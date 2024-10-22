@@ -1,0 +1,12 @@
+@import 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Ubuntu+Mono:wght@400;700&display=swap';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  color: white;
+  background-color: #222;
+  color-scheme: dark;
+}
