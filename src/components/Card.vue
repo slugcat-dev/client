@@ -8,6 +8,7 @@ const { card, canvas } = defineProps<{
 	canvas: Canvas
 }>()
 const cardRef = useTemplateRef('card')
+const contentRef = useTemplateRef('content')
 const state = reactive({
 	active: false,
 	downOffset: {
@@ -20,7 +21,7 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
 function onPointerDown(event: PointerEvent) {
-	if (state.active)
+	if (pointer.down || contentRef.value!.active)
 		return
 
 	const cardRect = cardRef.value!.getBoundingClientRect()
@@ -64,11 +65,11 @@ function onPointerUp() {
 		:style="{
 			left: card.pos.x + 'px',
 			top: card.pos.y + 'px',
-			cursor: state.active ? 'grabbing' : 'grab'
+			cursor: contentRef?.active ? 'auto' : state.active ? 'grabbing' : 'grab'
 		}"
 		@pointerdown="onPointerDown"
 	>
-		<CardContent :card />
+		<CardContent ref="content" :card />
 	</div>
 </template>
 

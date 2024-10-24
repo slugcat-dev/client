@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, useTemplateRef } from 'vue'
+import { onMounted, reactive, useTemplateRef } from 'vue'
 import { disableRule, Editor } from '@slugcat-dev/mark-ed'
-import { moveLine, smoothCaret } from '../editor'
+import { moveCaretWhereClicked, moveLine, smoothCaret } from '../editor'
 
 const { card } = defineProps<{ card: Card }>()
 const contentRef = useTemplateRef('content')
 const caretRef = useTemplateRef('caret')
+const state = reactive({
+	active: false
+})
 let editor: Editor
 
 onMounted(() => {
@@ -31,22 +34,36 @@ onMounted(() => {
 	smoothCaret(editor, caretRef.value!)
 
 	if (card.id === 'new')
-		onClick()
+		activate()
 })
 
-function onClick() {
-	editor.readonly = false
-	editor.root.focus()
+function onClick(event: MouseEvent) {
+	if (state.active)
+		return
 
-	// TODO: move caret where clicked
+	activate()
+	moveCaretWhereClicked(event)
+
+	// Force a selection update after moving the caret
+	editor.setSelection(editor.getSelection())
 }
 
 function onBlur() {
+	state.active = false
 	editor.readonly = true
 
 	if (card.id === 'new')
 		card.id = Date.now()
 }
+
+function activate() {
+	state.active = true
+	editor.readonly = false
+
+	editor.root.focus()
+}
+
+defineExpose(state)
 </script>
 
 <template>

@@ -13,10 +13,16 @@ const pointer = reactive<PointerState>({
 	y: 0,
 	movementX: 0,
 	movementY: 0,
-	type: 'none'
+	type: 'none',
+	id: 0
 })
 
 useEventListener('pointerdown', (event: PointerEvent) => {
+	// Ignore this pointer if a different one is already being tracked
+	if (pointer.id && pointer.id !== event.pointerId)
+		return
+
+	// Start tracking the pointer
 	pointer.down = {
 		x: event.clientX,
 		y: event.clientY
@@ -24,9 +30,14 @@ useEventListener('pointerdown', (event: PointerEvent) => {
 	pointer.x = event.clientX
 	pointer.y = event.clientY
 	pointer.type = event.pointerType
+	pointer.id = event.pointerId
 })
 
 useEventListener('pointermove', (event: PointerEvent) => {
+	if (pointer.id !== event.pointerId)
+		return
+
+	// Update pointer position and movement
 	pointer.x = event.clientX
 	pointer.y = event.clientY
 	pointer.movementX = event.movementX
@@ -37,9 +48,13 @@ useEventListener('pointermove', (event: PointerEvent) => {
 		pointer.moved = true
 })
 
-useEventListener('pointerup', () => {
+useEventListener('pointerup', (event: PointerEvent) => {
+	if (pointer.id !== event.pointerId)
+		return
+
 	pointer.down = false
 	pointer.moved = false
+	pointer.id = 0
 })
 
 provide('pointer', pointer)

@@ -1,6 +1,5 @@
 import type { Editor } from '@slugcat-dev/mark-ed'
-import { isAndroid, isFirefox } from './utils'
-import { isIOS } from '@vueuse/core'
+import { caretRangeFromPoint, isAndroid, isFirefox, isIOS, isPointerCoarse, selectRange } from './utils'
 
 /**
  * Move selected lines up or down.
@@ -96,4 +95,26 @@ export function smoothCaret(editor: Editor, caret: HTMLElement) {
 		else
 			caret.style.animationName = 'blink-1'
 	})
+}
+
+export function moveCaretWhereClicked(event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
+	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
+
+	// Move the caret to the next word boundary
+	if (isPointerCoarse) {
+		const text = caretRange.startContainer.textContent ?? ''
+		let start = caretRange.startOffset
+		let end = caretRange.startOffset
+
+		while (start > 0 && !/\s|\W/.test(text.charAt(start - 1)))
+			start--
+
+		while (end < text.length && !/\s|\W/.test(text.charAt(end)))
+			end++
+
+		caretRange.setStart(caretRange.startContainer, end - caretRange.startOffset <= caretRange.startOffset - start ? end : start)
+		caretRange.collapse(true)
+	}
+
+	selectRange(caretRange)
 }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, inject, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
-import { suppressClick } from '../utils'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -29,7 +28,7 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
 function onPointerDown() {
-	if (state.active)
+	if (pointer.down)
 		return
 
 	state.active = true
@@ -60,6 +59,7 @@ function onPointerUp() {
 }
 
 function onClick(event: MouseEvent) {
+	// Require doubleclick to create a card when using a mouse
 	if (!createCard || (pointer.type === 'mouse' && event.detail !== 2))
 		return
 

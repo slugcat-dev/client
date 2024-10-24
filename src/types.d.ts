@@ -7,6 +7,7 @@ interface PointerStateBase extends Pos {
 	movementX: number
 	movementY: number
 	type: string
+	id: number
 }
 
 interface PointerUpState extends PointerStateBase {

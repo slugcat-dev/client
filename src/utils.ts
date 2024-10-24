@@ -24,3 +24,34 @@ export function suppressClick() {
 		event.stopPropagation()
 	}, true)
 }
+
+/**
+ * Select the specified range.
+ */
+export function selectRange(range: Range) {
+	const selection = document.getSelection()
+
+	if (selection) {
+		selection.removeAllRanges()
+		selection.addRange(range)
+	}
+}
+
+/**
+ * Get the caret range at the specified coordinates.
+ */
+export function caretRangeFromPoint(x: number, y: number) {
+	if (isFirefox) {
+		const caretPos = document.caretPositionFromPoint(x, y)
+		const range = document.createRange()
+
+		if (caretPos) {
+			range.setStart(caretPos.offsetNode, caretPos.offset)
+			range.collapse(true)
+		}
+
+		return range
+	}
+
+	return document.caretRangeFromPoint(x, y) ?? document.createRange()
+}
