@@ -1,0 +1,139 @@
+.md-editor {
+	font-family: var(--font-content);
+	font-size: .875rem;
+	line-height: 1.25rem;
+	outline: none;
+}
+
+.selection-layer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+
+	.caret {
+		display: none;
+		position: absolute;
+		width: 2px;
+		left: -1px;
+		background-color: currentcolor;
+		animation: blink-1 1s steps(1) infinite;
+
+		&.visible {
+			display: initial;
+			transition: height 50ms, translate 50ms;
+		}
+	}
+}
+
+.md-line {
+	position: relative;
+}
+
+.md-mark {
+	color: color-mix(in srgb, currentcolor, transparent 50%);
+}
+
+.md-hidden {
+	font-size: 0;
+	line-height: 0;
+}
+
+.md-heading {
+	margin-block: 0;
+	font-size: .875rem;
+
+	&:is(h1) {
+		font-size: 1.25rem;
+		line-height: 1.5rem;
+	}
+}
+
+.md-code,
+.md-code-block {
+	font-family: var(--font-monospace);
+	background-color: #333;
+}
+
+.md-code {
+	padding-block: .125rem;
+	border-radius: .25em;
+
+	&:has(.md-hidden) {
+		padding-inline: .25rem;
+	}
+}
+
+.md-code-block {
+	display: block;
+	padding-inline: .5rem;
+
+	.md-code-lang {
+		color: #08f;
+	}
+
+	.md-hidden {
+		font-size: inherit;
+		line-height: inherit;
+	}
+}
+
+.md-code-block.md-open {
+	margin-top: .5rem;
+	border-top-left-radius: .375rem;
+	border-top-right-radius: .375rem;
+}
+
+.md-code-block.md-close,
+.md-line:last-child .md-code-block {
+	margin-bottom: .5rem;
+	border-bottom-right-radius: .375rem;
+	border-bottom-left-radius: .375rem;
+}
+
+.md-quote > .md-mark.md-hidden {
+	font-size: inherit;
+	line-height: inherit;
+	color: transparent;
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: -1px;
+		width: 3px;
+		height: calc(100% + 2px);
+		background-color: #666;
+		border-radius: .125rem;
+	}
+}
+
+.md-task {
+	.md-checkmark {
+		font-family: var(--font-monospace);
+	}
+
+	.md-checkbox {
+		display: inline-flex;
+		position: relative;
+		top: .125rem;
+		margin-inline-end: .25rem;
+
+		input {
+			width: .875rem;
+			height: .875rem;
+			margin: 0;
+			cursor: pointer;
+		}
+	}
+
+	&:has(.md-mark:not(.md-hidden)) .md-checkbox {
+		display: none;
+	}
+}
+
+@keyframes blink-1 {
+	50% { opacity: 0; }
+}
+
+@keyframes blink-2 {
+	50% { opacity: 0; }
+}

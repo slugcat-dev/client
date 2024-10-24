@@ -1,0 +1,32 @@
+@import 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap';
+
+* {
+	box-sizing: border-box;
+}
+
+:root {
+	color-scheme: dark;
+	--color-accent: oklch(80% .125 250deg);
+	--color-background: #222;
+	--color-text: #ddd;
+	--color-link: #08f;
+	--font-ui: system-ui;
+	--font-content: 'Roboto', sans-serif;
+	--font-monospace: 'Ubuntu Mono', monospace;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-ui);
+	color: var(--color-text);
+	background-color: var(--color-background);
+}
+
+a {
+	color: var(--color-link);
+}
+
+::selection {
+	background-color: color-mix(in srgb, var(--color-accent), transparent 75%);
+}
