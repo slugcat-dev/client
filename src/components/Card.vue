@@ -20,6 +20,9 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
 function onPointerDown(event: PointerEvent) {
+	if (state.active)
+		return
+
 	const cardRect = cardRef.value!.getBoundingClientRect()
 
 	state.active = true

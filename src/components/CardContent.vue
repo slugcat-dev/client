@@ -24,7 +24,14 @@ onMounted(() => {
 		}
 	})
 
+	editor.addEventListener('change', () => {
+		card.content = editor.content
+	})
+
 	smoothCaret(editor, caretRef.value!)
+
+	if (card.id === 'new')
+		onClick()
 })
 
 function onClick() {
@@ -36,6 +43,9 @@ function onClick() {
 
 function onBlur() {
 	editor.readonly = true
+
+	if (card.id === 'new')
+		card.id = Date.now()
 }
 </script>
 

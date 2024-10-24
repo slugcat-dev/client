@@ -24,11 +24,16 @@ const gridSize = computed(() => {
 
 	return value
 })
+let createCard = false
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
 function onPointerDown() {
+	if (state.active)
+		return
+
 	state.active = true
+	createCard = document.activeElement === document.body
 	unwatchPointerMove = watch(pointer, onPointerMove)
 	unwatchPointerUp = watch(() => pointer.down, onPointerUp, { flush: 'sync' })
 }
@@ -47,15 +52,24 @@ function onPointerUp() {
 
 	state.active = false
 
+	if (pointer.moved)
+		createCard = false
+
 	unwatchPointerMove()
 	unwatchPointerUp()
-
-	if (pointer.type === 'mouse' && pointer.moved)
-		suppressClick()
 }
 
-function onClick() {
-	console.log('create card')
+function onClick(event: MouseEvent) {
+	if (!createCard || (pointer.type === 'mouse' && event.detail !== 2))
+		return
+
+	const canvasRect = canvasRef.value!.getBoundingClientRect()
+	const pos = {
+		x: pointer.x - state.scroll.x - canvasRect.x,
+		y: pointer.y - state.scroll.y - canvasRect.y
+	}
+
+	cards.push({ id: 'new', content: '', pos })
 }
 </script>
 

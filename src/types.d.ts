@@ -28,7 +28,7 @@ interface Canvas {
 }
 
 interface Card {
-	id: number
+	id: 'new' | number
 	pos: Pos
 	content: string
 }
