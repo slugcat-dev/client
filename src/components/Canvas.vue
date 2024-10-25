@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { computed, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { usePointer } from '../composables/pointer'
+import { createCard } from '../cards'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -12,7 +14,7 @@ const state = reactive({
 		y: 0
 	}
 }) as Canvas
-const pointer = inject<PointerState>('pointer')!
+const pointer = usePointer()
 const animating = computed(() => pointer.down)
 const gridSize = computed(() => {
 	// Adjust the background grid size to the zoom level
@@ -23,7 +25,7 @@ const gridSize = computed(() => {
 
 	return value
 })
-let createCard = false
+let clickAllowed = false
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
@@ -32,7 +34,7 @@ function onPointerDown() {
 		return
 
 	state.active = true
-	createCard = document.activeElement === document.body
+	clickAllowed = document.activeElement === document.body
 	unwatchPointerMove = watch(pointer, onPointerMove)
 	unwatchPointerUp = watch(() => pointer.down, onPointerUp, { flush: 'sync' })
 }
@@ -52,7 +54,7 @@ function onPointerUp() {
 	state.active = false
 
 	if (pointer.moved)
-		createCard = false
+		clickAllowed = false
 
 	unwatchPointerMove()
 	unwatchPointerUp()
@@ -60,7 +62,7 @@ function onPointerUp() {
 
 function onClick(event: MouseEvent) {
 	// Require doubleclick to create a card when using a mouse
-	if (!createCard || (pointer.type === 'mouse' && event.detail !== 2))
+	if (!clickAllowed || (pointer.type === 'mouse' && event.detail !== 2))
 		return
 
 	const canvasRect = canvasRef.value!.getBoundingClientRect()
@@ -69,7 +71,7 @@ function onClick(event: MouseEvent) {
 		y: pointer.y - state.scroll.y - canvasRect.y
 	}
 
-	cards.push({ id: 'new', content: '', pos })
+	createCard({ pos })
 }
 </script>
 
@@ -129,13 +131,11 @@ function onClick(event: MouseEvent) {
 	user-select: none;
 	touch-action: none;
 
-	/* Tmp */
-	outline: 1px solid #5555;
 	top: 24px;
 	left: 48px;
 	width: calc(100vw - 48px);
 	height: calc(100vh - 24px);
-	/* Tmp */
+	outline: 1px solid #363636;
 
 	.canvas-background {
 		position: absolute;

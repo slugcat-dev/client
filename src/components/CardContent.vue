@@ -2,6 +2,7 @@
 import { onMounted, reactive, useTemplateRef } from 'vue'
 import { disableRule, Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret } from '../editor'
+import { deleteCard, updateCard } from '../cards'
 
 const { card } = defineProps<{ card: Card }>()
 const contentRef = useTemplateRef('content')
@@ -27,10 +28,6 @@ onMounted(() => {
 		}
 	})
 
-	editor.addEventListener('change', () => {
-		card.content = editor.content
-	})
-
 	smoothCaret(editor, caretRef.value!)
 
 	if (card.id === 'new')
@@ -51,9 +48,12 @@ function onClick(event: MouseEvent) {
 function onBlur() {
 	state.active = false
 	editor.readonly = true
+	card.content = editor.content
 
-	if (card.id === 'new')
-		card.id = Date.now()
+	if (card.content === '')
+		deleteCard(card.id)
+	else
+		updateCard(card)
 }
 
 function activate() {

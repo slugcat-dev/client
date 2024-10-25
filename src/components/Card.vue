@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { inject, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { usePointer } from '../composables/pointer'
 import { suppressClick } from '../utils'
+import { updateCard } from '../cards'
 import CardContent from './CardContent.vue'
 
 const { card, canvas } = defineProps<{
@@ -16,7 +18,7 @@ const state = reactive({
 		y: 0
 	}
 })
-const pointer = inject<PointerState>('pointer')!
+const pointer = usePointer()
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
@@ -52,8 +54,12 @@ function onPointerUp() {
 	unwatchPointerMove()
 	unwatchPointerUp()
 
-	if (pointer.type === 'mouse' && pointer.moved)
-		suppressClick()
+	if (pointer.moved) {
+		if ((pointer as PointerDownState).type === 'mouse')
+			suppressClick()
+
+		updateCard(card)
+	}
 }
 </script>
 
