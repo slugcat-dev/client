@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import { reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { suppressClick } from '../utils'
-import { updateCard } from '../cards'
+import { updateCard } from '../composables/cards'
 import CardContent from './CardContent.vue'
 
 const { card, canvas } = defineProps<{
 	card: Card,
 	canvas: Canvas
 }>()
-const cardRef = useTemplateRef('card')
-const contentRef = useTemplateRef('content')
+const cardRef = useTemplateRef('card-ref')
+const contentRef = useTemplateRef('content-ref')
 const state = reactive({
 	active: false,
 	downOffset: {
 		x: 0,
-		y: 0
+		y: 0,
+		zoom: 0
 	}
 })
 const pointer = usePointer()
@@ -29,9 +30,12 @@ function onPointerDown(event: PointerEvent) {
 	const cardRect = cardRef.value!.getBoundingClientRect()
 
 	state.active = true
-	state.downOffset.x = event.clientX - cardRect.x
-	state.downOffset.y = event.clientY - cardRect.y
-	unwatchPointerMove = watch(pointer, onPointerMove)
+	state.downOffset = {
+		x: event.clientX - cardRect.x,
+		y: event.clientY - cardRect.y,
+		zoom: canvas.smoothZoom
+	}
+	unwatchPointerMove = watch([pointer, canvas], onPointerMove)
 	unwatchPointerUp = watch(() => pointer.down, onPointerUp, { flush: 'sync' })
 }
 
@@ -39,10 +43,12 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
-	const cardRect = canvas.ref.getBoundingClientRect()
+	const zoomDelta = canvas.smoothZoom / state.downOffset.zoom
 
-	card.pos.x = pointer.x - state.downOffset.x - canvas.scroll.x - cardRect.x
-	card.pos.y = pointer.y - state.downOffset.y - canvas.scroll.y - cardRect.y
+	card.pos = canvas.toCanvasPos({
+		x: pointer.x - state.downOffset.x * zoomDelta,
+		y: pointer.y - state.downOffset.y * zoomDelta
+	})
 }
 
 function onPointerUp() {
@@ -65,7 +71,7 @@ function onPointerUp() {
 
 <template>
 	<div
-		ref="card"
+		ref="card-ref"
 		class="card"
 		:class="{ active: state.active }"
 		:style="{
@@ -75,7 +81,11 @@ function onPointerUp() {
 		}"
 		@pointerdown.left="onPointerDown"
 	>
-		<CardContent ref="content" :card />
+		<CardContent
+			ref="content-ref"
+			:card
+			:canvas
+		/>
 	</div>
 </template>
 

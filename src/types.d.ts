@@ -26,6 +26,13 @@ interface Canvas {
 	ref: HTMLElement
 	active: boolean
 	scroll: Pos
+	smoothScroll: Pos
+	zoom: number
+	smoothZoom: number
+	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
+	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
+	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
+	animate: () => void
 }
 
 interface Card {

@@ -2,11 +2,14 @@
 import { onMounted, reactive, useTemplateRef } from 'vue'
 import { disableRule, Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret } from '../editor'
-import { deleteCard, updateCard } from '../cards'
+import { deleteCard, updateCard } from '../composables/cards'
 
-const { card } = defineProps<{ card: Card }>()
-const contentRef = useTemplateRef('content')
-const caretRef = useTemplateRef('caret')
+const { card, canvas } = defineProps<{
+	card: Card,
+	canvas: Canvas
+}>()
+const contentRef = useTemplateRef('content-ref')
+const caretRef = useTemplateRef('caret-ref')
 const state = reactive({
 	active: false
 })
@@ -28,7 +31,7 @@ onMounted(() => {
 		}
 	})
 
-	smoothCaret(editor, caretRef.value!)
+	smoothCaret(editor, caretRef.value!, canvas)
 
 	if (card.id === 'new')
 		activate()
@@ -68,13 +71,13 @@ defineExpose(state)
 
 <template>
 	<div
-		ref="content"
+		ref="content-ref"
 		class="card-content"
 		@click.left="onClick"
 		@blur="onBlur"
 	></div>
 	<div class="selection-layer">
-		<div ref="caret" class="caret"></div>
+		<div ref="caret-ref" class="caret"></div>
 	</div>
 </template>
 

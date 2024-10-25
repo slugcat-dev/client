@@ -1,25 +1,26 @@
 <script setup lang="ts">
-import { computed, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
+import { computed, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { useCanvas } from '../composables/canvas'
 import { usePointer } from '../composables/pointer'
-import { createCard } from '../cards'
+import { createCard } from '../composables/cards'
 import { isTrackpad } from '../utils'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
-const canvasRef = useTemplateRef('canvas')
+const canvasRef = useTemplateRef('canvas-ref')
+const canvas = useCanvas(canvasRef)
 const state = reactive({
-	ref: canvasRef,
-	active: false,
-	scroll: {
-		x: 0,
-		y: 0
-	}
-}) as Canvas
+	active: false
+})
 const pointer = usePointer()
-const animating = computed(() => pointer.down)
+const animating = computed(() => state.active
+	|| canvas.smoothZoom !== canvas.zoom
+	|| canvas.smoothScroll.x !== canvas.scroll.x
+	|| canvas.smoothScroll.y !== canvas.scroll.y
+)
 const gridSize = computed(() => {
 	// Adjust the background grid size to the zoom level
-	let value = 20 * 1
+	let value = 20 * canvas.smoothZoom
 
 	while (value <= 10) value *= 2
 	while (value >= 30) value /= 2
@@ -44,8 +45,10 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
-	state.scroll.x += pointer.movementX
-	state.scroll.y += pointer.movementY
+	canvas.scroll.x += pointer.movementX
+	canvas.scroll.y += pointer.movementY
+	canvas.smoothScroll.x = canvas.scroll.x
+	canvas.smoothScroll.y = canvas.scroll.y
 }
 
 function onPointerUp() {
@@ -66,13 +69,7 @@ function onClick(event: MouseEvent) {
 	if (!clickAllowed || (pointer.type === 'mouse' && event.detail !== 2))
 		return
 
-	const canvasRect = canvasRef.value!.getBoundingClientRect()
-	const pos = {
-		x: pointer.x - state.scroll.x - canvasRect.x,
-		y: pointer.y - state.scroll.y - canvasRect.y
-	}
-
-	createCard({ pos })
+	createCard({ pos: canvas.toCanvasPos(pointer) })
 }
 
 function onWheel(event: WheelEvent) {
@@ -88,18 +85,42 @@ function onWheel(event: WheelEvent) {
 		deltaY = Math.sign(deltaY) * 100
 	}
 
-	// Scroll horizontally when holding shift
-	if (event.shiftKey && !deltaX)
-		[deltaX, deltaY] = [deltaY, deltaX]
+	if (event.ctrlKey || event.metaKey) {
+		// Zoom the canvas
+		const delta = isMouseWheel
+			? Math.sign(event.deltaY) * .2
+			: event.deltaY / 150
 
-	state.scroll.x -= deltaX
-	state.scroll.y -= deltaY
+		canvas.zoomTo(canvas.zoom * (1 - delta), pointer)
+
+		if (isMouseWheel)
+			canvas.animate()
+		else {
+			canvas.smoothScroll.x = canvas.scroll.x
+			canvas.smoothScroll.y = canvas.scroll.y
+			canvas.smoothZoom = canvas.zoom
+		}
+	} else {
+		// Scroll horizontally when holding shift or vertically otherwise
+		if (event.shiftKey && !deltaX)
+			[deltaX, deltaY] = [deltaY, deltaX]
+
+		canvas.scroll.x -= deltaX
+		canvas.scroll.y -= deltaY
+
+		if (isMouseWheel)
+			canvas.animate()
+		else {
+			canvas.smoothScroll.x = canvas.scroll.x
+			canvas.smoothScroll.y = canvas.scroll.y
+		}
+	}
 }
 </script>
 
 <template>
 	<div
-		ref="canvas"
+		ref="canvas-ref"
 		class="canvas"
 		:style="{ cursor: state.active && pointer.moved ? 'move' : 'default' }"
 
@@ -112,8 +133,8 @@ function onWheel(event: WheelEvent) {
 			<pattern
 				id="dot-pattern"
 				patternUnits="userSpaceOnUse"
-				:x="state.scroll.x"
-				:y="state.scroll.y"
+				:x="canvas.smoothScroll.x"
+				:y="canvas.smoothScroll.y"
 				:width="gridSize"
 				:height="gridSize"
 			>
@@ -134,7 +155,8 @@ function onWheel(event: WheelEvent) {
 		<div
 			class="stuff"
 			:style="{
-				translate: `${state.scroll.x}px ${state.scroll.y}px`,
+				translate: `${canvas.smoothScroll.x}px ${canvas.smoothScroll.y}px`,
+				scale: canvas.smoothZoom,
 				willChange: animating ? 'transform' : 'auto'
 			}"
 		>
@@ -142,7 +164,7 @@ function onWheel(event: WheelEvent) {
 				v-for="card of cards"
 				:key="card.id"
 				:card
-				:canvas="state"
+				:canvas
 			/>
 		</div>
 	</div>

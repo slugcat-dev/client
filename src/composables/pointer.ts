@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { onBeforeUnmount, reactive } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import { isPointerCoarse, moveThreshold } from '../utils'
 
@@ -34,7 +34,7 @@ export function usePointer() {
 	})
 
 	useEventListener('pointermove', (event: PointerEvent) => {
-		if (pointer.id !== event.pointerId)
+		if (pointer.id && pointer.id !== event.pointerId)
 			return
 
 		// Update pointer position and movement

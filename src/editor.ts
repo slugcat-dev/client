@@ -35,7 +35,7 @@ export function moveLine(editor: Editor, up: boolean): void {
 /**
  * Add a smooth animated caret.
  */
-export function smoothCaret(editor: Editor, caret: HTMLElement) {
+export function smoothCaret(editor: Editor, caret: HTMLElement, canvas: Canvas) {
 	// Don't apply on mobile devices
 	if (isAndroid || isIOS)
 		return
@@ -68,7 +68,7 @@ export function smoothCaret(editor: Editor, caret: HTMLElement) {
 				const rect = innermostChild.getBoundingClientRect()
 				const computedStyle = getComputedStyle(innermostChild)
 				const fontSize = parseFloat(computedStyle.fontSize)
-				const caretHeight = rect.height - fontSize * 1.125
+				const caretHeight = rect.height - fontSize * 1.125 * canvas.zoom
 
 				caretRect.x = rect.x + parseFloat(computedStyle.paddingInlineStart)
 				caretRect.y = rect.y + caretHeight / 2
@@ -78,8 +78,8 @@ export function smoothCaret(editor: Editor, caret: HTMLElement) {
 			const x = Math.round(caretRect.left - editorRect.left)
 			const y = Math.round(caretRect.top - editorRect.top)
 
-			caret.style.height = `${caretRect.height}px`
-			caret.style.translate = `${x}px ${y}px`
+			caret.style.height = `${caretRect.height / canvas.zoom}px`
+			caret.style.translate = `${x / canvas.zoom}px ${y / canvas.zoom}px`
 
 			// Sry Firefox <3
 			if (!isFirefox || selection.isCollapsed)

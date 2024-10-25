@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCards } from '../cards'
+import { useCards } from '../composables/cards'
 import Canvas from './Canvas.vue'
 
 const cards = useCards()
