@@ -55,3 +55,18 @@ export function caretRangeFromPoint(x: number, y: number) {
 
 	return document.caretRangeFromPoint(x, y) ?? document.createRange()
 }
+
+/**
+ * Detect if a wheel event comes from a trackpad.
+ */
+export function isTrackpad(event: WheelEvent & { wheelDeltaX?: number, wheelDeltaY?: number }) {
+	if (event.deltaMode !== event.DOM_DELTA_PIXEL)
+		return false
+
+	// See https://stackoverflow.com/q/10744645/13505160
+	return (
+		(event.wheelDeltaX && event.wheelDeltaX !== 0 && Math.abs(event.wheelDeltaX) !== 120)
+		|| (event.wheelDeltaY && event.wheelDeltaY !== 0 && Math.abs(event.wheelDeltaY) !== 120)
+		|| (event.wheelDeltaX && event.wheelDeltaY && event.wheelDeltaX === -3 * event.deltaX && event.wheelDeltaY === -3 * event.deltaY)
+	)
+}

@@ -2,6 +2,7 @@
 import { computed, reactive, useTemplateRef, watch, WatchHandle } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { createCard } from '../cards'
+import { isTrackpad } from '../utils'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -73,6 +74,27 @@ function onClick(event: MouseEvent) {
 
 	createCard({ pos })
 }
+
+function onWheel(event: WheelEvent) {
+	if (state.active)
+		return
+
+	const isMouseWheel = !isTrackpad(event)
+	let deltaX = event.deltaX
+	let deltaY = event.deltaY
+
+	if (isMouseWheel) {
+		deltaX = Math.sign(deltaX) * 100
+		deltaY = Math.sign(deltaY) * 100
+	}
+
+	// Scroll horizontally when holding shift
+	if (event.shiftKey && !deltaX)
+		[deltaX, deltaY] = [deltaY, deltaX]
+
+	state.scroll.x -= deltaX
+	state.scroll.y -= deltaY
+}
 </script>
 
 <template>
@@ -80,8 +102,10 @@ function onClick(event: MouseEvent) {
 		ref="canvas"
 		class="canvas"
 		:style="{ cursor: state.active && pointer.moved ? 'move' : 'default' }"
+
 		@pointerdown.left.self="onPointerDown"
 		@pointerdown.middle.self="onPointerDown"
+		@wheel.prevent="onWheel"
 		@click.left.self="onClick"
 	>
 		<svg class="canvas-background">

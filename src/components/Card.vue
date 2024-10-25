@@ -73,7 +73,7 @@ function onPointerUp() {
 			top: card.pos.y + 'px',
 			cursor: contentRef?.active ? 'auto' : state.active ? 'grabbing' : 'grab'
 		}"
-		@pointerdown="onPointerDown"
+		@pointerdown.left="onPointerDown"
 	>
 		<CardContent ref="content" :card />
 	</div>
