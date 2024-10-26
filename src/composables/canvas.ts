@@ -9,6 +9,18 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 		zoom: 1,
 		smoothZoom: 1
 	})
+	const animation = {
+		lock: false,
+		start: {
+			time: 0,
+			scroll: { x: 0, y: 0 },
+			zoom: 1
+		},
+		delta: {
+			scroll: { x: 0, y: 0 },
+			zoom: 0
+		}
+	}
 
 	function toCanvasPos(pos: Pos, smooth = true) {
 		const scroll = smooth ? canvas.smoothScroll : canvas.scroll
@@ -54,10 +66,36 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 		canvas.scroll.y -= dY
 	}
 
-	function animate() {
-		canvas.smoothScroll.x = canvas.scroll.x
-		canvas.smoothScroll.y = canvas.scroll.y
-		canvas.smoothZoom = canvas.zoom
+	function animate(duration = 200) {
+		animation.start.time = performance.now()
+		animation.start.scroll.x = canvas.smoothScroll.x
+		animation.start.scroll.y = canvas.smoothScroll.y
+		animation.start.zoom = canvas.smoothZoom
+		animation.delta.scroll.x = canvas.scroll.x - canvas.smoothScroll.x
+		animation.delta.scroll.y = canvas.scroll.y - canvas.smoothScroll.y
+		animation.delta.zoom = canvas.zoom - canvas.smoothZoom
+
+		if (animation.lock)
+			return
+
+		animation.lock = true
+
+		function scrollStep(timestamp: number) {
+			const elapsedTime = timestamp - animation.start.time
+			const progress = Math.max(Math.min(elapsedTime / duration, 1), 0)
+			const ease = (t: number) => (--t) * t * t + 1
+
+			canvas.smoothScroll.x = animation.start.scroll.x + animation.delta.scroll.x * ease(progress)
+			canvas.smoothScroll.y = animation.start.scroll.y + animation.delta.scroll.y * ease(progress)
+			canvas.smoothZoom = animation.start.zoom + animation.delta.zoom * ease(progress)
+
+			if (elapsedTime < duration)
+				requestAnimationFrame(scrollStep)
+			else
+				animation.lock = false
+		}
+
+		requestAnimationFrame(scrollStep)
 	}
 
 	return Object.assign(canvas, {

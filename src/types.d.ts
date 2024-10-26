@@ -32,7 +32,7 @@ interface Canvas {
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
 	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
-	animate: () => void
+	animate: (duration?: number) => void
 }
 
 interface Card {

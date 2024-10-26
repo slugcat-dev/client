@@ -175,6 +175,7 @@ function onWheel(event: WheelEvent) {
 	position: relative;
 	overflow: clip;
 	user-select: none;
+	-webkit-user-select: none;
 	touch-action: none;
 
 	top: 24px;
