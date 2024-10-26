@@ -98,10 +98,33 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 		requestAnimationFrame(animationStep)
 	}
 
+	function kineticScroll(velocity: Pos, pointer: PointerState) {
+		let prevTimestamp = Infinity
+
+		function kineticScrollStep(timestamp: number) {
+			const delta = Math.max(timestamp - prevTimestamp, 0) / (1000 / 60)
+
+			canvas.scroll.x += velocity.x * delta
+			canvas.scroll.y += velocity.y * delta
+			canvas.smoothScroll.x = canvas.scroll.x
+			canvas.smoothScroll.y = canvas.scroll.y
+			velocity.x *= 0.95 ** delta
+			velocity.y *= 0.95 ** delta
+
+			if ((Math.abs(velocity.x) > .25 || Math.abs(velocity.y) > .25) && !pointer.down)
+				requestAnimationFrame(kineticScrollStep)
+
+			prevTimestamp = timestamp
+		}
+
+		requestAnimationFrame(kineticScrollStep)
+	}
+
 	return Object.assign(canvas, {
 		toCanvasPos,
 		toCanvasRect,
 		zoomTo,
-		animate
+		animate,
+		kineticScroll
 	}) as Canvas
 }

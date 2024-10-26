@@ -18,8 +18,8 @@ const state = reactive({
 		zoom: 0
 	}
 })
-const pointer = inject<PointerState>('pointer')!
-const pointers = inject<PointerState[]>('pointers')!
+const pointer = inject('pointer') as PointerState
+const pointers = inject('pointers') as PointerState[]
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 

@@ -2,15 +2,15 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { createCard } from '../composables/cards'
-import { isTrackpad } from '../utils'
+import { isTrackpad, moveThreshold } from '../utils'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
 const canvas = useCanvas(canvasRef)
 const state = reactive({ panning: false })
-const pointer = inject<PointerState>('pointer')!
-const pointers = inject<PointerState[]>('pointers')!
+const pointer = inject('pointer') as PointerState
+const pointers = inject('pointers') as PointerState[]
 const animating = computed(() => state.panning
 	|| canvas.smoothZoom !== canvas.zoom
 	|| canvas.smoothScroll.x !== canvas.scroll.x
@@ -63,8 +63,15 @@ function onPointerUp() {
 
 	state.panning = false
 
-	if (pointer.moved)
+	if (pointer.moved) {
 		clickAllowed = false
+
+		// Make scrolling feel like it has inertia on touch devices
+		const velocity = { x: pointer.movementX, y: pointer.movementY }
+
+		if (pointer.type === 'touch' && moveThreshold(velocity, { x: 0, y: 0 }, 4))
+			canvas.kineticScroll(velocity, pointer)
+	}
 
 	unwatchPointerMove()
 	unwatchPointerUp()
