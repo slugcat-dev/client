@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { usePointer } from '../composables/pointer'
+import { inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { suppressClick } from '../utils'
 import { updateCard } from '../composables/cards'
 import CardContent from './CardContent.vue'
@@ -19,7 +18,8 @@ const state = reactive({
 		zoom: 0
 	}
 })
-const pointer = usePointer()
+const pointer = inject<PointerState>('pointer')!
+const pointers = inject<PointerState[]>('pointers')!
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
@@ -35,8 +35,15 @@ function onPointerDown(event: PointerEvent) {
 		y: event.clientY - cardRect.y,
 		zoom: canvas.smoothZoom
 	}
-	unwatchPointerMove = watch([pointer, canvas], onPointerMove)
-	unwatchPointerUp = watch(() => pointer.down, onPointerUp, { flush: 'sync' })
+
+	// Add watchers after the event has bubbled to the listener that updates the pointer state
+	watch(pointer, () => {
+		unwatchPointerMove = watch([pointer, canvas], onPointerMove)
+		unwatchPointerUp = watch([
+			() => pointer.down,
+			() => pointers.length
+		], onPointerUp, { flush: 'sync' })
+	}, { once: true })
 }
 
 function onPointerMove() {
@@ -52,7 +59,7 @@ function onPointerMove() {
 }
 
 function onPointerUp() {
-	if (pointer.down)
+	if (pointer.down && pointers.length === 1)
 		return
 
 	state.active = false
@@ -61,7 +68,7 @@ function onPointerUp() {
 	unwatchPointerUp()
 
 	if (pointer.moved) {
-		if ((pointer as PointerDownState).type === 'mouse')
+		if (pointer.type === 'mouse')
 			suppressClick()
 
 		updateCard(card)

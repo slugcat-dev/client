@@ -3,24 +3,14 @@ interface Pos {
 	y: number
 }
 
-interface PointerStateBase extends Pos {
+interface PointerState extends Pos {
+	id: number
+	down: Pos | false
+	moved: boolean
 	movementX: number
 	movementY: number
 	type: string
-	id: number
 }
-
-interface PointerUpState extends PointerStateBase {
-	down: false
-	moved: false
-}
-
-interface PointerDownState extends PointerStateBase {
-	down: Pos
-	moved: boolean
-}
-
-type PointerState = PointerUpState | PointerDownState
 
 interface Canvas {
 	ref: HTMLElement

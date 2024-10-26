@@ -10,9 +10,7 @@ const { card, canvas } = defineProps<{
 }>()
 const contentRef = useTemplateRef('content-ref')
 const caretRef = useTemplateRef('caret-ref')
-const state = reactive({
-	active: false
-})
+const state = reactive({ active: false })
 let editor: Editor
 
 onMounted(() => {
@@ -23,11 +21,6 @@ onMounted(() => {
 		keymap: {
 			'Alt ArrowUp': editor => moveLine(editor, true),
 			'Alt ArrowDown': editor => moveLine(editor, false)
-		},
-		markdown: {
-			lineGrammar: {
-				ThematicBreak: disableRule
-			}
 		}
 	})
 

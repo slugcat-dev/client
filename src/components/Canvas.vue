@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
-import { usePointer } from '../composables/pointer'
 import { createCard } from '../composables/cards'
 import { isTrackpad } from '../utils'
 import Card from './Card.vue'
@@ -9,11 +8,10 @@ import Card from './Card.vue'
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
 const canvas = useCanvas(canvasRef)
-const state = reactive({
-	active: false
-})
-const pointer = usePointer()
-const animating = computed(() => state.active
+const state = reactive({ panning: false })
+const pointer = inject<PointerState>('pointer')!
+const pointers = inject<PointerState[]>('pointers')!
+const animating = computed(() => state.panning
 	|| canvas.smoothZoom !== canvas.zoom
 	|| canvas.smoothScroll.x !== canvas.scroll.x
 	|| canvas.smoothScroll.y !== canvas.scroll.y
@@ -35,16 +33,24 @@ function onPointerDown() {
 	if (pointer.down)
 		return
 
-	state.active = true
+	state.panning = true
 	clickAllowed = document.activeElement === document.body
-	unwatchPointerMove = watch(pointer, onPointerMove)
-	unwatchPointerUp = watch(() => pointer.down, onPointerUp, { flush: 'sync' })
+
+	// Add watchers after the event has bubbled to the listener that updates the pointer state
+	watch(pointer, () => {
+		unwatchPointerMove = watch(pointer, onPointerMove)
+		unwatchPointerUp = watch([
+			() => pointer.down,
+			() => pointers.length
+		], onPointerUp, { flush: 'sync' })
+	}, { once: true })
 }
 
 function onPointerMove() {
 	if (!pointer.moved)
 		return
 
+	// Pan the canvas
 	canvas.scroll.x += pointer.movementX
 	canvas.scroll.y += pointer.movementY
 	canvas.smoothScroll.x = canvas.scroll.x
@@ -52,10 +58,10 @@ function onPointerMove() {
 }
 
 function onPointerUp() {
-	if (pointer.down)
+	if (pointer.down && pointers.length === 1)
 		return
 
-	state.active = false
+	state.panning = false
 
 	if (pointer.moved)
 		clickAllowed = false
@@ -73,7 +79,7 @@ function onClick(event: MouseEvent) {
 }
 
 function onWheel(event: WheelEvent) {
-	if (state.active)
+	if (state.panning)
 		return
 
 	const isMouseWheel = !isTrackpad(event)
@@ -91,7 +97,7 @@ function onWheel(event: WheelEvent) {
 			? Math.sign(event.deltaY) * .2
 			: event.deltaY / 150
 
-		canvas.zoomTo(canvas.zoom * (1 - delta), pointer)
+		canvas.zoomTo(canvas.zoom * (1 - delta), { x: event.clientX, y: event.clientY })
 
 		if (isMouseWheel)
 			canvas.animate()
@@ -122,7 +128,7 @@ function onWheel(event: WheelEvent) {
 	<div
 		ref="canvas-ref"
 		class="canvas"
-		:style="{ cursor: state.active && pointer.moved ? 'move' : 'default' }"
+		:style="{ cursor: state.panning && pointer.moved ? 'move' : 'default' }"
 
 		@pointerdown.left.self="onPointerDown"
 		@pointerdown.middle.self="onPointerDown"
@@ -175,7 +181,6 @@ function onWheel(event: WheelEvent) {
 	position: relative;
 	overflow: clip;
 	user-select: none;
-	-webkit-user-select: none;
 	touch-action: none;
 
 	top: 24px;

@@ -80,7 +80,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 
 		animation.lock = true
 
-		function scrollStep(timestamp: number) {
+		function animationStep(timestamp: number) {
 			const elapsedTime = timestamp - animation.start.time
 			const progress = Math.max(Math.min(elapsedTime / duration, 1), 0)
 			const ease = (t: number) => (--t) * t * t + 1
@@ -90,12 +90,12 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 			canvas.smoothZoom = animation.start.zoom + animation.delta.zoom * ease(progress)
 
 			if (elapsedTime < duration)
-				requestAnimationFrame(scrollStep)
+				requestAnimationFrame(animationStep)
 			else
 				animation.lock = false
 		}
 
-		requestAnimationFrame(scrollStep)
+		requestAnimationFrame(animationStep)
 	}
 
 	return Object.assign(canvas, {
