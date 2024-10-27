@@ -21,6 +21,7 @@ interface Canvas {
 	active: boolean
 	scroll: Pos
 	smoothScroll: Pos
+	scrollSpeed: Pos
 	zoom: number
 	smoothZoom: number
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos

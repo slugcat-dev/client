@@ -3,14 +3,11 @@ import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } f
 import { useCanvas } from '../composables/canvas'
 import { createCard } from '../composables/cards'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged } from '../utils'
-import { useKeymap } from '../composables/keymap'
+import { useArrowKeys, useKeymap } from '../composables/keymap'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
-const pointer = inject('pointer') as PointerState
-const pointers = inject('pointers') as PointerState[]
-const canvas = useCanvas(canvasRef, pointer, pointers)
 const state = reactive({
 	panning: false,
 	pinching: false,
@@ -20,6 +17,10 @@ const state = reactive({
 		prevTranslate: { x: 0, y: 0 }
 	}
 })
+const pointer = inject('pointer') as PointerState
+const pointers = inject('pointers') as PointerState[]
+const canvas = useCanvas(canvasRef, pointer, pointers)
+const arrowKeys = useArrowKeys()
 const animating = computed(() => state.panning
 	|| state.pinching
 	|| canvas.smoothZoom !== canvas.zoom
@@ -45,6 +46,24 @@ useKeymap({
 	'End': canvas.overview,
 	'CtrlMeta +': keyboardZoom,
 	'CtrlMeta -': keyboardZoom
+})
+
+// Pan the canvas using the arrow keys
+watch(arrowKeys, () => {
+	const scrollSpeed = {
+		x: (arrowKeys.left ? 1 : 0) - (arrowKeys.right ? 1 : 0),
+		y: (arrowKeys.up ? 1 : 0) - (arrowKeys.down ? 1 : 0),
+	}
+
+	// Normalize the scroll speed so scrolling diagonally doesn't feel faster
+	const magnitude = Math.hypot(scrollSpeed.x, scrollSpeed.y)
+
+	if (magnitude) {
+		scrollSpeed.x = (scrollSpeed.x / magnitude) * 1000
+		scrollSpeed.y = (scrollSpeed.y / magnitude) * 1000
+	}
+
+	canvas.scrollSpeed = scrollSpeed
 })
 
 function keyboardZoom(event: KeyboardEvent) {

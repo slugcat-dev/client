@@ -1,5 +1,6 @@
 import { useEventListener } from '@vueuse/core'
 import { isMac, usingInput } from '../utils'
+import { reactive } from 'vue'
 
 export function useKeymap(keymap: Keymap) {
 	const compiledKeymap = Object.entries(keymap).map(([key, handler]) => {
@@ -49,4 +50,25 @@ export function useKeymap(keymap: Keymap) {
 			keybind.handler(event)
 		}
 	})
+}
+
+export function useArrowKeys() {
+	const arrowKeys = reactive({
+		left: false,
+		right: false,
+		up: false,
+		down: false
+	})
+
+	useEventListener(['keydown', 'keyup'], (event: KeyboardEvent) => {
+		const key = event.key.toLowerCase()
+		const direction = key.substring(5)
+
+		if (!key.includes('arrow') || usingInput())
+			return
+
+		arrowKeys[direction as keyof typeof arrowKeys] = event.type === 'keydown'
+	})
+
+	return arrowKeys
 }

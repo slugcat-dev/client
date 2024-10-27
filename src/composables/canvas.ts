@@ -1,4 +1,4 @@
-import { reactive, type ShallowRef } from 'vue'
+import { reactive, watch, type ShallowRef } from 'vue'
 
 export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
 	const canvas = reactive({
@@ -6,10 +6,12 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		active: false,
 		scroll: { x: 0, y: 0 },
 		smoothScroll: { x: 0, y: 0 },
+		scrollSpeed: { x: 0, y: 0 },
 		zoom: 1,
 		smoothZoom: 1
 	})
 	const animation = {
+		scrolling: false,
 		lock: false,
 		start: {
 			time: 0,
@@ -21,6 +23,36 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 			zoom: 0
 		}
 	}
+
+	watch(() => canvas.scrollSpeed, () => {
+		if (canvas.scrollSpeed.x === 0 && canvas.scrollSpeed.y === 0)
+			return animation.scrolling = false
+
+		if (animation.scrolling)
+			return
+
+		animation.scrolling = true
+
+		let prevTimestamp = Infinity
+
+		function scrollStep(timestamp: number) {
+			const delta = Math.max(timestamp - prevTimestamp, 0) / 1000
+			const scrollX = canvas.scrollSpeed.x * delta
+			const scrollY = canvas.scrollSpeed.y * delta
+
+			canvas.scroll.x += scrollX
+			canvas.scroll.y += scrollY
+
+			animate()
+
+			if (animation.scrolling)
+				requestAnimationFrame(scrollStep)
+
+			prevTimestamp = timestamp
+		}
+
+		requestAnimationFrame(scrollStep)
+	})
 
 	function toCanvasPos(pos: Pos, smooth = true) {
 		const scroll = smooth ? canvas.smoothScroll : canvas.scroll
