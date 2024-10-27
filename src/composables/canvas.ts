@@ -1,4 +1,5 @@
 import { reactive, watch, type ShallowRef } from 'vue'
+import { clamp } from '../utils'
 
 export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
 	const canvas = reactive({
@@ -8,7 +9,8 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		smoothScroll: { x: 0, y: 0 },
 		scrollSpeed: { x: 0, y: 0 },
 		zoom: 1,
-		smoothZoom: 1
+		smoothZoom: 1,
+		anyArrowKey: false
 	})
 	const animation = {
 		scrolling: false,
@@ -25,9 +27,6 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 	}
 
 	watch(() => canvas.scrollSpeed, () => {
-		if (canvas.scrollSpeed.x === 0 && canvas.scrollSpeed.y === 0)
-			return animation.scrolling = false
-
 		if (animation.scrolling)
 			return
 
@@ -36,23 +35,30 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		let prevTimestamp = Infinity
 
 		function scrollStep(timestamp: number) {
-			const delta = Math.max(timestamp - prevTimestamp, 0) / 1000
-			const scrollX = canvas.scrollSpeed.x * delta
-			const scrollY = canvas.scrollSpeed.y * delta
+			const delta = Math.max(timestamp - prevTimestamp, 0)
+			const speedX = Math.abs(canvas.scrollSpeed.x)
+			const speedY = Math.abs(canvas.scrollSpeed.y)
+
+			// Normalize the scroll speed so scrolling diagonally doesn't feel faster
+			const magnitude = Math.hypot(speedX, speedY)
+
+			if (!magnitude) // !pointer.down
+				return animation.scrolling = false
+
+			const scrollX = (canvas.scrollSpeed.x * delta / magnitude) * speedX
+			const scrollY = (canvas.scrollSpeed.y * delta / magnitude) * speedY
 
 			canvas.scroll.x += scrollX
 			canvas.scroll.y += scrollY
 
 			animate()
-
-			if (animation.scrolling)
-				requestAnimationFrame(scrollStep)
+			requestAnimationFrame(scrollStep)
 
 			prevTimestamp = timestamp
 		}
 
 		requestAnimationFrame(scrollStep)
-	})
+	}, { deep: true })
 
 	function toCanvasPos(pos: Pos, smooth = true) {
 		const scroll = smooth ? canvas.smoothScroll : canvas.scroll
@@ -87,7 +93,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 			if (zoom < .2)
 				zoom = (zoom / 0.2) ** Math.E * 0.1 + 0.1
 		} else
-			zoom = Math.max(Math.min(zoom, 2), .2)
+			zoom = clamp(zoom, .2, 2)
 
 		canvas.zoom = zoom
 
@@ -132,7 +138,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		const scaleX = canvasRect.width / (rect.width + 100)
 		const scaleY = canvasRect.height / (rect.height + 100)
 
-		canvas.zoom = Math.max(Math.min(scaleX, scaleY, 1), .2)
+		canvas.zoom = clamp(Math.min(scaleX, scaleY), .2, 1)
 		canvas.scroll.x = (canvasRect.width - rect.width * canvas.zoom) / 2 - rect.x * canvas.zoom
 		canvas.scroll.y = (canvasRect.height - rect.height * canvas.zoom) / 2 - rect.y * canvas.zoom
 
@@ -155,7 +161,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 
 		function animationStep(timestamp: number) {
 			const elapsedTime = timestamp - animation.start.time
-			const progress = Math.max(Math.min(elapsedTime / duration, 1), 0)
+			const progress = clamp(elapsedTime / duration, 0, 1)
 			const ease = (t: number) => (--t) * t * t + 1
 
 			canvas.smoothScroll.x = animation.start.scroll.x + animation.delta.scroll.x * ease(progress)
@@ -171,6 +177,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		requestAnimationFrame(animationStep)
 	}
 
+	// Make scrolling feel like it has inertia
 	function kineticScroll(velocity: Pos) {
 		if (pointers.length)
 			return
@@ -196,6 +203,22 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		requestAnimationFrame(kineticScrollStep)
 	}
 
+	// Scroll the canvas depending on how close the pointer is to the edge of the canvas
+	function edgeScroll() {
+		if (canvas.anyArrowKey)
+			return
+
+		const canvasRect = canvas.ref!.getBoundingClientRect()
+		const threshold = 100
+		const left = pointer.x - canvasRect.left
+		const right = canvasRect.right - pointer.x
+		const top = pointer.y - canvasRect.top
+		const bottom = canvasRect.bottom - pointer.y
+
+		canvas.scrollSpeed.x = clamp((left < threshold ? threshold - left : right < threshold ? -(threshold - right) : 0) / 100, -1, 1)
+		canvas.scrollSpeed.y = clamp((top < threshold ? threshold - top : bottom < threshold ? -(threshold - bottom) : 0) / 100, -1, 1)
+	}
+
 	return Object.assign(canvas, {
 		toCanvasPos,
 		toCanvasRect,
@@ -203,6 +226,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		home,
 		overview,
 		animate,
-		kineticScroll
+		kineticScroll,
+		edgeScroll
 	}) as Canvas
 }

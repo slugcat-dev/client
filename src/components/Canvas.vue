@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
-import { createCard } from '../composables/cards'
+import { useArrowKeys, useKeymap } from '../composables/keys'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged } from '../utils'
-import { useArrowKeys, useKeymap } from '../composables/keymap'
+import { createCard } from '../composables/cards'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -49,21 +49,22 @@ useKeymap({
 })
 
 // Pan the canvas using the arrow keys
+// This is a funny way to convert booleans to numbers btw
 watch(arrowKeys, () => {
-	const scrollSpeed = {
-		x: (arrowKeys.left ? 1 : 0) - (arrowKeys.right ? 1 : 0),
-		y: (arrowKeys.up ? 1 : 0) - (arrowKeys.down ? 1 : 0),
+	if (state.panning)
+		return
+
+	canvas.scrollSpeed = {
+		x: +arrowKeys.left - +arrowKeys.right,
+		y: +arrowKeys.up - +arrowKeys.down,
 	}
+	canvas.anyArrowKey = arrowKeys.left
+		|| arrowKeys.right
+		|| arrowKeys.up
+		|| arrowKeys.down
 
-	// Normalize the scroll speed so scrolling diagonally doesn't feel faster
-	const magnitude = Math.hypot(scrollSpeed.x, scrollSpeed.y)
-
-	if (magnitude) {
-		scrollSpeed.x = (scrollSpeed.x / magnitude) * 1000
-		scrollSpeed.y = (scrollSpeed.y / magnitude) * 1000
-	}
-
-	canvas.scrollSpeed = scrollSpeed
+	if (pointer.down && !pointer.moved)
+		pointer.moved = true
 })
 
 function keyboardZoom(event: KeyboardEvent) {
@@ -81,7 +82,7 @@ function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	// Use one pointer to pan the canvas and two pointers for pinch-to-zoom, more than two pointers will be ignored
 	onceChanged(pointers, () => {
-		if (pointers.length === 1 && event.target === canvas.ref) {
+		if (pointers.length === 1 && event.target === canvas.ref && !canvas.anyArrowKey) {
 			state.panning = true
 			clickAllowed = document.activeElement === document.body
 			unwatchPointerMove = watch(pointer, onPointerMove)
@@ -234,6 +235,9 @@ function onWheel(event: WheelEvent) {
 			canvas.smoothScroll.x = canvas.scroll.x
 			canvas.smoothScroll.y = canvas.scroll.y
 		}
+
+		if (pointer.down && !pointer.moved)
+			pointer.moved = true
 	}
 }
 </script>

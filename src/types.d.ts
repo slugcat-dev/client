@@ -24,6 +24,7 @@ interface Canvas {
 	scrollSpeed: Pos
 	zoom: number
 	smoothZoom: number
+	anyArrowKey: boolean
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
 	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
@@ -31,6 +32,7 @@ interface Canvas {
 	overview: () => void
 	animate: (duration?: number) => void
 	kineticScroll: (velocity: Pos) => void
+	edgeScroll: () => void
 }
 
 interface Card {

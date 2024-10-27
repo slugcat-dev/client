@@ -53,6 +53,8 @@ function onPointerMove() {
 		x: pointer.x - state.downOffset.x * canvas.smoothZoom / state.downOffset.zoom,
 		y: pointer.y - state.downOffset.y * canvas.smoothZoom / state.downOffset.zoom
 	})
+
+	canvas.edgeScroll()
 }
 
 function onPointerUp() {
@@ -93,6 +95,8 @@ function cardInteractionAllowed(event: Event) {
 			zIndex: state.dragging ? 1 : 0
 		}"
 		@pointerdown.left="onPointerDown"
+		@click.left.ctrl.exact=""
+		@click.left.meta.exact=""
 	>
 		<CardContent
 			ref="content-ref"

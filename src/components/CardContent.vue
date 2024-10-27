@@ -67,7 +67,7 @@ defineExpose(state)
 	<div
 		ref="content-ref"
 		class="card-content"
-		@click.left="onClick"
+		@click.left.exact="onClick"
 		@blur="onBlur"
 	></div>
 	<div class="selection-layer">

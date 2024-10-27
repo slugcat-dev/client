@@ -6,6 +6,10 @@ export const isMac = /Mac/i.test(navigator.platform)
 export const isIOS = isMac && 'ontouchstart' in window
 export const isPointerCoarse = window.matchMedia('(pointer: coarse)').matches
 
+export function clamp(value: number, min: number, max: number) {
+	return Math.max(Math.min(value, max), min)
+}
+
 /**
  * Wait for a value to change before executing a function.
  */
@@ -125,4 +129,20 @@ export function distance(positions: Pos[]) {
 	), 0)
 
 	return sum / positions.length
+}
+
+/**
+ * Load an image from a given source URL.
+ *
+ * @returns A Promise that resolves with a loaded `HTMLImageElement`.
+ */
+export function loadImage(src: string) {
+	return new Promise<HTMLImageElement>((resolve, reject) => {
+		const img = new Image()
+
+		img.addEventListener('load', () => resolve(img))
+		img.addEventListener('error', reject)
+
+		img.src = src
+	})
 }
