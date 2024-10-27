@@ -23,7 +23,7 @@ interface Canvas {
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
 	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
 	animate: (duration?: number) => void
-	kineticScroll: (velocity: Pos, pointer: PointerState) => void
+	kineticScroll: (velocity: Pos) => void
 }
 
 interface Card {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, useTemplateRef } from 'vue'
-import { disableRule, Editor } from '@slugcat-dev/mark-ed'
+import { Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret } from '../editor'
 import { deleteCard, updateCard } from '../composables/cards'
 
@@ -35,10 +35,7 @@ function onClick(event: MouseEvent) {
 		return
 
 	activate()
-	moveCaretWhereClicked(event)
-
-	// Force a selection update after moving the caret
-	editor.setSelection(editor.getSelection())
+	moveCaretWhereClicked(editor, event)
 }
 
 function onBlur() {

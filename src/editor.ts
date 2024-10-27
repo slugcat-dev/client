@@ -97,7 +97,7 @@ export function smoothCaret(editor: Editor, caret: HTMLElement, canvas: Canvas) 
 	})
 }
 
-export function moveCaretWhereClicked(event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
+export function moveCaretWhereClicked(editor: Editor, event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
 	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
 
 	// Move the caret to the next word boundary
@@ -117,4 +117,7 @@ export function moveCaretWhereClicked(event: MouseEvent | MouseEvent & { rangeOf
 	}
 
 	selectRange(caretRange)
+
+	// Force a selection update after moving the caret
+	editor.setSelection(editor.getSelection())
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { suppressClick } from '../utils'
+import { onceChanged, suppressClick } from '../utils'
 import { updateCard } from '../composables/cards'
 import CardContent from './CardContent.vue'
 
@@ -11,7 +11,7 @@ const { card, canvas } = defineProps<{
 const cardRef = useTemplateRef('card-ref')
 const contentRef = useTemplateRef('content-ref')
 const state = reactive({
-	active: false,
+	dragging: false,
 	downOffset: {
 		x: 0,
 		y: 0,
@@ -24,37 +24,34 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
 function onPointerDown(event: PointerEvent) {
-	if (pointer.down || contentRef.value!.active)
-		return
+	// Wait until the event has bubbled to the listener on the document that updates the pointer state
+	onceChanged(pointer, () => {
+		if (pointers.length > 1 || contentRef.value!.active)
+			return
 
-	const cardRect = cardRef.value!.getBoundingClientRect()
+		const cardRect = cardRef.value!.getBoundingClientRect()
 
-	state.active = true
-	state.downOffset = {
-		x: event.clientX - cardRect.x,
-		y: event.clientY - cardRect.y,
-		zoom: canvas.smoothZoom
-	}
-
-	// Add watchers after the event has bubbled to the listener that updates the pointer state
-	watch(pointer, () => {
+		state.dragging = true
+		state.downOffset = {
+			x: event.clientX - cardRect.x,
+			y: event.clientY - cardRect.y,
+			zoom: canvas.smoothZoom
+		}
 		unwatchPointerMove = watch([pointer, canvas], onPointerMove)
 		unwatchPointerUp = watch([
 			() => pointer.down,
 			() => pointers.length
 		], onPointerUp, { flush: 'sync' })
-	}, { once: true })
+	})
 }
 
 function onPointerMove() {
 	if (!pointer.moved)
 		return
 
-	const zoomDelta = canvas.smoothZoom / state.downOffset.zoom
-
 	card.pos = canvas.toCanvasPos({
-		x: pointer.x - state.downOffset.x * zoomDelta,
-		y: pointer.y - state.downOffset.y * zoomDelta
+		x: pointer.x - state.downOffset.x * canvas.smoothZoom / state.downOffset.zoom,
+		y: pointer.y - state.downOffset.y * canvas.smoothZoom / state.downOffset.zoom
 	})
 }
 
@@ -62,10 +59,7 @@ function onPointerUp() {
 	if (pointer.down && pointers.length === 1)
 		return
 
-	state.active = false
-
-	unwatchPointerMove()
-	unwatchPointerUp()
+	state.dragging = false
 
 	if (pointer.moved) {
 		if (pointer.type === 'mouse')
@@ -73,6 +67,9 @@ function onPointerUp() {
 
 		updateCard(card)
 	}
+
+	unwatchPointerMove()
+	unwatchPointerUp()
 }
 </script>
 
@@ -80,11 +77,11 @@ function onPointerUp() {
 	<div
 		ref="card-ref"
 		class="card"
-		:class="{ active: state.active }"
 		:style="{
 			left: card.pos.x + 'px',
 			top: card.pos.y + 'px',
-			cursor: contentRef?.active ? 'auto' : state.active ? 'grabbing' : 'grab'
+			cursor: contentRef?.active ? 'auto' : state.dragging ? 'grabbing' : 'grab',
+			zIndex: state.dragging ? 1 : 0
 		}"
 		@pointerdown.left="onPointerDown"
 	>
@@ -99,9 +96,5 @@ function onPointerUp() {
 <style>
 .card {
 	position: absolute;
-
-	&.active {
-		z-index: 1;
-	}
 }
 </style>

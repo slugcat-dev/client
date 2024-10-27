@@ -2,16 +2,25 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { createCard } from '../composables/cards'
-import { isTrackpad, moveThreshold } from '../utils'
+import { distance, isTrackpad, midpoint, moveThreshold, onceChanged } from '../utils'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
-const canvas = useCanvas(canvasRef)
-const state = reactive({ panning: false })
 const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
+const canvas = useCanvas(canvasRef, pointer, pointers)
+const state = reactive({
+	panning: false,
+	pinching: false,
+	gesture: {
+		pointers: [] as PointerState[],
+		initialZoom: 1,
+		prevTranslate: { x: 0, y: 0 }
+	}
+})
 const animating = computed(() => state.panning
+	|| state.pinching
 	|| canvas.smoothZoom !== canvas.zoom
 	|| canvas.smoothScroll.x !== canvas.scroll.x
 	|| canvas.smoothScroll.y !== canvas.scroll.y
@@ -28,22 +37,29 @@ const gridSize = computed(() => {
 let clickAllowed = false
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
+let unwatchGestureChange: WatchHandle
 
-function onPointerDown() {
-	if (pointer.down)
-		return
-
-	state.panning = true
-	clickAllowed = document.activeElement === document.body
-
-	// Add watchers after the event has bubbled to the listener that updates the pointer state
-	watch(pointer, () => {
-		unwatchPointerMove = watch(pointer, onPointerMove)
-		unwatchPointerUp = watch([
-			() => pointer.down,
-			() => pointers.length
-		], onPointerUp, { flush: 'sync' })
-	}, { once: true })
+function onPointerDown(event: PointerEvent) {
+	// Wait until the event has bubbled to the listener on the document that updates the pointer state
+	// Use one pointer to pan the canvas and two pointers for pinch-to-zoom, more than two pointers will be ignored
+	onceChanged(pointers, () => {
+		if (pointers.length === 1 && event.target === canvas.ref) {
+			state.panning = true
+			clickAllowed = document.activeElement === document.body
+			unwatchPointerMove = watch(pointer, onPointerMove)
+			unwatchPointerUp = watch([
+				() => pointer.down,
+				() => pointers.length
+			], onPointerUp, { flush: 'sync' })
+		} else if (pointers.length === 2) {
+			state.pinching = true
+			state.gesture.pointers = pointers.map(p => ({ ...p }))
+			state.gesture.initialZoom = canvas.smoothZoom
+			state.gesture.prevTranslate = { x: 0, y: 0 }
+			clickAllowed = false
+			unwatchGestureChange = watch(pointers, onGestureChange)
+		}
+	})
 }
 
 function onPointerMove() {
@@ -70,11 +86,63 @@ function onPointerUp() {
 		const velocity = { x: pointer.movementX, y: pointer.movementY }
 
 		if (pointer.type === 'touch' && moveThreshold(velocity, { x: 0, y: 0 }, 4))
-			canvas.kineticScroll(velocity, pointer)
+			canvas.kineticScroll(velocity)
 	}
 
 	unwatchPointerMove()
 	unwatchPointerUp()
+}
+
+function onGestureChange() {
+	// Only track the pointers involved in the gesture
+	const activePointers = pointers.filter(p => state.gesture.pointers.some(g => g.id === p.id))
+
+	// Continue as long as the two involved pointers are still down
+	if (activePointers.length !== 2)
+		return onGestureEnd()
+
+	const origin = midpoint(state.gesture.pointers)
+	const currentMidpoint = midpoint(activePointers)
+	const transform = {
+		scale: distance(activePointers) / distance(state.gesture.pointers),
+		translate: {
+			x: currentMidpoint.x - origin.x,
+			y: currentMidpoint.y - origin.y
+		}
+	}
+	const dX = transform.translate.x - state.gesture.prevTranslate.x
+	const dY = transform.translate.y - state.gesture.prevTranslate.y
+
+	// Elastic zoom
+	canvas.zoomTo(state.gesture.initialZoom * transform.scale, {
+		x: origin.x + transform.translate.x,
+		y: origin.y + transform.translate.y
+	}, true)
+
+	// Apply transformations to the canvas
+	canvas.scroll.x += dX
+	canvas.scroll.y += dY
+	canvas.smoothScroll.x = canvas.scroll.x
+	canvas.smoothScroll.y = canvas.scroll.y
+	canvas.smoothZoom = canvas.zoom
+	state.gesture.prevTranslate = transform.translate
+}
+
+function onGestureEnd() {
+	state.pinching = false
+
+	// Elastic zoom bounce back
+	if (canvas.zoom > 2 || canvas.zoom < .2) {
+		const canvasRect = canvas.ref.getBoundingClientRect()
+
+		canvas.zoomTo(canvas.zoom, {
+			x: canvasRect.x + canvasRect.width / 2,
+			y: canvasRect.y + canvasRect.height / 2
+		})
+		canvas.animate(300)
+	}
+
+	unwatchGestureChange()
 }
 
 function onClick(event: MouseEvent) {
@@ -86,13 +154,14 @@ function onClick(event: MouseEvent) {
 }
 
 function onWheel(event: WheelEvent) {
-	if (state.panning)
+	if (state.panning || state.pinching)
 		return
 
 	const isMouseWheel = !isTrackpad(event)
 	let deltaX = event.deltaX
 	let deltaY = event.deltaY
 
+	// Normalize scroll speed
 	if (isMouseWheel) {
 		deltaX = Math.sign(deltaX) * 100
 		deltaY = Math.sign(deltaY) * 100
@@ -136,9 +205,8 @@ function onWheel(event: WheelEvent) {
 		ref="canvas-ref"
 		class="canvas"
 		:style="{ cursor: state.panning && pointer.moved ? 'move' : 'default' }"
-
-		@pointerdown.left.self="onPointerDown"
-		@pointerdown.middle.self="onPointerDown"
+		@pointerdown.left="onPointerDown"
+		@pointerdown.middle="onPointerDown"
 		@wheel.prevent="onWheel"
 		@click.left.self="onClick"
 	>

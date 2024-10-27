@@ -1,6 +1,6 @@
 import { reactive, type ShallowRef } from 'vue'
 
-export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
+export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
 	const canvas = reactive({
 		ref,
 		active: false,
@@ -23,9 +23,12 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 	}
 
 	function toCanvasPos(pos: Pos, smooth = true) {
+		if (!canvas.ref)
+			throw Error('Canvas not mounted')
+
 		const scroll = smooth ? canvas.smoothScroll : canvas.scroll
 		const zoom = smooth ? canvas.smoothZoom : canvas.zoom
-		const canvasRect = canvas.ref!.getBoundingClientRect()
+		const canvasRect = canvas.ref.getBoundingClientRect()
 
 		return {
 			x: (pos.x - scroll.x - canvasRect.left) / zoom,
@@ -98,7 +101,10 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 		requestAnimationFrame(animationStep)
 	}
 
-	function kineticScroll(velocity: Pos, pointer: PointerState) {
+	function kineticScroll(velocity: Pos) {
+		if (pointers.length)
+			return
+
 		let prevTimestamp = Infinity
 
 		function kineticScrollStep(timestamp: number) {

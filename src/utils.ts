@@ -1,8 +1,17 @@
+import { type MaybeRefOrGetter, watch } from 'vue'
+
 export const isFirefox = /Firefox/i.test(navigator.userAgent)
 export const isAndroid = /Android/i.test(navigator.userAgent)
 export const isMac = /Mac/i.test(navigator.platform)
 export const isIOS = isMac && 'ontouchstart' in window
 export const isPointerCoarse = window.matchMedia('(pointer: coarse)').matches
+
+/**
+ * Wait for a value to change before executing a function.
+ */
+export function onceChanged(source: MaybeRefOrGetter, callback: Function) {
+	watch(source, () => callback(), { once: true })
+}
 
 /**
  * Check if the pointer was moved by at least the specified amount of pixels.
@@ -69,4 +78,32 @@ export function isTrackpad(event: WheelEvent & { wheelDeltaX?: number, wheelDelt
 		|| (event.wheelDeltaY && event.wheelDeltaY !== 0 && Math.abs(event.wheelDeltaY) !== 120)
 		|| (event.wheelDeltaX && event.wheelDeltaY && event.wheelDeltaX === -3 * event.deltaX && event.wheelDeltaY === -3 * event.deltaY)
 	)
+}
+
+/**
+ * Calculate the midpoint between given points.
+ */
+export function midpoint(positions: Pos[]) {
+	const sum = positions.reduce((acc, pos) => ({
+		x: acc.x + pos.x,
+		y: acc.y + pos.y
+	}))
+
+	return {
+		x: sum.x / positions.length,
+		y: sum.y / positions.length
+	}
+}
+
+/**
+ * Calculate the distance between given points.
+ */
+export function distance(positions: Pos[]) {
+	const mid = midpoint(positions)
+	const sum = positions.reduce((_, pos) => Math.hypot(
+		pos.x - mid.x,
+		pos.y - mid.y
+	), 0)
+
+	return sum / positions.length
 }
