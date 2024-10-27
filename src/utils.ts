@@ -81,6 +81,25 @@ export function isTrackpad(event: WheelEvent & { wheelDeltaX?: number, wheelDelt
 }
 
 /**
+ * Check if the active element is an input.
+ */
+export function usingInput() {
+	const activeElement = document.activeElement
+
+	if (activeElement) {
+		const contentEditable = activeElement.getAttribute('contenteditable') ?? 'false'
+
+		return (
+			activeElement instanceof HTMLInputElement
+			|| activeElement instanceof HTMLTextAreaElement
+			|| contentEditable !== 'false'
+		)
+	}
+
+	return false
+}
+
+/**
  * Calculate the midpoint between given points.
  */
 export function midpoint(positions: Pos[]) {

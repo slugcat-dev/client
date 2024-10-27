@@ -3,6 +3,7 @@ import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } f
 import { useCanvas } from '../composables/canvas'
 import { createCard } from '../composables/cards'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged } from '../utils'
+import { useKeymap } from '../composables/keymap'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -38,6 +39,24 @@ let clickAllowed = false
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 let unwatchGestureChange: WatchHandle
+
+useKeymap({
+	'Home': canvas.home,
+	'End': canvas.overview,
+	'CtrlMeta +': keyboardZoom,
+	'CtrlMeta -': keyboardZoom
+})
+
+function keyboardZoom(event: KeyboardEvent) {
+	const delta = event.key === '+' ? -.2 : .2
+	const canvasRect = canvas.ref.getBoundingClientRect()
+
+	canvas.zoomTo(canvas.zoom * (1 - delta), {
+		x: canvasRect.x + canvasRect.width / 2,
+		y: canvasRect.y + canvasRect.height / 2
+	})
+	canvas.animate()
+}
 
 function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state

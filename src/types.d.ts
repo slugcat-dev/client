@@ -12,6 +12,10 @@ interface PointerState extends Pos {
 	type: string
 }
 
+interface Keymap {
+	[key: string]: (event: KeyboardEvent) => void
+}
+
 interface Canvas {
 	ref: HTMLElement
 	active: boolean
@@ -22,6 +26,8 @@ interface Canvas {
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
 	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
+	home: () => void
+	overview: () => void
 	animate: (duration?: number) => void
 	kineticScroll: (velocity: Pos) => void
 }
