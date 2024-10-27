@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
-import { moveCaretWhereClicked, moveLine, smoothCaret } from '../editor'
+import { moveCaretWhereClicked, moveLine, smoothCaret, toggleCheckbox } from '../editor'
 import { deleteCard, updateCard } from '../composables/cards'
 
 const { card, canvas } = defineProps<{
@@ -31,11 +31,15 @@ onMounted(() => {
 })
 
 function onClick(event: MouseEvent) {
-	if (state.active)
+	if (state.active || event.target instanceof HTMLAnchorElement)
 		return
 
 	activate()
-	moveCaretWhereClicked(editor, event)
+
+	if (event.target instanceof HTMLInputElement)
+		toggleCheckbox(editor, event)
+	else
+		moveCaretWhereClicked(editor, event)
 }
 
 function onBlur() {

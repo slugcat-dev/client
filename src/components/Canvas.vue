@@ -184,7 +184,7 @@ function onWheel(event: WheelEvent) {
 		}
 	} else {
 		// Scroll horizontally when holding shift or vertically otherwise
-		if (event.shiftKey && !deltaX)
+		if (isMouseWheel && event.shiftKey && !deltaX)
 			[deltaX, deltaY] = [deltaY, deltaX]
 
 		canvas.scroll.x -= deltaX

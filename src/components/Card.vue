@@ -26,7 +26,7 @@ let unwatchPointerUp: WatchHandle
 function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	onceChanged(pointer, () => {
-		if (pointers.length > 1 || contentRef.value!.active)
+		if (!cardInteractionAllowed(event))
 			return
 
 		const cardRect = cardRef.value!.getBoundingClientRect()
@@ -70,6 +70,15 @@ function onPointerUp() {
 
 	unwatchPointerMove()
 	unwatchPointerUp()
+}
+
+function cardInteractionAllowed(event: Event) {
+	return (
+		typeof card.id === 'number'
+		&& pointers.length === 1
+		&& !contentRef.value?.active
+		&& !(event.target instanceof HTMLAnchorElement)
+	)
 }
 </script>
 

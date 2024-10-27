@@ -1,4 +1,4 @@
-import type { Editor } from '@slugcat-dev/mark-ed'
+import { Editor } from '@slugcat-dev/mark-ed'
 import { caretRangeFromPoint, isAndroid, isFirefox, isIOS, isPointerCoarse, selectRange } from './utils'
 
 /**
@@ -30,6 +30,50 @@ export function moveLine(editor: Editor, up: boolean): void {
 	const end = start + (selection.end - selection.start)
 
 	editor.updateDOM({ start, end })
+}
+
+export function moveCaretWhereClicked(editor: Editor, event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
+	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
+
+	// Move the caret to the next word boundary
+	if (isPointerCoarse) {
+		const text = caretRange.startContainer.textContent ?? ''
+		let start = caretRange.startOffset
+		let end = caretRange.startOffset
+
+		while (start > 0 && !/\s|\W/.test(text.charAt(start - 1)))
+			start--
+
+		while (end < text.length && !/\s|\W/.test(text.charAt(end)))
+			end++
+
+		caretRange.setStart(caretRange.startContainer, end - caretRange.startOffset <= caretRange.startOffset - start ? end : start)
+		caretRange.collapse(true)
+	}
+
+	selectRange(caretRange)
+
+	// Force a selection update after moving the caret
+	editor.setSelection(editor.getSelection())
+}
+
+/**
+ * Toggle TaskList checkboxes.
+ */
+export function toggleCheckbox(editor: Editor, event: Event) {
+	if (!(event.target instanceof HTMLInputElement && event.target.matches('.md-task input[type="checkbox"]')))
+		return
+
+	const checkboxPos = editor.getNodeOffset(event.target)
+	const line = editor.lineAt(checkboxPos)
+	const pos = checkboxPos - line.from + 3
+	const text = line.text
+
+	editor.lines[line.num] = text.substring(0, pos)
+		+ (text[pos] === ' ' ? 'x' : ' ')
+		+ text.substring(pos + 1)
+
+	editor.updateDOM(Editor.selectionFrom(line.end))
 }
 
 /**
@@ -95,29 +139,4 @@ export function smoothCaret(editor: Editor, caret: HTMLElement, canvas: Canvas) 
 		else
 			caret.style.animationName = 'blink-1'
 	})
-}
-
-export function moveCaretWhereClicked(editor: Editor, event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
-	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
-
-	// Move the caret to the next word boundary
-	if (isPointerCoarse) {
-		const text = caretRange.startContainer.textContent ?? ''
-		let start = caretRange.startOffset
-		let end = caretRange.startOffset
-
-		while (start > 0 && !/\s|\W/.test(text.charAt(start - 1)))
-			start--
-
-		while (end < text.length && !/\s|\W/.test(text.charAt(end)))
-			end++
-
-		caretRange.setStart(caretRange.startContainer, end - caretRange.startOffset <= caretRange.startOffset - start ? end : start)
-		caretRange.collapse(true)
-	}
-
-	selectRange(caretRange)
-
-	// Force a selection update after moving the caret
-	editor.setSelection(editor.getSelection())
 }
