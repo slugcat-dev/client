@@ -27,6 +27,10 @@ export function updateCard(card: Card) {
 		console.log('UPDATE', card.id)
 }
 
+export function updateMany(cards: Card[]) {
+	console.log('UPDATE', ...cards.map(card => card.id))
+}
+
 export function deleteCard(id: 'new' | number) {
 	if (id !== 'new')
 		console.log('DELETE', id)

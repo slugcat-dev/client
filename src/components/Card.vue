@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { onceChanged, rectsOverlap, suppressClick } from '../utils'
-import { updateCard } from '../composables/cards'
+import { updateCard, updateMany } from '../composables/cards'
 import CardContent from './CardContent.vue'
 
 const { card, canvas, selection } = defineProps<{
@@ -78,10 +78,21 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
+	const prevPosition = card.pos
+
 	card.pos = canvas.toCanvasPos({
 		x: pointer.x - state.downOffset.x * canvas.smoothZoom / state.downOffset.zoom,
 		y: pointer.y - state.downOffset.y * canvas.smoothZoom / state.downOffset.zoom
 	})
+
+	if (selection.cards.length > 1) {
+		selection.cards.filter((selected: Card) => selected !== card).forEach((c: Card) => {
+			c.pos = {
+				x: c.pos.x + card.pos.x - prevPosition.x,
+				y: c.pos.y + card.pos.y - prevPosition.y
+			}
+		})
+	}
 
 	canvas.edgeScroll()
 }
@@ -97,7 +108,11 @@ function onPointerUp() {
 			suppressClick()
 
 		canvas.stopEdgeScroll()
-		updateCard(card)
+
+		if (selection.cards.length > 1)
+			updateMany(selection.cards)
+		else
+			updateCard(card)
 	}
 
 	unwatchPointerMove()
