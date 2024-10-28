@@ -5,6 +5,7 @@ export const isAndroid = /Android/i.test(navigator.userAgent)
 export const isMac = /Mac/i.test(navigator.platform)
 export const isIOS = isMac && 'ontouchstart' in window
 export const isPointerCoarse = window.matchMedia('(pointer: coarse)').matches
+export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export function clamp(value: number, min: number, max: number) {
 	return Math.max(Math.min(value, max), min)
@@ -136,10 +137,22 @@ export function distance(positions: Pos[]) {
  */
 export function rectsOverlap(a: DOMRect, b: DOMRect) {
 	return !(
-		a.right < b.left
-		|| a.left > b.right
-		|| a.bottom < b.top
+		a.left > b.right
+		|| a.right < b.left
 		|| a.top > b.bottom
+		|| a.bottom < b.top
+	)
+}
+
+/**
+ * Check if a rect completely contains another rect.
+ */
+export function rectContains(a: DOMRect, b: DOMRect) {
+	return (
+		a.left <= b.left
+		&& a.right >= b.right
+		&& a.top <= b.top
+		&& a.bottom >= b.bottom
 	)
 }
 

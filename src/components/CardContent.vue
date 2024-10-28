@@ -92,15 +92,13 @@ defineExpose(state)
 .card-content {
 	padding: .375rem;
 	background-color: #282828;
-	border: 2px solid #333;
+	border: 2px solid #303030;
 	border-radius: .375rem;
-
-	&:focus {
-		border-color: var(--color-accent);
-	}
+	box-shadow: 0 2px 4px #00000020;
 }
 
-.card.selected .card-content {
-	border-color: var(--color-accent-50);
+.card.selected .card-content,
+.card-content:focus {
+	border-color: var(--color-accent);
 }
 </style>

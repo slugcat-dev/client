@@ -35,12 +35,16 @@ const cursor = computed(() => {
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
-watch(() => selection.rect, () => {
+watch([() => selection.rect], () => {
 	const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
 
 	// Check if the card is in the selection
 	state.selected = !!selection.rect && rectsOverlap(selection.rect, cardRect)
-})
+}, { flush: 'sync' })
+
+watch([() => selection.cards], () => {
+	state.selected = selection.cards.includes(card)
+}, { flush: 'sync' })
 
 watch(() => state.selected, () => {
 	if (state.selected)

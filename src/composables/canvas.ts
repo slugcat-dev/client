@@ -1,5 +1,5 @@
 import { reactive, watch, type ShallowRef } from 'vue'
-import { clamp } from '../utils'
+import { clamp, prefersReducedMotion } from '../utils'
 
 export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
 	const canvas = reactive({
@@ -146,6 +146,14 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 	}
 
 	function animate(duration = 200) {
+		if (prefersReducedMotion) {
+			canvas.smoothScroll.x = canvas.scroll.x
+			canvas.smoothScroll.y = canvas.scroll.y
+			canvas.smoothZoom = canvas.zoom
+
+			return
+		}
+
 		animation.start.time = performance.now()
 		animation.start.scroll.x = canvas.smoothScroll.x
 		animation.start.scroll.y = canvas.smoothScroll.y

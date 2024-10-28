@@ -14,8 +14,10 @@ export const useCards = createGlobalState(() => {
 
 const cards = useCards()
 
-export function createCard(card: Partial<Card>) {
-	cards.push({ id: 'new', content: '', pos: { x: 0, y: 0}, ...card })
+export function createCard(data: Partial<Card>) {
+	const length = cards.push({ id: 'new', content: '', pos: { x: 0, y: 0}, ...data })
+
+	return cards[length - 1]
 }
 
 export function updateCard(card: Card) {
@@ -36,4 +38,9 @@ export function deleteCard(id: 'new' | number) {
 		console.log('DELETE', id)
 
 	cards.splice(cards.findIndex(card => card.id === id), 1)
+}
+
+export function deleteMany(cardsToDelte: Card[]) {
+	console.log('DELETE', ...cardsToDelte.map(card => card.id))
+	cards.splice(0, cards.length, ...cards.filter(card => !cardsToDelte.includes(card)))
 }

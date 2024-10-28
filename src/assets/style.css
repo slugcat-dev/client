@@ -6,16 +6,17 @@
 }
 
 :root {
-	color-scheme: dark;
-	--color-accent: oklch(80% .125 250deg);
+	--color-accent: #7dc3ff;
 	--color-accent-25: color-mix(in srgb, var(--color-accent), transparent 75%);
 	--color-accent-50: color-mix(in srgb, var(--color-accent), transparent 50%);
-	--color-background: #222;
-	--color-text: #ddd;
-	--color-link: #08f;
+	--color-background: #202020;
+	--color-text: #d0d0d0;
+	--color-link: var(--color-accent);
 	--font-ui: system-ui;
 	--font-content: 'Roboto', sans-serif;
 	--font-monospace: 'Ubuntu Mono', monospace;
+	color-scheme: dark;
+	accent-color: var(--color-accent);
 }
 
 body {

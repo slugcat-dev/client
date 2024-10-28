@@ -4,7 +4,8 @@ import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
 import { useEventListener } from '@vueuse/core'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
-import { createCard } from '../composables/cards'
+import { createCard, deleteMany } from '../composables/cards'
+import { copyCards, pasteOnCanvas } from '../clipboard'
 import Card from './Card.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
@@ -81,15 +82,28 @@ useKeymap({
 	'CtrlMeta +': keyboardZoom,
 	'CtrlMeta -': keyboardZoom,
 	'CtrlMeta A': () => selection.rect = new DOMRect(-Infinity, -Infinity, Infinity, Infinity),
+	'CtrlMeta C': copySelectedCards,
+	'CtrlMeta X': () => {
+		copySelectedCards()
+		deleteSelectedCards()
+	},
+	'Backspace': deleteSelectedCards,
+	'Delete': deleteSelectedCards,
 	'Escape': selection.clear
 })
 
+// Clear the selection when cards are removed
+watch(() => cards.length, (len, oldLen) => {
+	if (oldLen > len)
+		selection.clear()
+})
+
 // Pan the canvas using the arrow keys
-// This is a funny way to convert booleans to numbers btw
 watch(arrowKeys, () => {
 	if (state.panning)
 		return
 
+// This is a funny way to convert booleans to numbers btw
 	canvas.scrollSpeed = {
 		x: +arrowKeys.left - +arrowKeys.right,
 		y: +arrowKeys.up - +arrowKeys.down,
@@ -117,6 +131,20 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 	})
 })
 
+useEventListener('paste', async (event: ClipboardEvent) => {
+	if (!state.pointerOver || usingInput())
+		return
+
+	const createdCards = await pasteOnCanvas(canvas, event.clipboardData, pointer)
+
+	if (createdCards.length) {
+		selection.clear()
+
+		// Select the pasted cards
+		selection.cards = createdCards
+	}
+})
+
 function keyboardZoom(event: KeyboardEvent) {
 	const delta = event.key === '+' ? -.2 : .2
 	const canvasRect = canvas.ref.getBoundingClientRect()
@@ -126,6 +154,16 @@ function keyboardZoom(event: KeyboardEvent) {
 		y: canvasRect.y + canvasRect.height / 2
 	})
 	canvas.animate()
+}
+
+function copySelectedCards() {
+	if (selection.cards.length)
+		copyCards(selection.cards)
+}
+
+function deleteSelectedCards() {
+	if (selection.cards.length)
+		deleteMany(selection.cards)
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -372,10 +410,6 @@ function onWheel(event: WheelEvent) {
 			/>
 		</svg>
 		<div
-			class="selection"
-			:style="selectionStyle"
-		/>
-		<div
 			class="stuff"
 			:style="{
 				translate: `${canvas.smoothScroll.x}px ${canvas.smoothScroll.y}px`,
@@ -391,6 +425,10 @@ function onWheel(event: WheelEvent) {
 				:selection
 			/>
 		</div>
+		<div
+			class="selection"
+			:style="selectionStyle"
+		/>
 	</div>
 </template>
 
@@ -405,7 +443,7 @@ function onWheel(event: WheelEvent) {
 	left: 48px;
 	width: calc(100vw - 48px);
 	height: calc(100vh - 24px);
-	outline: 1px solid #363636;
+	outline: 1px solid #303030;
 
 	.canvas-background {
 		position: absolute;
@@ -415,8 +453,12 @@ function onWheel(event: WheelEvent) {
 		pointer-events: none;
 
 		circle {
-			fill: #363636;
+			fill: #383838;
 		}
+	}
+
+	.stuff {
+		position: absolute;
 	}
 
 	.selection {
@@ -424,10 +466,6 @@ function onWheel(event: WheelEvent) {
 		background-color: var(--color-accent-25);
 		border: 1px solid var(--color-accent);
 		pointer-events: none;
-	}
-
-	.stuff {
-		position: absolute;
 	}
 }
 </style>
