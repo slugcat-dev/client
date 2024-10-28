@@ -26,8 +26,12 @@ onMounted(() => {
 
 	smoothCaret(editor, caretRef.value!, canvas)
 
-	if (card.id === 'new')
+	if (card.id === 'new') {
 		activate()
+
+		if (card.content !== '')
+			editor.setSelection(card.content.length)
+	}
 })
 
 function onClick(event: MouseEvent) {
@@ -40,6 +44,11 @@ function onClick(event: MouseEvent) {
 		toggleCheckbox(editor, event)
 	else
 		moveCaretWhereClicked(editor, event)
+}
+
+function onKeyDelete() {
+	if (editor.content === '')
+		contentRef.value!.blur()
 }
 
 function onBlur() {
@@ -68,6 +77,8 @@ defineExpose(state)
 		ref="content-ref"
 		class="card-content"
 		@click.left.exact="onClick"
+		@keydown.backspace="onKeyDelete"
+		@keydown.delete="onKeyDelete"
 		@blur="onBlur"
 	></div>
 	<div class="selection-layer">

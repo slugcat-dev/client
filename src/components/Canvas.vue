@@ -2,7 +2,8 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
-import { distance, isTrackpad, midpoint, moveThreshold, onceChanged } from '../utils'
+import { useEventListener } from '@vueuse/core'
+import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
 import { createCard } from '../composables/cards'
 import Card from './Card.vue'
 
@@ -11,6 +12,7 @@ const canvasRef = useTemplateRef('canvas-ref')
 const state = reactive({
 	panning: false,
 	pinching: false,
+	pointerOver: false,
 	gesture: {
 		pointers: [] as PointerState[],
 		initialZoom: 1,
@@ -65,6 +67,18 @@ watch(arrowKeys, () => {
 
 	if (pointer.down && !pointer.moved)
 		pointer.moved = true
+})
+
+// Allow typing anywhere on the canvas to create a new card
+useEventListener('keydown', (event: KeyboardEvent) => {
+	if (event.ctrlKey || event.metaKey || event.key === 'Enter' || event.key.length !== 1 || !state.pointerOver || usingInput())
+		return
+
+	createCard({
+		id: 'new',
+		pos: canvas.toCanvasPos(pointer),
+		content: event.key !== ' ' && event.key !== 'Enter' ? event.key : ''
+	})
 })
 
 function keyboardZoom(event: KeyboardEvent) {
@@ -249,6 +263,8 @@ function onWheel(event: WheelEvent) {
 		:style="{ cursor: state.panning && pointer.moved ? 'move' : 'default' }"
 		@pointerdown.left="onPointerDown"
 		@pointerdown.middle="onPointerDown"
+		@pointerenter="state.pointerOver = true"
+		@pointerout="state.pointerOver = false"
 		@wheel.prevent="onWheel"
 		@click.left.self="onClick"
 	>
