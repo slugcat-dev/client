@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { onceChanged, suppressClick } from '../utils'
+import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { onceChanged, rectsOverlap, suppressClick } from '../utils'
 import { updateCard } from '../composables/cards'
 import CardContent from './CardContent.vue'
 
-const { card, canvas } = defineProps<{
+const { card, canvas, selection } = defineProps<{
 	card: Card,
-	canvas: Canvas
+	canvas: Canvas,
+	selection: CanvasSelection
 }>()
 const cardRef = useTemplateRef('card-ref')
 const contentRef = useTemplateRef('content-ref')
 const state = reactive({
+	selected: false,
 	dragging: false,
 	downOffset: {
 		x: 0,
@@ -20,10 +22,37 @@ const state = reactive({
 })
 const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
+const cursor = computed(() => {
+	if (contentRef.value?.active)
+		return 'auto'
+	else if (selection.visible)
+		return 'inherit'
+	else if (state.dragging)
+		return 'grabbing'
+
+	return 'grab'
+})
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
+watch(() => selection.rect, () => {
+	const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+
+	// Check if the card is in the selection
+	state.selected = !!selection.rect && rectsOverlap(selection.rect, cardRect)
+})
+
+watch(() => state.selected, () => {
+	if (state.selected)
+		selection.cards.push(card)
+	else
+		selection.cards.splice(selection.cards.indexOf(card), 1)
+})
+
 function onPointerDown(event: PointerEvent) {
+	if (!state.selected)
+		selection.clear()
+
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	onceChanged(pointer, () => {
 		if (!cardInteractionAllowed(event))
@@ -67,6 +96,7 @@ function onPointerUp() {
 		if (pointer.type === 'mouse')
 			suppressClick()
 
+		canvas.stopEdgeScroll()
 		updateCard(card)
 	}
 
@@ -88,20 +118,22 @@ function cardInteractionAllowed(event: Event) {
 	<div
 		ref="card-ref"
 		class="card"
+		:class="{ selected: state.selected }"
 		:style="{
 			left: card.pos.x + 'px',
 			top: card.pos.y + 'px',
-			cursor: contentRef?.active ? 'auto' : state.dragging ? 'grabbing' : 'grab',
-			zIndex: state.dragging ? 1 : 0
+			cursor,
+			zIndex: contentRef?.active || state.selected || state.dragging ? 1 : 0
 		}"
-		@pointerdown.left="onPointerDown"
-		@click.left.ctrl.exact=""
-		@click.left.meta.exact=""
+		@pointerdown.left.exact="onPointerDown"
+		@click.left.ctrl.exact="state.selected = !state.selected"
+		@click.left.meta.exact="state.selected = !state.selected"
 	>
 		<CardContent
 			ref="content-ref"
 			:card
 			:canvas
+			:selection
 		/>
 	</div>
 </template>

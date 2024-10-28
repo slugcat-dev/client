@@ -8,6 +8,8 @@
 :root {
 	color-scheme: dark;
 	--color-accent: oklch(80% .125 250deg);
+	--color-accent-25: color-mix(in srgb, var(--color-accent), transparent 75%);
+	--color-accent-50: color-mix(in srgb, var(--color-accent), transparent 50%);
 	--color-background: #222;
 	--color-text: #ddd;
 	--color-link: #08f;
@@ -28,5 +30,5 @@ a {
 }
 
 ::selection {
-	background-color: color-mix(in srgb, var(--color-accent), transparent 75%);
+	background-color: var(--color-accent-25);
 }

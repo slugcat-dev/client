@@ -33,10 +33,18 @@ interface Canvas {
 	animate: (duration?: number) => void
 	kineticScroll: (velocity: Pos) => void
 	edgeScroll: () => void
+	stopEdgeScroll: () => void
 }
 
 interface Card {
 	id: 'new' | number
 	pos: Pos
 	content: string
+}
+
+interface CanvasSelection {
+	rect: DOMRect | null
+	cards: Card[]
+	visible: boolean
+	clear: () => void
 }

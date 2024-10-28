@@ -219,6 +219,13 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		canvas.scrollSpeed.y = clamp((top < threshold ? threshold - top : bottom < threshold ? -(threshold - bottom) : 0) / 100, -1, 1)
 	}
 
+	function stopEdgeScroll() {
+		if (!canvas.anyArrowKey) {
+			canvas.scrollSpeed.x = 0
+			canvas.scrollSpeed.y = 0
+		}
+	}
+
 	return Object.assign(canvas, {
 		toCanvasPos,
 		toCanvasRect,
@@ -227,6 +234,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		overview,
 		animate,
 		kineticScroll,
-		edgeScroll
+		edgeScroll,
+		stopEdgeScroll
 	}) as Canvas
 }

@@ -10,6 +10,7 @@ import Card from './Card.vue'
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
 const state = reactive({
+	selecing: false,
 	panning: false,
 	pinching: false,
 	pointerOver: false,
@@ -23,6 +24,23 @@ const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
 const canvas = useCanvas(canvasRef, pointer, pointers)
 const arrowKeys = useArrowKeys()
+const selection = reactive<CanvasSelection>({
+	rect: null,
+	cards: [],
+	visible: false,
+	clear() {
+		selection.rect = null
+		selection.cards = []
+	}
+})
+const cursor = computed(() => {
+	if (state.panning && pointer.moved)
+		return 'move'
+	else if (state.selecing)
+		return 'crosshair'
+
+	return 'default'
+})
 const animating = computed(() => state.panning
 	|| state.pinching
 	|| canvas.smoothZoom !== canvas.zoom
@@ -38,7 +56,21 @@ const gridSize = computed(() => {
 
 	return value
 })
+const selectionStyle = computed(() => {
+	const rect = selection.rect ?? new DOMRect()
+	const translateX = canvas.smoothScroll.x + rect.left * canvas.smoothZoom
+	const translateY = canvas.smoothScroll.y + rect.top * canvas.smoothZoom
+
+	return {
+		width: `${Math.abs(rect.width) * canvas.smoothZoom}px`,
+		height: `${Math.abs(rect.height) * canvas.smoothZoom}px`,
+		translate: `${translateX}px ${translateY}px`,
+		opacity: selection.visible ? 1 : 0,
+		transition: `opacity ${selection.visible ? 0 : .2}s`
+	}
+})
 let clickAllowed = false
+let unwatchCanvas: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 let unwatchGestureChange: WatchHandle
@@ -47,7 +79,9 @@ useKeymap({
 	'Home': canvas.home,
 	'End': canvas.overview,
 	'CtrlMeta +': keyboardZoom,
-	'CtrlMeta -': keyboardZoom
+	'CtrlMeta -': keyboardZoom,
+	'CtrlMeta A': () => selection.rect = new DOMRect(-Infinity, -Infinity, Infinity, Infinity),
+	'Escape': selection.clear
 })
 
 // Pan the canvas using the arrow keys
@@ -71,8 +105,10 @@ watch(arrowKeys, () => {
 
 // Allow typing anywhere on the canvas to create a new card
 useEventListener('keydown', (event: KeyboardEvent) => {
-	if (event.ctrlKey || event.metaKey || event.key === 'Enter' || event.key.length !== 1 || !state.pointerOver || usingInput())
+	if (event.ctrlKey || event.metaKey || (event.key !== 'Enter' && event.key.length !== 1) || !state.pointerOver || usingInput())
 		return
+
+	event.preventDefault()
 
 	createCard({
 		id: 'new',
@@ -94,11 +130,19 @@ function keyboardZoom(event: KeyboardEvent) {
 
 function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
-	// Use one pointer to pan the canvas and two pointers for pinch-to-zoom, more than two pointers will be ignored
+	// Use one pointer to pan the canvas or select and two pointers for pinch-to-zoom, more than two pointers will be ignored
 	onceChanged(pointers, () => {
 		if (pointers.length === 1 && event.target === canvas.ref && !canvas.anyArrowKey) {
-			state.panning = true
-			clickAllowed = document.activeElement === document.body
+			if (event.metaKey || event.ctrlKey) {
+				selection.clear()
+
+				state.selecing = true
+				unwatchCanvas = watch(canvas, onPointerMove)
+			} else {
+				state.panning = true
+				clickAllowed = document.activeElement === document.body
+			}
+
 			unwatchPointerMove = watch(pointer, onPointerMove)
 			unwatchPointerUp = watch([
 				() => pointer.down,
@@ -119,20 +163,41 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
+	// Update the selection
+	if (state.selecing) {
+		if (!selection.rect) {
+			const downPos = canvas.toCanvasPos(pointer.down as Pos)
+
+			selection.rect = new DOMRect(downPos.x, downPos.y, 0, 0)
+			selection.visible = true
+		}
+
+		const pointerPos = canvas.toCanvasPos(pointer)
+
+		selection.rect = new DOMRect(
+			selection.rect.x,
+			selection.rect.y,
+			pointerPos.x - selection.rect.x,
+			pointerPos.y - selection.rect.y
+		)
+
+		canvas.edgeScroll()
+	}
+
 	// Pan the canvas
-	canvas.scroll.x += pointer.movementX
-	canvas.scroll.y += pointer.movementY
-	canvas.smoothScroll.x = canvas.scroll.x
-	canvas.smoothScroll.y = canvas.scroll.y
+	if (state.panning) {
+		canvas.scroll.x += pointer.movementX
+		canvas.scroll.y += pointer.movementY
+		canvas.smoothScroll.x = canvas.scroll.x
+		canvas.smoothScroll.y = canvas.scroll.y
+	}
 }
 
 function onPointerUp() {
 	if (pointer.down && pointers.length === 1)
 		return
 
-	state.panning = false
-
-	if (pointer.moved) {
+	if (state.panning && pointer.moved) {
 		clickAllowed = false
 
 		// Make scrolling feel like it has inertia on touch devices
@@ -141,6 +206,17 @@ function onPointerUp() {
 		if (pointer.type === 'touch' && moveThreshold(velocity, { x: 0, y: 0 }, 4))
 			canvas.kineticScroll(velocity)
 	}
+
+	if (state.selecing) {
+		selection.visible = false
+		clickAllowed = false
+
+		canvas.stopEdgeScroll()
+		unwatchCanvas()
+	}
+
+	state.panning = false
+	state.selecing = false
 
 	unwatchPointerMove()
 	unwatchPointerUp()
@@ -199,11 +275,14 @@ function onGestureEnd() {
 }
 
 function onClick(event: MouseEvent) {
-	// Require doubleclick to create a card when using a mouse
-	if (!clickAllowed || (pointer.type === 'mouse' && event.detail !== 2))
+	if (!clickAllowed)
 		return
 
-	createCard({ pos: canvas.toCanvasPos(pointer) })
+	selection.clear()
+
+	// Require doubleclick to create a card when using a mouse
+	if (pointer.type === 'mouse' && event.detail === 2)
+		createCard({ pos: canvas.toCanvasPos(pointer) })
 }
 
 function onWheel(event: WheelEvent) {
@@ -260,11 +339,12 @@ function onWheel(event: WheelEvent) {
 	<div
 		ref="canvas-ref"
 		class="canvas"
-		:style="{ cursor: state.panning && pointer.moved ? 'move' : 'default' }"
+		:style="{ cursor }"
 		@pointerdown.left="onPointerDown"
 		@pointerdown.middle="onPointerDown"
 		@pointerenter="state.pointerOver = true"
-		@pointerout="state.pointerOver = false"
+		@pointerleave="state.pointerOver = false"
+		@pointercancel ="state.pointerOver = false"
 		@wheel.prevent="onWheel"
 		@click.left.self="onClick"
 	>
@@ -292,6 +372,10 @@ function onWheel(event: WheelEvent) {
 			/>
 		</svg>
 		<div
+			class="selection"
+			:style="selectionStyle"
+		/>
+		<div
 			class="stuff"
 			:style="{
 				translate: `${canvas.smoothScroll.x}px ${canvas.smoothScroll.y}px`,
@@ -304,6 +388,7 @@ function onWheel(event: WheelEvent) {
 				:key="card.id"
 				:card
 				:canvas
+				:selection
 			/>
 		</div>
 	</div>
@@ -332,6 +417,13 @@ function onWheel(event: WheelEvent) {
 		circle {
 			fill: #363636;
 		}
+	}
+
+	.selection {
+		position: absolute;
+		background-color: var(--color-accent-25);
+		border: 1px solid var(--color-accent);
+		pointer-events: none;
 	}
 
 	.stuff {

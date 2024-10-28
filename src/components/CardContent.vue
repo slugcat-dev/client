@@ -4,9 +4,10 @@ import { Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret, toggleCheckbox } from '../editor'
 import { deleteCard, updateCard } from '../composables/cards'
 
-const { card, canvas } = defineProps<{
+const { card, canvas, selection } = defineProps<{
 	card: Card,
-	canvas: Canvas
+	canvas: Canvas,
+	selection: CanvasSelection
 }>()
 const contentRef = useTemplateRef('content-ref')
 const caretRef = useTemplateRef('caret-ref')
@@ -66,6 +67,7 @@ function activate() {
 	state.active = true
 	editor.readonly = false
 
+	selection.clear()
 	editor.root.focus()
 }
 
@@ -96,5 +98,9 @@ defineExpose(state)
 	&:focus {
 		border-color: var(--color-accent);
 	}
+}
+
+.card.selected .card-content {
+	border-color: var(--color-accent-50);
 }
 </style>

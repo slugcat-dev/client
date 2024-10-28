@@ -132,6 +132,18 @@ export function distance(positions: Pos[]) {
 }
 
 /**
+ * Check if two rects overlap.
+ */
+export function rectsOverlap(a: DOMRect, b: DOMRect) {
+	return !(
+		a.right < b.left
+		|| a.left > b.right
+		|| a.bottom < b.top
+		|| a.top > b.bottom
+	)
+}
+
+/**
  * Load an image from a given source URL.
  *
  * @returns A Promise that resolves with a loaded `HTMLImageElement`.
