@@ -91,6 +91,9 @@ export function isTrackpad(event: WheelEvent & { wheelDeltaX?: number, wheelDelt
 export function usingInput() {
 	const activeElement = document.activeElement
 
+	if (activeElement === document.body)
+		return false
+
 	if (activeElement) {
 		const contentEditable = activeElement.getAttribute('contenteditable') ?? 'false'
 
@@ -170,4 +173,11 @@ export function loadImage(src: string) {
 
 		img.src = src
 	})
+}
+
+/**
+ * Check if a string is a valid CSS color.
+ */
+export function isValidColor(color: string) {
+	return CSS.supports('color', color)
 }

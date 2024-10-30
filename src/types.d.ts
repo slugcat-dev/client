@@ -38,6 +38,7 @@ interface Canvas {
 
 interface Card {
 	id: 'new' | number
+	type: 'text' | 'image'
 	pos: Pos
 	content: string
 }

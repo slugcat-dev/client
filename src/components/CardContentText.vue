@@ -2,16 +2,17 @@
 import { onMounted, reactive, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret, toggleCheckbox } from '../editor'
+import { useDebounceFn } from '@vueuse/core'
 import { deleteCard, updateCard } from '../composables/cards'
 
-const { card, canvas, selection } = defineProps<{
-	card: Card,
-	canvas: Canvas,
-	selection: CanvasSelection
-}>()
+const { card, canvas } = defineProps<{ card: Card, canvas: Canvas }>()
 const contentRef = useTemplateRef('content-ref')
 const caretRef = useTemplateRef('caret-ref')
-const state = reactive({ active: false })
+const state = reactive({
+	active: false,
+	deleteIntent: false
+})
+const clearDeleteIntent = useDebounceFn(() => state.deleteIntent = false, 500)
 let editor: Editor
 
 onMounted(() => {
@@ -47,9 +48,17 @@ function onClick(event: MouseEvent) {
 		moveCaretWhereClicked(editor, event)
 }
 
-function onKeyDelete() {
-	if (editor.content === '')
-		contentRef.value!.blur()
+function onKeyDelete(event: KeyboardEvent) {
+	if (editor.content !== '' || event.repeat)
+		return
+
+	if (state.deleteIntent)
+		return contentRef.value!.blur()
+
+	state.deleteIntent = true
+
+	clearDeleteIntent()
+	wiggleAnimation()
 }
 
 function onBlur() {
@@ -67,38 +76,57 @@ function activate() {
 	state.active = true
 	editor.readonly = false
 
-	selection.clear()
 	editor.root.focus()
 }
 
-defineExpose(state)
+async function wiggleAnimation() {
+  contentRef.value!.classList.remove('wiggle')
+
+	// Trigger reflow to restart the animation
+  void contentRef.value!.offsetWidth
+
+  contentRef.value!.classList.add('wiggle')
+}
+
+defineExpose({ active: state.active })
 </script>
 
 <template>
-	<div
-		ref="content-ref"
-		class="card-content"
-		@click.left.exact="onClick"
-		@keydown.backspace="onKeyDelete"
-		@keydown.delete="onKeyDelete"
-		@blur="onBlur"
-	></div>
-	<div class="selection-layer">
-		<div ref="caret-ref" class="caret"></div>
+	<div class="card-content">
+		<div
+			ref="content-ref"
+			class="card-content-text"
+			@click.left.exact="onClick"
+			@keydown.delete="onKeyDelete"
+			@blur="onBlur"
+		></div>
+		<div class="selection-layer">
+			<div ref="caret-ref" class="caret"></div>
+		</div>
 	</div>
 </template>
 
-<style>
-.card-content {
+<style scoped>
+.card-content-text {
 	padding: .375rem;
 	background-color: #282828;
 	border: 2px solid #303030;
 	border-radius: .375rem;
-	box-shadow: 0 2px 4px #00000020;
+	box-shadow: 0 2px 4px #0002;
 }
 
-.card.selected .card-content,
-.card-content:focus {
+.card.selected .card-content-text,
+.card-content-text:focus {
 	border-color: var(--color-accent);
+}
+
+.wiggle {
+  animation: wiggle .1s ease-in-out;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0px) rotate(0deg); }
+  25% { transform: translateX(-5px) rotate(-5deg); }
+  75% { transform: translateX(0px) rotate(10deg); }
 }
 </style>

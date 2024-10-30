@@ -2,7 +2,8 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { onceChanged, rectsOverlap, suppressClick } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
-import CardContent from './CardContent.vue'
+import CardContentText from './CardContentText.vue'
+import CardContentImage from './CardContentImage.vue'
 
 const { card, canvas, selection } = defineProps<{
 	card: Card,
@@ -47,7 +48,7 @@ watch([() => selection.cards], () => {
 }, { flush: 'sync' })
 
 watch(() => state.selected, () => {
-	if (state.selected)
+	if (state.selected && !selection.cards.includes(card))
 		selection.cards.push(card)
 	else
 		selection.cards.splice(selection.cards.indexOf(card), 1)
@@ -84,11 +85,13 @@ function onPointerMove() {
 
 	const prevPosition = card.pos
 
+	// Move the card
 	card.pos = canvas.toCanvasPos({
 		x: pointer.x - state.downOffset.x * canvas.smoothZoom / state.downOffset.zoom,
 		y: pointer.y - state.downOffset.y * canvas.smoothZoom / state.downOffset.zoom
 	})
 
+	// Move other selected cards
 	if (selection.cards.length > 1) {
 		selection.cards.filter((selected: Card) => selected !== card).forEach((c: Card) => {
 			c.pos = {
@@ -131,6 +134,13 @@ function cardInteractionAllowed(event: Event) {
 		&& !(event.target instanceof HTMLAnchorElement)
 	)
 }
+
+function getContentComponent() {
+	switch (card.type) {
+		case 'text': return CardContentText
+		case 'image': return CardContentImage
+	}
+}
 </script>
 
 <template>
@@ -148,11 +158,12 @@ function cardInteractionAllowed(event: Event) {
 		@click.left.ctrl.exact="state.selected = !state.selected"
 		@click.left.meta.exact="state.selected = !state.selected"
 	>
-		<CardContent
+		<component
 			ref="content-ref"
+			:is="getContentComponent()"
 			:card
 			:canvas
-			:selection
+			@click.left.exact="selection.clear()"
 		/>
 	</div>
 </template>

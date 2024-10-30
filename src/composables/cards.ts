@@ -5,8 +5,8 @@ export const useCards = createGlobalState(() => {
 	console.log('GET cards')
 
 	const cards = reactive<Card[]>([
-		{ id: Date.now(), content: 'Test', pos: { x: 25, y: 100 } },
-		{ id: Date.now() + 1, content: 'Hello, **World**!', pos: { x: 100, y: 25 } }
+		{ id: Date.now(), type: 'text', content: 'Test', pos: { x: 25, y: 100 } },
+		{ id: Date.now() + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 100, y: 25 } }
 	])
 
 	return cards
@@ -15,7 +15,13 @@ export const useCards = createGlobalState(() => {
 const cards = useCards()
 
 export function createCard(data: Partial<Card>) {
-	const length = cards.push({ id: 'new', content: '', pos: { x: 0, y: 0}, ...data })
+	const length = cards.push({
+		id: 'new',
+		type: 'text',
+		content: '',
+		pos: { x: 0, y: 0},
+		...data
+	})
 
 	return cards[length - 1]
 }

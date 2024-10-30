@@ -76,6 +76,12 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 let unwatchGestureChange: WatchHandle
 
+// Clear the selection when cards are removed
+watch(() => cards.length, (length, oldLength) => {
+	if (oldLength > length)
+		selection.clear()
+})
+
 useKeymap({
 	'Home': canvas.home,
 	'End': canvas.overview,
@@ -92,18 +98,12 @@ useKeymap({
 	'Escape': selection.clear
 })
 
-// Clear the selection when cards are removed
-watch(() => cards.length, (len, oldLen) => {
-	if (oldLen > len)
-		selection.clear()
-})
-
 // Pan the canvas using the arrow keys
 watch(arrowKeys, () => {
 	if (state.panning)
 		return
 
-// This is a funny way to convert booleans to numbers btw
+	// This is a funny way to convert booleans to numbers btw
 	canvas.scrollSpeed = {
 		x: +arrowKeys.left - +arrowKeys.right,
 		y: +arrowKeys.up - +arrowKeys.down,
@@ -131,19 +131,8 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 	})
 })
 
-useEventListener('paste', async (event: ClipboardEvent) => {
-	if (!state.pointerOver || usingInput())
-		return
-
-	const createdCards = await pasteOnCanvas(canvas, event.clipboardData, pointer)
-
-	if (createdCards.length) {
-		selection.clear()
-
-		// Select the pasted cards
-		selection.cards = createdCards
-	}
-})
+// Add the paste listener to the document because non-input elements don't receive paste events
+useEventListener('paste', onPaste)
 
 function keyboardZoom(event: KeyboardEvent) {
 	const delta = event.key === '+' ? -.2 : .2
@@ -178,7 +167,7 @@ function onPointerDown(event: PointerEvent) {
 				unwatchCanvas = watch(canvas, onPointerMove)
 			} else {
 				state.panning = true
-				clickAllowed = document.activeElement === document.body
+				clickAllowed = !usingInput()
 			}
 
 			unwatchPointerMove = watch(pointer, onPointerMove)
@@ -319,8 +308,10 @@ function onClick(event: MouseEvent) {
 	selection.clear()
 
 	// Require doubleclick to create a card when using a mouse
-	if (pointer.type === 'mouse' && event.detail === 2)
-		createCard({ pos: canvas.toCanvasPos(pointer) })
+	if (pointer.type === 'mouse' && event.detail !== 2)
+		return
+
+	createCard({ pos: canvas.toCanvasPos(pointer) })
 }
 
 function onWheel(event: WheelEvent) {
@@ -371,6 +362,21 @@ function onWheel(event: WheelEvent) {
 			pointer.moved = true
 	}
 }
+
+async function onPaste(event: ClipboardEvent | DragEvent) {
+	if (!state.pointerOver || usingInput())
+		return
+
+	const dataTransfer = event instanceof ClipboardEvent ? event.clipboardData : event.dataTransfer
+	const pastedCards = await pasteOnCanvas(canvas, dataTransfer, pointer)
+
+	if (pastedCards.length) {
+		selection.clear()
+
+		// Select the pasted cards
+		selection.cards = pastedCards
+	}
+}
 </script>
 
 <template>
@@ -383,8 +389,12 @@ function onWheel(event: WheelEvent) {
 		@pointerenter="state.pointerOver = true"
 		@pointerleave="state.pointerOver = false"
 		@pointercancel ="state.pointerOver = false"
-		@wheel.prevent="onWheel"
 		@click.left.self="onClick"
+		@wheel.prevent="onWheel"
+		@dragenter="state.pointerOver = true"
+		@dragleave="state.pointerOver = false"
+		@dragover.stop.prevent
+		@drop.prevent="onPaste"
 	>
 		<svg class="canvas-background">
 			<pattern

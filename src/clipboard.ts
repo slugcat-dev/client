@@ -20,6 +20,7 @@ export function copyCards(cards: Card[]) {
 		event.preventDefault()
 		event.clipboardData.setData('text/plain', cards.map(card => card.content).join('\n\n'))
 		event.clipboardData.setData('cards', JSON.stringify(cards.map(card => ({
+			type: card.type,
 			pos: card.pos,
 			content: card.content
 		}))))
@@ -52,6 +53,7 @@ export async function pasteOnCanvas(canvas: Canvas, dataTransfer: DataTransfer |
 			return cards.map((card, i) => {
 				return createCard({
 					id: Date.now() + i,
+					type: card.type,
 					pos: {
 						x: pos.x + card.pos.x - corner.x,
 						y: pos.y + card.pos.y - corner.y
