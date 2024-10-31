@@ -1,5 +1,5 @@
 import { createCard } from './composables/cards'
-import { fileToBase64 } from './utils'
+import { fileToBase64, loadImage } from './utils'
 
 /**
  * Copy the given cards to the clipboard.
@@ -91,16 +91,28 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 	if (textItem) {
 		let text = textItem.data
 
-		// Paste text copied from Visual Studio Code as fenced code block
+		// Test if the pasted text is an image URL
+		try {
+			await loadImage(text)
+
+			return [createCard({
+				id: Date.now(),
+				type: 'image',
+				pos,
+				content: text
+			})]
+		} catch {}
+
+		// Test if the text was copied from Visual Studio Code and can be pasted as fenced code block
 		if (vscodeItem) {
 			try {
 				const mode = JSON.parse(vscodeItem.data).mode as string
 				const fence = '```'
 
 				if (mode !== 'plaintext' && mode !== 'markdown') {
-					if (text.includes('\n')) {
+					if (text.includes('\n'))
 						text = `${fence}${mode}\n${text}\n${fence}`
-					} else
+					else
 						text = `\`${text}\``
 				}
 			} catch {}
