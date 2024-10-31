@@ -176,6 +176,19 @@ export function loadImage(src: string) {
 }
 
 /**
+ * Encode a file into a Base64 string.
+ */
+export function fileToBase64(file: File) {
+	return new Promise<string>((resolve, reject) => {
+			const reader = new FileReader()
+
+			reader.addEventListener('loadend', () => resolve(reader.result as string))
+			reader.addEventListener('error', () => reject(new Error('File could not be read')))
+			reader.readAsDataURL(file)
+	})
+}
+
+/**
  * Check if a string is a valid CSS color.
  */
 export function isValidColor(color: string) {

@@ -71,6 +71,7 @@ const selectionStyle = computed(() => {
 	}
 })
 let clickAllowed = false
+let lastTrackpadTime = 0
 let unwatchCanvas: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
@@ -318,7 +319,7 @@ function onWheel(event: WheelEvent) {
 	if (state.panning || state.pinching)
 		return
 
-	const isMouseWheel = !isTrackpad(event)
+	const isMouseWheel = !(Date.now() - lastTrackpadTime < 1000 || isTrackpad(event))
 	let deltaX = event.deltaX
 	let deltaY = event.deltaY
 
@@ -326,7 +327,8 @@ function onWheel(event: WheelEvent) {
 	if (isMouseWheel) {
 		deltaX = Math.sign(deltaX) * 100
 		deltaY = Math.sign(deltaY) * 100
-	}
+	} else
+		lastTrackpadTime = Date.now()
 
 	if (event.ctrlKey || event.metaKey) {
 		// Zoom the canvas
@@ -367,8 +369,10 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 	if (!state.pointerOver || usingInput())
 		return
 
-	const dataTransfer = event instanceof ClipboardEvent ? event.clipboardData : event.dataTransfer
-	const pastedCards = await pasteOnCanvas(canvas, dataTransfer, pointer)
+	const isClipboardEvent = event instanceof ClipboardEvent
+	const dataTransfer = isClipboardEvent ? event.clipboardData : event.dataTransfer
+	const pos = canvas.toCanvasPos(isClipboardEvent ? pointer : { x: event.clientX, y: event.clientY })
+	const pastedCards = await pasteOnCanvas(dataTransfer, pos)
 
 	if (pastedCards.length) {
 		selection.clear()

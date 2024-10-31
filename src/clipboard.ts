@@ -1,4 +1,5 @@
 import { createCard } from './composables/cards'
+import { fileToBase64 } from './utils'
 
 /**
  * Copy the given cards to the clipboard.
@@ -11,10 +12,10 @@ export function copyCards(cards: Card[]) {
 
 		// Sort cards in reading order
 		cards.sort((a, b) => {
-			if (a.pos.x !== b.pos.x)
-				return a.pos.x - b.pos.x
+			if (a.pos.y !== b.pos.y)
+				return a.pos.y - b.pos.y
 
-			return a.pos.y - b.pos.y
+			return a.pos.x - b.pos.x
 		})
 
 		event.preventDefault()
@@ -31,27 +32,49 @@ export function copyCards(cards: Card[]) {
 /**
  * Paste content from the clipboard or drag and drop on the canvas.
  */
-export async function pasteOnCanvas(canvas: Canvas, dataTransfer: DataTransfer | null, pointer: PointerState): Promise<Card[]> {
+export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos) {
 	if (!dataTransfer)
 		return []
 
-	const items = Array.from(dataTransfer.items)
+	const files = Array.from(dataTransfer.files)
+	const images = files.filter(file => file.type.startsWith('image'))
+	const items = await Promise.all(Array.from(dataTransfer.items)
+		.filter(item => item.kind !== 'file')
+		.map(async item => ({ type: item.type, data: await getAsString(item) })))
 	const cardsItem = items.find(item => item.type === 'cards')
+	const textItem = items.find(item => item.type === 'text/plain')
+	const vscodeItem = items.find(item => item.type === 'vscode-editor-data')
 
-	// Paste copied cards directly
+	// Paste images
+	if (images.length) {
+		let offset = 0
+
+		return await Promise.all(images.map(image => new Promise<Card>(async resolve => {
+			const data = await fileToBase64(image)
+
+			resolve(createCard({
+				id: Date.now() + Math.random(),
+				type: 'image',
+				pos: {
+					x: pos.x + offset,
+					y: pos.y + offset
+				},
+				content: data
+			}))
+
+			offset += 20
+		})))
+	}
+
+	// Paste copied cards
 	if (cardsItem) {
 		try {
-			const data = await getAsString(cardsItem)
-			const cards = JSON.parse(data) as Card[]
+			const cards = JSON.parse(cardsItem.data) as Card[]
 
-			if (!cards.length)
-				return []
+			if (cards.length) {
+				const corner = cards[0].pos
 
-			const corner = cards[0].pos
-			const pos = canvas.toCanvasPos(pointer)
-
-			return cards.map((card, i) => {
-				return createCard({
+				return cards.map((card, i) => createCard({
 					id: Date.now() + i,
 					type: card.type,
 					pos: {
@@ -59,13 +82,39 @@ export async function pasteOnCanvas(canvas: Canvas, dataTransfer: DataTransfer |
 						y: pos.y + card.pos.y - corner.y
 					},
 					content: card.content
-				})
-			})
+				}))
+			}
 		} catch {}
 	}
 
-	for (const item of items)
-		console.log(item.type)
+	// Paste text
+	if (textItem) {
+		let text = textItem.data
+
+		// Paste text copied from Visual Studio Code as fenced code block
+		if (vscodeItem) {
+			try {
+				const mode = JSON.parse(vscodeItem.data).mode as string
+				const fence = '```'
+
+				if (mode !== 'plaintext' && mode !== 'markdown') {
+					if (text.includes('\n')) {
+						text = `${fence}${mode}\n${text}\n${fence}`
+					} else
+						text = `\`${text}\``
+				}
+			} catch {}
+		}
+
+		return [createCard({
+			id: Date.now(),
+			type: 'text',
+			pos,
+			content: text
+		})]
+	}
+
+	console.log(items)
 
 	return []
 }

@@ -48,9 +48,10 @@ watch([() => selection.cards], () => {
 }, { flush: 'sync' })
 
 watch(() => state.selected, () => {
-	if (state.selected && !selection.cards.includes(card))
-		selection.cards.push(card)
-	else
+	if (state.selected) {
+		if (!selection.cards.includes(card))
+			selection.cards.push(card)
+	} else
 		selection.cards.splice(selection.cards.indexOf(card), 1)
 })
 
@@ -149,8 +150,7 @@ function getContentComponent() {
 		class="card"
 		:class="{ selected: state.selected }"
 		:style="{
-			left: card.pos.x + 'px',
-			top: card.pos.y + 'px',
+			translate: `${card.pos.x}px ${card.pos.y}px`,
 			cursor,
 			zIndex: contentRef?.active || state.selected || state.dragging ? 1 : 0
 		}"
