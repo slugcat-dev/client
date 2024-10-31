@@ -6,7 +6,11 @@
 }
 
 :root {
-	--color-accent: #7dc3ff;
+	--color-red: #fda19f;
+	--color-yellow: #e2b179;
+	--color-green: #80cc96;
+	--color-blue: #7dc3ff;
+	--color-accent: var(--color-blue);
 	--color-accent-25: color-mix(in srgb, var(--color-accent), transparent 75%);
 	--color-accent-50: color-mix(in srgb, var(--color-accent), transparent 50%);
 	--color-background: #202020;
@@ -22,6 +26,7 @@
 body {
 	margin: 0;
 	font-family: var(--font-ui);
+	font-size: .875rem;
 	color: var(--color-text);
 	background-color: var(--color-background);
 	-webkit-tap-highlight-color: transparent;

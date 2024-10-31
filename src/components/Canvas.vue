@@ -2,6 +2,7 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
+import { useToaster } from '../composables/toaster'
 import { useEventListener } from '@vueuse/core'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
 import { createCard, deleteMany } from '../composables/cards'
@@ -19,7 +20,8 @@ const state = reactive({
 		pointers: [] as PointerState[],
 		initialZoom: 1,
 		prevTranslate: { x: 0, y: 0 }
-	}
+	},
+	loading: false
 })
 const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
@@ -34,11 +36,14 @@ const selection = reactive<CanvasSelection>({
 		selection.cards = []
 	}
 })
+const { toast, untoast } = useToaster()
 const cursor = computed(() => {
 	if (state.panning && pointer.moved)
 		return 'move'
 	else if (state.selecing)
 		return 'crosshair'
+	else if (state.loading)
+		return 'wait'
 
 	return 'default'
 })
@@ -369,17 +374,26 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 	if (!state.pointerOver || usingInput())
 		return
 
+	state.loading = true
+
+	const pasteToast = toast('Processing pasted content...', 'yellow')
 	const isClipboardEvent = event instanceof ClipboardEvent
 	const dataTransfer = isClipboardEvent ? event.clipboardData : event.dataTransfer
 	const pos = canvas.toCanvasPos(isClipboardEvent ? pointer : { x: event.clientX, y: event.clientY })
 	const pastedCards = await pasteOnCanvas(dataTransfer, pos)
 
+	untoast(pasteToast)
+
 	if (pastedCards.length) {
+		toast(`Pasted ${pastedCards.length} card${pastedCards.length !== 1 ? 's' : ''}`)
 		selection.clear()
 
 		// Select the pasted cards
 		selection.cards = pastedCards
-	}
+	} else
+		toast('Type not supported', 'red')
+
+	state.loading = false
 }
 </script>
 

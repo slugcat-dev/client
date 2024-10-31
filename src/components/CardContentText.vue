@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, useTemplateRef } from 'vue'
+import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { moveCaretWhereClicked, moveLine, smoothCaret, toggleCheckbox } from '../editor'
 import { useDebounceFn } from '@vueuse/core'
@@ -88,7 +88,7 @@ async function wiggleAnimation() {
   contentRef.value!.classList.add('wiggle')
 }
 
-defineExpose({ active: state.active })
+defineExpose({ active: toRef(state, 'active') })
 </script>
 
 <template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, toRef } from 'vue'
 
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
 const state = reactive({ active: false })
 
-defineExpose(state)
+defineExpose({ active: toRef(state, 'active') })
 </script>
 
 <template>

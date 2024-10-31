@@ -1,5 +1,5 @@
 import { createCard } from './composables/cards'
-import { fileToBase64, loadImage } from './utils'
+import { fileToBase64, isURL, loadImage } from './utils'
 
 /**
  * Copy the given cards to the clipboard.
@@ -92,16 +92,18 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		let text = textItem.data
 
 		// Test if the pasted text is an image URL
-		try {
-			await loadImage(text)
+		if (/^https?:\/\//.test(text) && isURL(text)) {
+			try {
+				await loadImage(text)
 
-			return [createCard({
-				id: Date.now(),
-				type: 'image',
-				pos,
-				content: text
-			})]
-		} catch {}
+				return [createCard({
+					id: Date.now(),
+					type: 'image',
+					pos,
+					content: text
+				})]
+			} catch {}
+		}
 
 		// Test if the text was copied from Visual Studio Code and can be pasted as fenced code block
 		if (vscodeItem) {

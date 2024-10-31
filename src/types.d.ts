@@ -49,3 +49,10 @@ interface CanvasSelection {
 	visible: boolean
 	clear: () => void
 }
+
+interface Toast {
+	id: number
+	message: string
+	color: 'red' | 'yellow' | 'green'
+	timeout: ReturnType<typeof setTimeout>
+}
