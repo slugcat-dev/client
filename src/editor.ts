@@ -1,5 +1,5 @@
-import { Editor, type Match } from '@slugcat-dev/mark-ed'
-import { caretRangeFromPoint, isAndroid, isFirefox, isIOS, isPointerCoarse, selectRange } from './utils'
+import { Editor } from '@slugcat-dev/mark-ed'
+import { caretRangeFromPoint, isDesktop, isFirefox, isPointerCoarse, selectRange } from './utils'
 import hljs from 'highlight.js'
 
 /**
@@ -81,11 +81,10 @@ export function toggleCheckbox(editor: Editor, event: Event) {
  * Add a smooth animated caret.
  */
 export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Canvas) {
-	// Don't apply on mobile devices
-	if (isAndroid || isIOS)
-		return
+	let transitionEndListener = false
 
-	editor.root.style.caretColor = 'transparent'
+	if (isDesktop)
+		editor.root.style.caretColor = 'transparent'
 
 	editor.addEventListener('selectionchange', () => {
 		const selection = document.getSelection()
@@ -128,7 +127,13 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 
 			// Sry Firefox <3
 			if (!isFirefox || selection.isCollapsed)
-				caretVisible = true
+				caretVisible = isDesktop
+
+			if (caretVisible) {
+				if (!transitionEndListener)
+					caret.addEventListener('transitionend', autoAdvance, { once: true })
+			} else
+				autoAdvance()
 		}
 
 		// Hide the caret if the editor is not focused
@@ -140,6 +145,28 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 		else
 			caret.style.animationName = 'blink-1'
 	})
+
+	// Automatically scroll the caret into view
+	function autoAdvance() {
+		const caretRect = caret.getBoundingClientRect()
+		const canvasRect = canvas.ref.getBoundingClientRect()
+		const margin = 28 * canvas.zoom
+		const windowHeight = window.visualViewport?.height ?? window.innerHeight
+
+		if (caretRect.right + margin > canvasRect.right)
+			canvas.scroll.x -= caretRect.right - canvasRect.right + margin
+		else if (caretRect.left - margin < canvasRect.left)
+			canvas.scroll.x -= caretRect.left - canvasRect.left - margin
+
+		if (caretRect.bottom + margin > Math.min(canvasRect.bottom, windowHeight))
+			canvas.scroll.y -= caretRect.bottom - Math.min(canvasRect.bottom, windowHeight) + margin
+		else if (caretRect.top - margin < canvasRect.top)
+			canvas.scroll.y -= caretRect.top - canvasRect.top - margin
+
+		canvas.animate()
+
+		transitionEndListener = false
+	}
 }
 
 /**

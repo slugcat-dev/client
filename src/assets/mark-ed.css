@@ -11,15 +11,14 @@
 	pointer-events: none;
 
 	.caret {
-		display: none;
-		position: absolute;
+		visibility: hidden;
 		width: 2px;
 		left: -1px;
 		background-color: currentcolor;
 		animation: blink-1 1s steps(1) infinite;
 
 		&.visible {
-			display: initial;
+			visibility: visible;
 			transition: height 50ms, translate 50ms;
 		}
 	}
