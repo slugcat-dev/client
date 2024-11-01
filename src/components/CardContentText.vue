@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
-import { moveCaretWhereClicked, moveLine, smoothCaret, toggleCheckbox } from '../editor'
+import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useDebounceFn } from '@vueuse/core'
 import { deleteCard, updateCard } from '../composables/cards'
 
@@ -26,7 +26,8 @@ onMounted(() => {
 		}
 	})
 
-	smoothCaret(editor, caretRef.value!, canvas)
+	highlightCodeAddon(editor)
+	smoothCaretAddon(editor, caretRef.value!, canvas)
 
 	if (card.id === 'new') {
 		activate()

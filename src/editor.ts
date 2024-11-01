@@ -1,5 +1,6 @@
-import { Editor } from '@slugcat-dev/mark-ed'
+import { Editor, type Match } from '@slugcat-dev/mark-ed'
 import { caretRangeFromPoint, isAndroid, isFirefox, isIOS, isPointerCoarse, selectRange } from './utils'
+import hljs from 'highlight.js'
 
 /**
  * Move selected lines up or down.
@@ -79,7 +80,7 @@ export function toggleCheckbox(editor: Editor, event: Event) {
 /**
  * Add a smooth animated caret.
  */
-export function smoothCaret(editor: Editor, caret: HTMLElement, canvas: Canvas) {
+export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Canvas) {
 	// Don't apply on mobile devices
 	if (isAndroid || isIOS)
 		return
@@ -139,4 +140,78 @@ export function smoothCaret(editor: Editor, caret: HTMLElement, canvas: Canvas) 
 		else
 			caret.style.animationName = 'blink-1'
 	})
+}
+
+/**
+ * Highlight fenced code blocks.
+ */
+export function highlightCodeAddon(editor: Editor) {
+	editor.addEventListener('change', onChange)
+	onChange()
+
+	function onChange() {
+		if (!editor.markdown.lineTypes.some(type => type === 'CodeBlock'))
+			return
+
+		const selection = editor.getSelection()
+		let inCodeBlock = false
+		let start = 0
+		let mark = '```'
+		let language = 'plaintext'
+		let code = []
+
+		for (let lineNum = 0; lineNum < editor.lines.length; lineNum++) {
+			const type = editor.markdown.lineTypes[lineNum]
+			const line = editor.lines[lineNum]
+
+			if (inCodeBlock) {
+				const isClosingLine = RegExp(`^(\\s*)(\`{${mark.length},})(\\s*)$`).test(line)
+
+				if (type === 'CodeBlock' && !isClosingLine)
+					code.push(line)
+
+				if (type !== 'CodeBlock' || isClosingLine || lineNum === editor.lines.length - 1) {
+					highlightCode(code, start, language, isClosingLine)
+
+					inCodeBlock = false
+					code = []
+				}
+			} else if (type === 'CodeBlock') {
+				const openMatch = /^([\t ]*)(`{3,})(\s*)([^\s`]*)([^`]*)$/.exec(line)!
+
+				inCodeBlock = true
+				start = lineNum + 1
+				mark = openMatch[2]
+				language = hljs.getLanguage(openMatch[4]) ? openMatch[4] : 'plaintext'
+			}
+		}
+
+		editor.setSelection(selection)
+	}
+
+	function highlightCode(code: string[], start: number, language: string, isClosingLine: boolean) {
+		if (!code.length)
+			return
+
+		for (let i = start; i < start + code.length; i++)
+			editor.root.children[start].remove()
+
+		const highlighted = hljs.highlight(code.join('\n'), { language, ignoreIllegals: true }).value
+
+		fixMultilineTags(highlighted).split('\n').reverse().forEach((line, i) => {
+			const lineElm = document.createElement('div')
+
+			lineElm.className = 'md-line'
+			lineElm.innerHTML = `<code class="md-code-block${isClosingLine || i ? '' : ' md-close'}">${line}</code>`
+
+			if (lineElm.firstChild!.textContent!.length === 0)
+				(lineElm.firstChild as Element).innerHTML = '<br>'
+
+			editor.root.insertBefore(lineElm, editor.root.children[start])
+		})
+	}
+
+	function fixMultilineTags(html: string) {
+		return html
+	}
 }
