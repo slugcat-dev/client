@@ -34,6 +34,8 @@ onMounted(() => {
 
 		if (card.content !== '')
 			editor.setSelection(card.content.length)
+		else
+			editor.setSelection(editor.getSelection())
 	}
 })
 
