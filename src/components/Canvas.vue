@@ -376,20 +376,26 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 
 	state.loading = true
 
-	const pasteToast = toast('Processing pasted content...', 'yellow')
+	const pasteToast = toast('Processing your content...', 'yellow')
 	const isClipboardEvent = event instanceof ClipboardEvent
 	const dataTransfer = isClipboardEvent ? event.clipboardData : event.dataTransfer
 	const pos = canvas.toCanvasPos(isClipboardEvent ? pointer : { x: event.clientX, y: event.clientY })
-	const pastedCards = await pasteOnCanvas(dataTransfer, pos)
+	const pasted = await pasteOnCanvas(dataTransfer, pos)
 
 	untoast(pasteToast)
 
-	if (pastedCards.length) {
-		toast(`Pasted ${pastedCards.length} card${pastedCards.length !== 1 ? 's' : ''}`)
-		selection.clear()
+	if (pasted.cards.length) {
+		let message = `${pasted.type}`
+
+		if (pasted.cards.length > 1)
+			message = `${pasted.cards.length} ${message}s`
+
+		toast(`Pasted ${message}`)
 
 		// Select the pasted cards
-		selection.cards = pastedCards
+		selection.clear()
+
+		selection.cards = pasted.cards
 	} else
 		toast('Type not supported', 'red')
 
@@ -411,8 +417,8 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@wheel.prevent="onWheel"
 		@dragenter="state.pointerOver = true"
 		@dragleave="state.pointerOver = false"
-		@dragover.stop.prevent
-		@drop.prevent="onPaste"
+		@dragover.self.stop.prevent
+		@drop.self.prevent="onPaste"
 	>
 		<svg class="canvas-background">
 			<pattern

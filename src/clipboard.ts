@@ -1,5 +1,6 @@
 import { createCard } from './composables/cards'
 import { fileToBase64, isURL, loadImage } from './utils'
+import { type Editor } from '@slugcat-dev/mark-ed'
 
 /**
  * Copy the given cards to the clipboard.
@@ -34,13 +35,11 @@ export function copyCards(cards: Card[]) {
  */
 export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos) {
 	if (!dataTransfer)
-		return []
+		return { type: null, cards: [] }
 
 	const files = Array.from(dataTransfer.files)
 	const images = files.filter(file => file.type.startsWith('image'))
-	const items = await Promise.all(Array.from(dataTransfer.items)
-		.filter(item => item.kind !== 'file')
-		.map(async item => ({ type: item.type, data: await getAsString(item) })))
+	const items = await getDataTransferItems(dataTransfer)
 	const cardsItem = items.find(item => item.type === 'cards')
 	const textItem = items.find(item => item.type === 'text/plain')
 	const vscodeItem = items.find(item => item.type === 'vscode-editor-data')
@@ -49,21 +48,24 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 	if (images.length) {
 		let offset = 0
 
-		return await Promise.all(images.map(image => new Promise<Card>(async resolve => {
-			const data = await fileToBase64(image)
+		return {
+			type: 'image',
+			cards: await Promise.all(images.map(image => new Promise<Card>(async resolve => {
+				const data = await fileToBase64(image)
 
-			resolve(createCard({
-				id: Date.now() + Math.random(),
-				type: 'image',
-				pos: {
-					x: pos.x + offset,
-					y: pos.y + offset
-				},
-				content: data
-			}))
+				resolve(createCard({
+					id: Date.now() + Math.random(),
+					type: 'image',
+					pos: {
+						x: pos.x + offset,
+						y: pos.y + offset
+					},
+					content: data
+				}))
 
-			offset += 20
-		})))
+				offset += 20
+			})))
+		}
 	}
 
 	// Paste copied cards
@@ -74,15 +76,18 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 			if (cards.length) {
 				const corner = cards[0].pos
 
-				return cards.map((card, i) => createCard({
-					id: Date.now() + i,
-					type: card.type,
-					pos: {
-						x: pos.x + card.pos.x - corner.x,
-						y: pos.y + card.pos.y - corner.y
-					},
-					content: card.content
-				}))
+				return {
+					type: 'card',
+					cards: cards.map((card, i) => createCard({
+						id: Date.now() + i,
+						type: card.type,
+						pos: {
+							x: pos.x + card.pos.x - corner.x,
+							y: pos.y + card.pos.y - corner.y
+						},
+						content: card.content
+					}))
+				}
 			}
 		} catch {}
 	}
@@ -96,41 +101,51 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 			try {
 				await loadImage(text)
 
-				return [createCard({
-					id: Date.now(),
+				return {
 					type: 'image',
-					pos,
-					content: text
-				})]
+					cards: [createCard({
+						id: Date.now(),
+						type: 'image',
+						pos,
+						content: text
+					})]
+				}
 			} catch {}
 		}
 
-		// Test if the text was copied from Visual Studio Code and can be pasted as fenced code block
+		// If the text was copied from Visual Studio Code, paste it as fenced code block
 		if (vscodeItem) {
 			try {
 				const mode = JSON.parse(vscodeItem.data).mode as string
 				const fence = '```'
 
-				if (mode !== 'plaintext' && mode !== 'markdown') {
-					if (text.includes('\n'))
-						text = `${fence}${mode}\n${text}\n${fence}`
-					else
-						text = `\`${text}\``
-				}
+				if (mode !== 'plaintext' && mode !== 'markdown')
+					text = `${fence}${mode}\n${text}\n${fence}`
 			} catch {}
 		}
 
-		return [createCard({
-			id: Date.now(),
-			type: 'text',
-			pos,
-			content: text
-		})]
+		return {
+			type: vscodeItem ? 'code' : 'text',
+			cards: [createCard({
+				id: Date.now(),
+				type: 'text',
+				pos,
+				content: text
+			})]
+		}
 	}
 
 	console.log(items)
 
-	return []
+	return { type: null, cards: [] }
+}
+
+export async function getDataTransferItems(dataTransfer: DataTransfer) {
+	const items = Array.from(dataTransfer.items)
+		.filter(item => item.kind !== 'file')
+		.map(async item => ({ type: item.type, data: await getAsString(item) }))
+
+	return Promise.all(items)
 }
 
 function getAsString(item: DataTransferItem) {

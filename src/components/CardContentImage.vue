@@ -1,8 +1,21 @@
 <script setup lang="ts">
-import { reactive, toRef } from 'vue'
+import { reactive, toRef, watch } from 'vue'
+import { useEventListener } from '@vueuse/core'
 
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
 const state = reactive({ active: false })
+let keyListenerCleanup: Function
+
+// Close the image preview with escape
+watch(state, () => {
+	if (state.active) {
+		keyListenerCleanup = useEventListener('keydown', (event: KeyboardEvent) => {
+			if (event.key === 'Escape')
+				state.active = false
+		})
+	} else
+		keyListenerCleanup()
+})
 
 defineExpose({ active: toRef(state, 'active') })
 </script>

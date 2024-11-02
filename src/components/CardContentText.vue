@@ -3,6 +3,7 @@ import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useDebounceFn } from '@vueuse/core'
+import { getDataTransferItems } from '../clipboard'
 import { deleteCard, updateCard } from '../composables/cards'
 
 const { card, canvas } = defineProps<{ card: Card, canvas: Canvas }>()
@@ -64,6 +65,19 @@ function onKeyDelete(event: KeyboardEvent) {
 	wiggleAnimation()
 }
 
+async function onPaste(event: ClipboardEvent) {
+	if (!event.clipboardData)
+		return
+
+	const items = await getDataTransferItems(event.clipboardData)
+	const textItem = items.find(item => item.type === 'text/plain')
+
+	if (items.some(item => item.type === 'cards'))
+		return
+
+	editor.insertAtSelection(textItem?.data ?? '')
+}
+
 function onBlur() {
 	state.active = false
 	editor.readonly = true
@@ -101,6 +115,7 @@ defineExpose({ active: toRef(state, 'active') })
 			class="card-content-text"
 			@click.left.exact="onClick"
 			@keydown.delete="onKeyDelete"
+			@paste.capture.stop.prevent="onPaste"
 			@blur="onBlur"
 		></div>
 		<div class="selection-layer">

@@ -33,6 +33,22 @@ export function moveLine(editor: Editor, up: boolean): void {
 	editor.updateDOM({ start, end })
 }
 
+/**
+ * Balance backticks for inline code formatting.
+ */
+export function balanceBackticks(text: string) {
+	const backtickSequences = new Set(text.match(/`+/g) || [])
+	let backticks = '`'
+
+	while (backtickSequences.has(backticks))
+		backticks += '`'
+
+	if (text.startsWith('`') || text.endsWith('`'))
+		text = ` ${text} `
+
+	return `${backticks}${text}${backticks}`
+}
+
 export function moveCaretWhereClicked(editor: Editor, event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
 	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
 
@@ -138,6 +154,11 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 
 		// Hide the caret if the editor is not focused
 		caret.classList.toggle('visible', caretVisible)
+
+		if (editor.focused)
+			caret.style.removeProperty('display')
+		else
+			caret.style.display = 'none'
 
 		// Restart the caret blink animation
 		if (caret.style.animationName === 'blink-1')
