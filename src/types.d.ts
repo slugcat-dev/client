@@ -46,7 +46,8 @@ interface Card {
 interface CanvasSelection {
 	rect: DOMRect | null
 	cards: Card[]
-	visible: boolean
+	rectVisible: boolean
+	draw: boolean
 	clear: () => void
 }
 
@@ -54,5 +55,6 @@ interface Toast {
 	id: number
 	message: string
 	color: 'red' | 'yellow' | 'green'
+	persistent: boolean
 	timeout: ReturnType<typeof setTimeout>
 }

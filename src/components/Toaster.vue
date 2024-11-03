@@ -10,9 +10,10 @@ const { toasts } = useToaster()
 			v-for="toast in toasts"
 			:key="toast.id"
 			class="toast"
+			:class="{ persistent: toast.persistent }"
 			:style="{
 				'--color': `var(--color-${toast.color})`,
-				'animation': toast.color === 'red' ? 'shake .5s' : 'none'
+				'animation': toast.color === 'red' ? 'error-shake .5s' : 'none'
 			}"
 		>
 			{{ toast.message }}
@@ -40,6 +41,11 @@ const { toasts } = useToaster()
 		box-shadow: 0 2px 4px #0002;
 		opacity: 0;
 		transition: scale .2s, opacity 1s 3s ease-in;
+
+		&.persistent {
+			opacity: 1;
+			transition: scale .2s;
+		}
 
 		&::before {
 			content: '';

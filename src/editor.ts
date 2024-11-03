@@ -1,5 +1,5 @@
 import { Editor } from '@slugcat-dev/mark-ed'
-import { caretRangeFromPoint, isDesktop, isFirefox, isPointerCoarse, selectRange } from './utils'
+import { caretRangeFromPoint, isDesktop, isFirefox, isMobile, isPointerCoarse, selectRange } from './utils'
 import hljs from 'highlight.js'
 
 /**
@@ -99,7 +99,9 @@ export function toggleCheckbox(editor: Editor, event: Event) {
 export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Canvas) {
 	let transitionEndListener = false
 
-	if (isDesktop)
+	if (isMobile)
+		editor.root.style.caretColor = 'var(--color-accent)'
+	else
 		editor.root.style.caretColor = 'transparent'
 
 	editor.addEventListener('selectionchange', () => {

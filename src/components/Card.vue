@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { onceChanged, rectsOverlap, suppressClick } from '../utils'
+import { onceChanged, rectsOverlap, suppressEvent } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
 import CardContentText from './CardContentText.vue'
 import CardContentImage from './CardContentImage.vue'
@@ -26,13 +26,14 @@ const pointers = inject('pointers') as PointerState[]
 const cursor = computed(() => {
 	if (contentRef.value?.active)
 		return 'auto'
-	else if (selection.visible)
+	else if (selection.rectVisible || selection.draw)
 		return 'inherit'
 	else if (state.dragging)
 		return 'grabbing'
 
 	return 'grab'
 })
+let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
@@ -46,6 +47,19 @@ watch([() => selection.rect], () => {
 watch([() => selection.cards], () => {
 	state.selected = selection.cards.includes(card)
 }, { flush: 'sync' })
+
+watch([() => selection.draw], () => {
+	if (selection.draw) {
+		unwatchPointer = watch(pointer, () => {
+			const cardRect = cardRef.value!.getBoundingClientRect()
+			const pointerRect = new DOMRect(pointer.x - 10, pointer.y - 10, 20, 20)
+
+			if (rectsOverlap(cardRect, pointerRect))
+				state.selected = true
+		})
+	} else
+		unwatchPointer()
+})
 
 watch(() => state.selected, () => {
 	if (state.selected) {
@@ -113,7 +127,7 @@ function onPointerUp() {
 
 	if (pointer.moved) {
 		if (pointer.type === 'mouse')
-			suppressClick()
+			suppressEvent('click')
 
 		canvas.stopEdgeScroll()
 
@@ -155,6 +169,7 @@ function getContentComponent() {
 			zIndex: contentRef?.active || state.selected || state.dragging ? 1 : 0
 		}"
 		@pointerdown.left.exact="onPointerDown"
+		@click.left.exact="selection.clear()"
 		@click.left.ctrl.exact="state.selected = !state.selected"
 		@click.left.meta.exact="state.selected = !state.selected"
 	>
@@ -163,7 +178,6 @@ function getContentComponent() {
 			:is="getContentComponent()"
 			:card
 			:canvas
-			@click.left.exact="selection.clear()"
 		/>
 	</div>
 </template>

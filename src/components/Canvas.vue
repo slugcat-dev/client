@@ -8,6 +8,7 @@ import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput 
 import { createCard, deleteMany } from '../composables/cards'
 import { copyCards, pasteOnCanvas } from '../clipboard'
 import Card from './Card.vue'
+import DrawSelection from './DrawSelection.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
@@ -30,7 +31,8 @@ const arrowKeys = useArrowKeys()
 const selection = reactive<CanvasSelection>({
 	rect: null,
 	cards: [],
-	visible: false,
+	rectVisible: false,
+	draw: false,
 	clear() {
 		selection.rect = null
 		selection.cards = []
@@ -62,7 +64,7 @@ const gridSize = computed(() => {
 
 	return value
 })
-const selectionStyle = computed(() => {
+const rectSelectionStyle = computed(() => {
 	const rect = selection.rect ?? new DOMRect()
 	const translateX = canvas.smoothScroll.x + rect.left * canvas.smoothZoom
 	const translateY = canvas.smoothScroll.y + rect.top * canvas.smoothZoom
@@ -71,11 +73,12 @@ const selectionStyle = computed(() => {
 		width: `${Math.abs(rect.width) * canvas.smoothZoom}px`,
 		height: `${Math.abs(rect.height) * canvas.smoothZoom}px`,
 		translate: `${translateX}px ${translateY}px`,
-		opacity: selection.visible ? 1 : 0,
-		transition: `opacity ${selection.visible ? 0 : .2}s`
+		opacity: selection.rectVisible ? 1 : 0,
+		transition: `opacity ${selection.rectVisible ? 0 : .2}s`
 	}
 })
 let clickAllowed = false
+let longPressTimeout: ReturnType<typeof setTimeout>
 let lastTrackpadTime = 0
 let unwatchCanvas: WatchHandle
 let unwatchPointerMove: WatchHandle
@@ -181,6 +184,15 @@ function onPointerDown(event: PointerEvent) {
 				() => pointer.down,
 				() => pointers.length
 			], onPointerUp, { flush: 'sync' })
+
+			longPressTimeout = setTimeout(() => {
+				selection.clear()
+
+				state.panning = false
+				state.selecing = true
+				selection.draw = true
+				unwatchCanvas = watch(canvas, onPointerMove)
+			}, 500)
 		} else if (pointers.length === 2) {
 			state.pinching = true
 			state.gesture.pointers = pointers.map(p => ({ ...p }))
@@ -196,25 +208,29 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
+	clearTimeout(longPressTimeout)
+
 	// Update the selection
 	if (state.selecing) {
-		if (!selection.rect) {
-			const downPos = canvas.toCanvasPos(pointer.down as Pos)
-
-			selection.rect = new DOMRect(downPos.x, downPos.y, 0, 0)
-			selection.visible = true
-		}
-
-		const pointerPos = canvas.toCanvasPos(pointer)
-
-		selection.rect = new DOMRect(
-			selection.rect.x,
-			selection.rect.y,
-			pointerPos.x - selection.rect.x,
-			pointerPos.y - selection.rect.y
-		)
-
 		canvas.edgeScroll()
+
+		if (!selection.draw) {
+			if (!selection.rect) {
+				const downPos = canvas.toCanvasPos(pointer.down as Pos)
+
+				selection.rect = new DOMRect(downPos.x, downPos.y, 0, 0)
+				selection.rectVisible = true
+			}
+
+			const pointerPos = canvas.toCanvasPos(pointer)
+
+			selection.rect = new DOMRect(
+				selection.rect.x,
+				selection.rect.y,
+				pointerPos.x - selection.rect.x,
+				pointerPos.y - selection.rect.y
+			)
+		}
 	}
 
 	// Pan the canvas
@@ -230,6 +246,8 @@ function onPointerUp() {
 	if (pointer.down && pointers.length === 1)
 		return
 
+	clearTimeout(longPressTimeout)
+
 	if (state.panning && pointer.moved) {
 		clickAllowed = false
 
@@ -241,7 +259,8 @@ function onPointerUp() {
 	}
 
 	if (state.selecing) {
-		selection.visible = false
+		selection.rectVisible = false
+		selection.draw = false
 		clickAllowed = false
 
 		canvas.stopEdgeScroll()
@@ -311,7 +330,12 @@ function onClick(event: MouseEvent) {
 	if (!clickAllowed)
 		return
 
-	selection.clear()
+	if (selection.cards.length) {
+		selection.clear()
+
+		if (pointer.type === 'touch')
+			return
+	}
 
 	// Require doubleclick to create a card when using a mouse
 	if (pointer.type === 'mouse' && event.detail !== 2)
@@ -460,9 +484,10 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 			/>
 		</div>
 		<div
-			class="selection"
-			:style="selectionStyle"
+			class="rect-selection"
+			:style="rectSelectionStyle"
 		/>
+		<DrawSelection :selection />
 	</div>
 </template>
 
@@ -475,8 +500,8 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 
 	top: 24px;
 	left: 48px;
-	width: calc(100vw - 48px);
-	height: calc(100vh - 24px);
+	width: calc(100dvw - 48px);
+	height: calc(100dvh - 24px);
 	outline: 1px solid #303030;
 
 	.canvas-background {
@@ -495,7 +520,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		position: absolute;
 	}
 
-	.selection {
+	.rect-selection {
 		position: absolute;
 		background-color: var(--color-accent-25);
 		border: 1px solid var(--color-accent);

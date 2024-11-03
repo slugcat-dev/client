@@ -31,13 +31,13 @@ export function moveThreshold(start: Pos, current: Pos, threshold: number) {
 }
 
 /**
- * Suppress the next click event.
+ * Suppress the next event of the specified type.
  */
-export function suppressClick() {
-	document.addEventListener('click', function suppressEvent(event: MouseEvent) {
-		document.removeEventListener('click', suppressEvent, true)
-		event.preventDefault()
+export function suppressEvent(type: keyof DocumentEventMap) {
+	document.addEventListener(type, function suppress(event: Event) {
 		event.stopPropagation()
+		event.preventDefault()
+		document.removeEventListener(type, suppress, true)
 	}, true)
 }
 

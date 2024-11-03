@@ -58,7 +58,7 @@ export function usePointer() {
 			pointers[index].down = false
 			pointers[index].moved = false
 
-			if (pointers[index].type === 'touch')
+			if (pointers[index].type === 'touch' || pointers[index].type === 'pen')
 				pointers.splice(index, 1)
 		}
 

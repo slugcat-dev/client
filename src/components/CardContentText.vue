@@ -3,6 +3,7 @@ import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useDebounceFn } from '@vueuse/core'
+import { prefersReducedMotion } from '../utils'
 import { getDataTransferItems } from '../clipboard'
 import { deleteCard, updateCard } from '../composables/cards'
 
@@ -56,7 +57,7 @@ function onKeyDelete(event: KeyboardEvent) {
 	if (editor.content !== '' || event.repeat)
 		return
 
-	if (state.deleteIntent)
+	if (state.deleteIntent || prefersReducedMotion)
 		return contentRef.value!.blur()
 
 	state.deleteIntent = true
