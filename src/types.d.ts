@@ -44,9 +44,9 @@ interface Card {
 }
 
 interface CanvasSelection {
-	rect: DOMRect | null
 	cards: Card[]
-	rectVisible: boolean
+	box: DOMRect | null
+	boxVisible: boolean
 	draw: boolean
 	clear: () => void
 }

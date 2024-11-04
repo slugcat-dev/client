@@ -42,7 +42,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 			// Normalize the scroll speed so scrolling diagonally doesn't feel faster
 			const magnitude = Math.hypot(speedX, speedY)
 
-			if (!magnitude) // !pointer.down
+			if (!magnitude)
 				return animation.scrolling = false
 
 			const scrollX = (canvas.scrollSpeed.x * delta / magnitude) * speedX
@@ -187,7 +187,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 
 	// Make scrolling feel like it has inertia
 	function kineticScroll(velocity: Pos) {
-		if (pointers.length)
+		if (pointers.length || prefersReducedMotion)
 			return
 
 		let prevTimestamp = Infinity

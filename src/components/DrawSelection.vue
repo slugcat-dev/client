@@ -8,13 +8,15 @@ import { useEventListener } from '@vueuse/core'
 const { selection } = defineProps<{ selection: CanvasSelection }>()
 const canvasRef = useTemplateRef('canvas-ref')
 const pointer = inject('pointer') as PointerState
+let animationLock = false
+let sizeModifier = 4
 let path: Pos[] = []
 let points: Pos[]
 let canvas: HTMLCanvasElement
 let canvasRect: DOMRect
 let ctx: CanvasRenderingContext2D
 let colorAccent: string
-let sizeModifier: number
+let prevTimestamp: number
 
 onMounted(() => {
 	canvas = canvasRef.value!
@@ -33,13 +35,19 @@ watch(() => selection.draw, () => {
 		path = []
 		points = new Array(10).fill(null).map(() => (toCanvasPos(pointer)))
 		colorAccent = getComputedStyle(canvas).getPropertyValue('--color-accent')
-		sizeModifier = 3
 
-		requestAnimationFrame(drawTail)
+		if (!animationLock) {
+			animationLock = true
+			prevTimestamp = performance.now()
+
+			requestAnimationFrame(drawTail)
+		}
 	}
 })
 
-function drawTail() {
+function drawTail(timestamp: number) {
+	const delta = Math.max(timestamp - prevTimestamp, 0) / (1000 / 60)
+
 	path.push(toCanvasPos(pointer))
 
 	// Limit the path length
@@ -49,8 +57,8 @@ function drawTail() {
 	// Maker the points follow the pointer
 	for (let i = 0; i < points.length; i++) {
 		if (path[i]) {
-			points[i].x += (path[i].x - points[i].x) * .75
-			points[i].y += (path[i].y - points[i].y) * .75
+			points[i].x += (path[i].x - points[i].x) * .75 * delta
+			points[i].y += (path[i].y - points[i].y) * .75 * delta
 		}
 	}
 
@@ -84,13 +92,24 @@ function drawTail() {
 	ctx.fill()
 	ctx.closePath()
 
-	if (sizeModifier > 1)
-		sizeModifier += (1 - sizeModifier) * .125
+	// Fade size in and out
+	if (selection.draw && sizeModifier > 1)
+		sizeModifier += (1 - sizeModifier) * .125 * delta
+	else if (sizeModifier > 0)
+		sizeModifier += (0 - sizeModifier) * .125 * delta
 
-	if (selection.draw)
-		requestAnimationFrame(drawTail)
-	else
+	// Stop the animation loop
+	if (Math.abs(sizeModifier) < .125) {
+		animationLock = false
+		sizeModifier = 4
+
 		ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+		return
+	} else
+		requestAnimationFrame(drawTail)
+
+	prevTimestamp = timestamp
 }
 
 function setup() {
@@ -112,10 +131,7 @@ function toCanvasPos(pos: Pos) {
 	<canvas
 		ref="canvas-ref"
 		class="draw-selection"
-		:style="{
-			opacity: selection.draw ? 1 : 0,
-			transition: selection.draw ? 'opacity .2s ease-out' : 'none'
-		}"
+		:style="{ opacity: selection.draw ? 1 : 0 }"
 	></canvas>
 </template>
 
@@ -124,6 +140,7 @@ function toCanvasPos(pos: Pos) {
 	position: absolute;
 	width: 100%;
 	height: 100%;
+	transition: opacity .2s ease-out;
 	pointer-events: none;
 }
 </style>

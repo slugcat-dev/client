@@ -158,7 +158,7 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 		caret.classList.toggle('visible', caretVisible)
 
 		if (editor.focused)
-			caret.style.removeProperty('display')
+			caret.style.display = 'block'
 		else
 			caret.style.display = 'none'
 

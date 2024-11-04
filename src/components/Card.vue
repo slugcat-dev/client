@@ -26,7 +26,7 @@ const pointers = inject('pointers') as PointerState[]
 const cursor = computed(() => {
 	if (contentRef.value?.active)
 		return 'auto'
-	else if (selection.rectVisible || selection.draw)
+	else if (selection.boxVisible || selection.draw)
 		return 'inherit'
 	else if (state.dragging)
 		return 'grabbing'
@@ -37,11 +37,13 @@ let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
-watch([() => selection.rect], () => {
-	const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+watch([() => selection.box], () => {
+	if (selection.box) {
+		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
 
-	// Check if the card is in the selection
-	state.selected = !!selection.rect && rectsOverlap(selection.rect, cardRect)
+		// Check if the card is in the selection
+		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
+	}
 }, { flush: 'sync' })
 
 watch([() => selection.cards], () => {
@@ -54,8 +56,12 @@ watch([() => selection.draw], () => {
 			const cardRect = cardRef.value!.getBoundingClientRect()
 			const pointerRect = new DOMRect(pointer.x - 10, pointer.y - 10, 20, 20)
 
-			if (rectsOverlap(cardRect, pointerRect))
+			if (rectsOverlap(cardRect, pointerRect) && !selection.cards.includes(card)) {
+				if (navigator.vibrate)
+					navigator.vibrate(50)
+
 				state.selected = true
+			}
 		})
 	} else
 		unwatchPointer()

@@ -82,8 +82,7 @@ defineExpose({ active: toRef(state, 'active') })
 	align-items: center;
 	justify-content: center;
 	padding: 2rem;
-	background-color: #000a;
-	backdrop-filter: blur(8px);
+	background-color: black;
 
 	img {
 		display: block;
@@ -93,23 +92,32 @@ defineExpose({ active: toRef(state, 'active') })
 	}
 }
 
-.image-preview-enter-active,
-.image-preview-leave-active {
-	transition: .4s;
-
-	img {
-		transition: .4s cubic-bezier(.68, -.55, .265, 1.55);
+@media (prefers-reduced-transparency: no-preference) {
+	.image-preview {
+		background-color: #000a;
+		backdrop-filter: blur(8px);
 	}
 }
 
-.image-preview-enter-from,
-.image-preview-leave-to {
-	background-color: transparent;
-	backdrop-filter: blur(0);
+@media (prefers-reduced-motion: no-preference) {
+	.image-preview-enter-active,
+	.image-preview-leave-active {
+		transition: .4s;
 
-	img {
-		opacity: 0;
-		scale: .75;
+		img {
+			transition: .4s cubic-bezier(.68, -.55, .265, 1.55);
+		}
+	}
+
+	.image-preview-enter-from,
+	.image-preview-leave-to {
+		background-color: transparent;
+		backdrop-filter: blur(0);
+
+		img {
+			opacity: 0;
+			scale: .75;
+		}
 	}
 }
 </style>

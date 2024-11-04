@@ -11,6 +11,7 @@
 	pointer-events: none;
 
 	.caret {
+		display: none;
 		visibility: hidden;
 		width: 2px;
 		left: -1px;

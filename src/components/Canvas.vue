@@ -2,11 +2,13 @@
 import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
+import { useSettings } from '../composables/settings'
 import { useToaster } from '../composables/toaster'
 import { useEventListener } from '@vueuse/core'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
 import { createCard, deleteMany } from '../composables/cards'
 import { copyCards, pasteOnCanvas } from '../clipboard'
+import CanvasBackground from './CanvasBackground.vue'
 import Card from './Card.vue'
 import DrawSelection from './DrawSelection.vue'
 
@@ -29,15 +31,16 @@ const pointers = inject('pointers') as PointerState[]
 const canvas = useCanvas(canvasRef, pointer, pointers)
 const arrowKeys = useArrowKeys()
 const selection = reactive<CanvasSelection>({
-	rect: null,
 	cards: [],
-	rectVisible: false,
+	box: null,
+	boxVisible: false,
 	draw: false,
-	clear() {
-		selection.rect = null
+	clear: () => {
+		selection.box = null
 		selection.cards = []
 	}
 })
+const { settings } = useSettings()
 const { toast, untoast } = useToaster()
 const cursor = computed(() => {
 	if (state.panning && pointer.moved)
@@ -64,17 +67,17 @@ const gridSize = computed(() => {
 
 	return value
 })
-const rectSelectionStyle = computed(() => {
-	const rect = selection.rect ?? new DOMRect()
-	const translateX = canvas.smoothScroll.x + rect.left * canvas.smoothZoom
-	const translateY = canvas.smoothScroll.y + rect.top * canvas.smoothZoom
+const boxSelectionStyle = computed(() => {
+	const boxRect = selection.box ?? new DOMRect()
+	const translateX = canvas.smoothScroll.x + boxRect.left * canvas.smoothZoom
+	const translateY = canvas.smoothScroll.y + boxRect.top * canvas.smoothZoom
 
 	return {
-		width: `${Math.abs(rect.width) * canvas.smoothZoom}px`,
-		height: `${Math.abs(rect.height) * canvas.smoothZoom}px`,
+		width: `${Math.abs(boxRect.width) * canvas.smoothZoom}px`,
+		height: `${Math.abs(boxRect.height) * canvas.smoothZoom}px`,
 		translate: `${translateX}px ${translateY}px`,
-		opacity: selection.rectVisible ? 1 : 0,
-		transition: `opacity ${selection.rectVisible ? 0 : .2}s`
+		opacity: selection.boxVisible ? 1 : 0,
+		transition: `opacity ${selection.boxVisible ? 0 : .2}s`
 	}
 })
 let clickAllowed = false
@@ -96,7 +99,7 @@ useKeymap({
 	'End': canvas.overview,
 	'CtrlMeta +': keyboardZoom,
 	'CtrlMeta -': keyboardZoom,
-	'CtrlMeta A': () => selection.rect = new DOMRect(-Infinity, -Infinity, Infinity, Infinity),
+	'CtrlMeta A': () => selection.box = new DOMRect(-Infinity, -Infinity, Infinity, Infinity),
 	'CtrlMeta C': copySelectedCards,
 	'CtrlMeta X': () => {
 		copySelectedCards()
@@ -166,10 +169,11 @@ function deleteSelectedCards() {
 
 function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
-	// Use one pointer to pan the canvas or select and two pointers for pinch-to-zoom, more than two pointers will be ignored
+	// Use one pointer to pan the canvas or select, and two pointers for pinch zoom
+	// More than two pointers will be ignored
 	onceChanged(pointers, () => {
 		if (pointers.length === 1 && event.target === canvas.ref && !canvas.anyArrowKey) {
-			if (event.metaKey || event.ctrlKey) {
+			if (event.ctrlKey || event.metaKey) {
 				selection.clear()
 
 				state.selecing = true
@@ -177,6 +181,22 @@ function onPointerDown(event: PointerEvent) {
 			} else {
 				state.panning = true
 				clickAllowed = !usingInput()
+
+				// Only allow long press if Ctrl / Meta is not pressed
+				longPressTimeout = setTimeout(() => {
+					if (navigator.vibrate)
+						navigator.vibrate(50)
+
+					selection.clear()
+
+					state.panning = false
+					state.selecing = true
+
+					if (settings.selectionMode === 'draw')
+						selection.draw = true
+
+					unwatchCanvas = watch(canvas, onPointerMove)
+				}, 500)
 			}
 
 			unwatchPointerMove = watch(pointer, onPointerMove)
@@ -184,15 +204,6 @@ function onPointerDown(event: PointerEvent) {
 				() => pointer.down,
 				() => pointers.length
 			], onPointerUp, { flush: 'sync' })
-
-			longPressTimeout = setTimeout(() => {
-				selection.clear()
-
-				state.panning = false
-				state.selecing = true
-				selection.draw = true
-				unwatchCanvas = watch(canvas, onPointerMove)
-			}, 500)
 		} else if (pointers.length === 2) {
 			state.pinching = true
 			state.gesture.pointers = pointers.map(p => ({ ...p }))
@@ -215,20 +226,20 @@ function onPointerMove() {
 		canvas.edgeScroll()
 
 		if (!selection.draw) {
-			if (!selection.rect) {
+			if (!selection.box) {
 				const downPos = canvas.toCanvasPos(pointer.down as Pos)
 
-				selection.rect = new DOMRect(downPos.x, downPos.y, 0, 0)
-				selection.rectVisible = true
+				selection.box = new DOMRect(downPos.x, downPos.y, 0, 0)
+				selection.boxVisible = true
 			}
 
 			const pointerPos = canvas.toCanvasPos(pointer)
 
-			selection.rect = new DOMRect(
-				selection.rect.x,
-				selection.rect.y,
-				pointerPos.x - selection.rect.x,
-				pointerPos.y - selection.rect.y
+			selection.box = new DOMRect(
+				selection.box.x,
+				selection.box.y,
+				pointerPos.x - selection.box.x,
+				pointerPos.y - selection.box.y
 			)
 		}
 	}
@@ -259,7 +270,7 @@ function onPointerUp() {
 	}
 
 	if (state.selecing) {
-		selection.rectVisible = false
+		selection.boxVisible = false
 		selection.draw = false
 		clickAllowed = false
 
@@ -333,12 +344,12 @@ function onClick(event: MouseEvent) {
 	if (selection.cards.length) {
 		selection.clear()
 
-		if (pointer.type === 'touch')
+		if (pointer.type === 'touch' || !settings.doubleClickCreateCard)
 			return
 	}
 
 	// Require doubleclick to create a card when using a mouse
-	if (pointer.type === 'mouse' && event.detail !== 2)
+	if (pointer.type === 'mouse' && event.detail !== 2 && settings.doubleClickCreateCard)
 		return
 
 	createCard({ pos: canvas.toCanvasPos(pointer) })
@@ -444,31 +455,9 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@dragover.self.stop.prevent
 		@drop.self.prevent="onPaste"
 	>
-		<svg class="canvas-background">
-			<pattern
-				id="dot-pattern"
-				patternUnits="userSpaceOnUse"
-				:x="canvas.smoothScroll.x"
-				:y="canvas.smoothScroll.y"
-				:width="gridSize"
-				:height="gridSize"
-			>
-				<circle
-					cx=".75"
-					cy=".75"
-					r=".75"
-				/>
-			</pattern>
-			<rect
-				x="0"
-				y="0"
-				width="100%"
-				height="100%"
-				fill="url(#dot-pattern)"
-			/>
-		</svg>
+		<CanvasBackground :scroll="canvas.smoothScroll" :gridSize />
 		<div
-			class="stuff"
+			class="cards"
 			:style="{
 				translate: `${canvas.smoothScroll.x}px ${canvas.smoothScroll.y}px`,
 				scale: canvas.smoothZoom,
@@ -484,8 +473,8 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 			/>
 		</div>
 		<div
-			class="rect-selection"
-			:style="rectSelectionStyle"
+			class="box-selection"
+			:style="boxSelectionStyle"
 		/>
 		<DrawSelection :selection />
 	</div>
@@ -494,15 +483,10 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 <style>
 .canvas {
 	position: relative;
+	flex-grow: 1;
 	overflow: clip;
 	user-select: none;
 	touch-action: none;
-
-	top: 24px;
-	left: 48px;
-	width: calc(100dvw - 48px);
-	height: calc(100dvh - 24px);
-	outline: 1px solid #303030;
 
 	.canvas-background {
 		position: absolute;
@@ -514,13 +498,17 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		circle {
 			fill: #383838;
 		}
+
+		line {
+			stroke: #383838;
+		}
 	}
 
-	.stuff {
+	.cards {
 		position: absolute;
 	}
 
-	.rect-selection {
+	.box-selection {
 		position: absolute;
 		background-color: var(--color-accent-25);
 		border: 1px solid var(--color-accent);
