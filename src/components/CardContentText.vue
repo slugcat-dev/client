@@ -119,6 +119,8 @@ defineExpose({ active: toRef(state, 'active') })
 		<div
 			ref="content-ref"
 			class="card-content-text"
+			role="textbox"
+			aria-multiline="true"
 			@click.left.exact="onClick"
 			@keydown.delete="onKeyDelete"
 			@paste.capture.stop.prevent="onPaste"
@@ -133,10 +135,10 @@ defineExpose({ active: toRef(state, 'active') })
 <style scoped>
 .card-content-text {
 	padding: .375rem;
-	background-color: #282828;
-	border: 2px solid #303030;
+	background-color: var(--color-card-background);
+	border: 2px solid var(--color-card-border);
 	border-radius: .375rem;
-	box-shadow: 0 2px 4px #0002;
+	box-shadow: var(--shadow);
 }
 
 .card.selected .card-content-text,

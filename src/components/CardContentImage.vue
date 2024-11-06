@@ -50,7 +50,7 @@ defineExpose({ active: toRef(state, 'active') })
 	height: auto;
 	max-height: 200px;
 	border-radius: .375rem;
-	filter: drop-shadow(0 2px 4px #0002);
+	filter: drop-shadow(var(--shadow));
 	-webkit-touch-callout: none;
 }
 
@@ -63,7 +63,7 @@ defineExpose({ active: toRef(state, 'active') })
 }
 
 .card:hover .card-content::after {
-	box-shadow: 0 0 0 2px #80808018 inset;
+	box-shadow: 0 0 0 2px var(--color-card-border) inset;
 }
 
 .card.selected .card-content::after {
@@ -72,7 +72,7 @@ defineExpose({ active: toRef(state, 'active') })
 
 .card.selected .card-content-image,
 .card:hover .card-content-image {
-	background-color: #282828;
+	background-color: var(--color-card-background);
 }
 
 .image-preview {

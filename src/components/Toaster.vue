@@ -12,7 +12,7 @@ const { toasts } = useToaster()
 			class="toast"
 			:class="{ persistent: toast.persistent }"
 			:style="{
-				'--color': `var(--color-${toast.color})`,
+				'--color-toast': `var(--color-${toast.color})`,
 				'animation': toast.color === 'red' ? 'error-shake 500ms' : 'none'
 			}"
 		>
@@ -35,10 +35,11 @@ const { toasts } = useToaster()
 
 	.toast {
 		padding: .5rem .75rem;
+		color: #d0d0d0;
 		background-color: #181818;
 		border: 1px solid #282828;
 		border-radius: 5rem;
-		box-shadow: 0 2px 4px #0002;
+		box-shadow: var(--shadow);
 		opacity: 0;
 		transition: scale 200ms, opacity 1s 3s ease-in;
 
@@ -53,13 +54,13 @@ const { toasts } = useToaster()
 			width: .625rem;
 			height: .625rem;
 			margin-right: .5rem;
-			background-color: var(--color);
+			background-color: var(--color-toast);
 			border-radius: 100%;
 			box-shadow: 0 0 0 4px transparent;
 			transition: box-shadow 500ms 200ms;
 
 			@starting-style {
-				box-shadow: 0 0 0 0 var(--color);
+				box-shadow: 0 0 0 0 var(--color-toast);
 			}
 		}
 

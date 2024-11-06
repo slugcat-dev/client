@@ -2,7 +2,7 @@
 // Import stylesheets
 import './assets/style.css'
 import './assets/mark-ed.css'
-import 'highlight.js/styles/github-dark.css'
+import './assets/hljs.css'
 
 // Create Vue app
 import { createApp } from 'vue'

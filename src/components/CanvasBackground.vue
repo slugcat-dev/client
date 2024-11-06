@@ -66,11 +66,11 @@ const { settings } = useSettings()
 	pointer-events: none;
 
 	circle {
-		fill: #383838;
+		fill: light-dark(#c8c8c8, #383838);
 	}
 
 	line {
-		stroke: #383838;
+		stroke: light-dark(#c8c8c8, #383838);
 	}
 }
 </style>

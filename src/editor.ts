@@ -146,20 +146,19 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 			// Sry Firefox <3
 			if (!isFirefox || selection.isCollapsed)
 				caretVisible = isDesktop
-
-			if (caretVisible) {
-				if (!transitionEndListener)
-					caret.addEventListener('transitionend', autoAdvance, { once: true })
-			} else
-				autoAdvance()
 		}
 
 		// Hide the caret if the editor is not focused
 		caret.classList.toggle('visible', caretVisible)
 
-		if (editor.focused)
+		if (editor.focused) {
 			caret.style.display = 'block'
-		else
+
+			if (!caretVisible)
+				autoAdvance()
+			else if (!transitionEndListener)
+				caret.addEventListener('transitionend', autoAdvance, { once: true })
+		} else
 			caret.style.display = 'none'
 
 		// Restart the caret blink animation
