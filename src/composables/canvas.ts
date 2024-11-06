@@ -217,14 +217,14 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 			return
 
 		const canvasRect = canvas.ref!.getBoundingClientRect()
-		const threshold = 100
+		const threshold = canvasRect.width < 600 ? 50 : 100
 		const left = pointer.x - canvasRect.left
 		const right = canvasRect.right - pointer.x
 		const top = pointer.y - canvasRect.top
 		const bottom = canvasRect.bottom - pointer.y
 
-		canvas.scrollSpeed.x = clamp((left < threshold ? threshold - left : right < threshold ? -(threshold - right) : 0) / 100, -1, 1)
-		canvas.scrollSpeed.y = clamp((top < threshold ? threshold - top : bottom < threshold ? -(threshold - bottom) : 0) / 100, -1, 1)
+		canvas.scrollSpeed.x = clamp((left < threshold ? threshold - left : right < threshold ? -(threshold - right) : 0) / threshold, -1, 1)
+		canvas.scrollSpeed.y = clamp((top < threshold ? threshold - top : bottom < threshold ? -(threshold - bottom) : 0) / threshold, -1, 1)
 	}
 
 	function stopEdgeScroll() {

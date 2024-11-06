@@ -27,7 +27,7 @@ onMounted(() => {
 })
 
 // Rescale the canvas when the window dimensions change
-useEventListener('resize', setup)
+useEventListener(window, 'resize', setup)
 
 watch(() => selection.draw, () => {
 	// Start drawing the pointer trail
@@ -140,7 +140,7 @@ function toCanvasPos(pos: Pos) {
 	position: absolute;
 	width: 100%;
 	height: 100%;
-	transition: opacity .2s ease-out;
+	transition: opacity 200ms ease-out;
 	pointer-events: none;
 }
 </style>

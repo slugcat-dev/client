@@ -1,21 +1,20 @@
 @import 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
-@import 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap';
 @import 'https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap';
 @import 'https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap';
-@import 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap';
 
 * {
 	box-sizing: border-box;
 }
 
 :root {
-	--color-red: oklch(75% .1 25deg);
-	--color-orange: oklch(75% .1 55deg);
-	--color-yellow: oklch(75% .1 80deg);
-	--color-green: oklch(75% .1 150deg);
-	--color-blue: oklch(75% .1 245deg);
-	--color-purple: oklch(75% .1 310deg);
-	--color-pink: oklch(75% .1 340deg);
+	--color-red: oklch(75% .125 25deg);
+	--color-orange: oklch(75% .125 55deg);
+	--color-yellow: oklch(75% .125 80deg);
+	--color-green: oklch(75% .125 150deg);
+	--color-blue: oklch(75% .125 245deg);
+	--color-purple: oklch(75% .125 310deg);
+	--color-pink: oklch(75% .125 340deg);
 	--color-gray: oklch(75% 0 0);
 }
 
@@ -35,6 +34,7 @@ body {
 	margin: 0;
 	font-family: system-ui;
 	font-size: .875rem;
+	line-height: 1.25;
 	color: var(--color-text);
 	background-color: var(--color-background);
 	-webkit-tap-highlight-color: transparent;

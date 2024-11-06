@@ -102,10 +102,10 @@ defineExpose({ active: toRef(state, 'active') })
 @media (prefers-reduced-motion: no-preference) {
 	.image-preview-enter-active,
 	.image-preview-leave-active {
-		transition: .4s;
+		transition: 400ms;
 
 		img {
-			transition: .4s cubic-bezier(.68, -.55, .265, 1.55);
+			transition: 400ms cubic-bezier(.68, -.55, .265, 1.55);
 		}
 	}
 

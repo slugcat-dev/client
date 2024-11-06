@@ -31,6 +31,11 @@ onMounted(() => {
 	highlightCodeAddon(editor)
 	smoothCaretAddon(editor, caretRef.value!, canvas)
 
+	// Prevent links from being dragged instead of the card
+	editor.addEventListener('change', () => {
+		editor.root.querySelectorAll('a').forEach(a => a.draggable = false)
+	})
+
 	if (card.id === 'new') {
 		activate()
 
@@ -140,7 +145,7 @@ defineExpose({ active: toRef(state, 'active') })
 }
 
 .wiggle {
-  animation: wiggle .1s ease-in-out;
+  animation: wiggle 100ms ease-in-out;
 }
 
 @keyframes wiggle {

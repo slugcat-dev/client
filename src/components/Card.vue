@@ -81,7 +81,7 @@ function onPointerDown(event: PointerEvent) {
 
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	onceChanged(pointer, () => {
-		if (!cardInteractionAllowed(event))
+		if (!cardInteractionAllowed())
 			return
 
 		const cardRect = cardRef.value!.getBoundingClientRect()
@@ -147,12 +147,11 @@ function onPointerUp() {
 	unwatchPointerUp()
 }
 
-function cardInteractionAllowed(event: Event) {
+function cardInteractionAllowed() {
 	return (
 		typeof card.id === 'number'
 		&& pointers.length === 1
 		&& !contentRef.value?.active
-		&& !(event.target instanceof HTMLAnchorElement)
 	)
 }
 

@@ -56,3 +56,21 @@ const { settings } = useSettings()
 		/>
 	</svg>
 </template>
+
+<style>
+.canvas-background {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+
+	circle {
+		fill: #383838;
+	}
+
+	line {
+		stroke: #383838;
+	}
+}
+</style>

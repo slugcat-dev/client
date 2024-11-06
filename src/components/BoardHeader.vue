@@ -17,5 +17,6 @@ const { settingsVisible } = useSettings()
 	padding: .5rem 1rem;
 	justify-content: space-between;
 	align-items: center;
+	user-select: none;
 }
 </style>

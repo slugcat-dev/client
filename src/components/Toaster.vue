@@ -13,7 +13,7 @@ const { toasts } = useToaster()
 			:class="{ persistent: toast.persistent }"
 			:style="{
 				'--color': `var(--color-${toast.color})`,
-				'animation': toast.color === 'red' ? 'error-shake .5s' : 'none'
+				'animation': toast.color === 'red' ? 'error-shake 500ms' : 'none'
 			}"
 		>
 			{{ toast.message }}
@@ -40,11 +40,11 @@ const { toasts } = useToaster()
 		border-radius: 5rem;
 		box-shadow: 0 2px 4px #0002;
 		opacity: 0;
-		transition: scale .2s, opacity 1s 3s ease-in;
+		transition: scale 200ms, opacity 1s 3s ease-in;
 
 		&.persistent {
 			opacity: 1;
-			transition: scale .2s;
+			transition: scale 200ms;
 		}
 
 		&::before {
@@ -56,7 +56,7 @@ const { toasts } = useToaster()
 			background-color: var(--color);
 			border-radius: 100%;
 			box-shadow: 0 0 0 4px transparent;
-			transition: box-shadow .5s .2s;
+			transition: box-shadow 500ms 200ms;
 
 			@starting-style {
 				box-shadow: 0 0 0 0 var(--color);
