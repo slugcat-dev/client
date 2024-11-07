@@ -49,7 +49,7 @@ export function balanceBackticks(text: string) {
 	return `${backticks}${text}${backticks}`
 }
 
-export function moveCaretWhereClicked(editor: Editor, event: MouseEvent | MouseEvent & { rangeOffset: number, rangeParent: Node }) {
+export function moveCaretWhereClicked(editor: Editor, event: MouseEvent) {
 	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
 
 	// Move the caret to the next word boundary
@@ -143,7 +143,6 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 			caret.style.height = `${caretRect.height / canvas.zoom}px`
 			caret.style.translate = `${x / canvas.zoom}px ${y / canvas.zoom}px`
 
-			// Sry Firefox <3
 			if (!isFirefox || selection.isCollapsed)
 				caretVisible = isDesktop
 		}

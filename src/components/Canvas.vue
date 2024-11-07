@@ -58,15 +58,6 @@ const animating = computed(() => state.panning
 	|| canvas.smoothScroll.x !== canvas.scroll.x
 	|| canvas.smoothScroll.y !== canvas.scroll.y
 )
-const gridSize = computed(() => {
-	// Adjust the background grid size to the zoom level
-	let value = 20 * canvas.smoothZoom
-
-	while (value <= 10) value *= 2
-	while (value >= 30) value /= 2
-
-	return value
-})
 const boxSelectionStyle = computed(() => {
 	const boxRect = selection.box ?? new DOMRect()
 	const translateX = canvas.smoothScroll.x + boxRect.left * canvas.smoothZoom
@@ -131,7 +122,7 @@ watch(arrowKeys, () => {
 
 // Allow typing anywhere on the canvas to create a new card
 useEventListener('keydown', (event: KeyboardEvent) => {
-	if (event.ctrlKey || event.metaKey || (event.key !== 'Enter' && event.key.length !== 1) || !state.pointerOver || usingInput())
+	if (!settings.typeAnywhere || !state.pointerOver || usingInput() || event.ctrlKey || event.metaKey || (event.key !== 'Enter' && event.key.length !== 1))
 		return
 
 	event.preventDefault()
@@ -456,7 +447,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@dragover.self.stop.prevent
 		@drop.self.prevent="onPaste"
 	>
-		<CanvasBackground :scroll="canvas.smoothScroll" :gridSize />
+		<CanvasBackground :scroll="canvas.smoothScroll" :canvas />
 		<div
 			class="cards"
 			:style="{

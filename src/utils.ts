@@ -100,7 +100,8 @@ export function usingInput() {
 		const contentEditable = activeElement.getAttribute('contenteditable') ?? 'false'
 
 		return (
-			activeElement instanceof HTMLInputElement
+			activeElement instanceof HTMLButtonElement
+			|| activeElement instanceof HTMLInputElement
 			|| activeElement instanceof HTMLTextAreaElement
 			|| contentEditable !== 'false'
 		)

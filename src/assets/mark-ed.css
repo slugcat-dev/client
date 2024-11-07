@@ -124,7 +124,9 @@
 
 .md-task {
 	.md-checkmark {
+		line-height: 1;
 		font-family: var(--font-monospace);
+		color: var(--color-text);
 	}
 
 	.md-checkbox {

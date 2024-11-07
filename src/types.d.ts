@@ -24,6 +24,7 @@ interface Canvas {
 	scrollSpeed: Pos
 	zoom: number
 	smoothZoom: number
+	gridSize: number
 	anyArrowKey: boolean
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect

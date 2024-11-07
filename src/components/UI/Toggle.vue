@@ -1,18 +1,10 @@
 <script setup lang="ts">
-defineProps({
-  modelValue: Boolean,
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-const updateValue = (event: Event) => {
-  emit('update:modelValue', (event.target as HTMLInputElement).checked)
-}
+const model = defineModel()
 </script>
 
 <template>
 	<div class="toggle">
-		<input type="checkbox" :checked="modelValue" @change="updateValue">
+		<input type="checkbox" v-model="model">
 	</div>
 </template>
 
@@ -55,6 +47,8 @@ const updateValue = (event: Event) => {
 		margin: 0;
 		width: inherit;
 		height: inherit;
+		border-radius: inherit;
+		cursor: pointer;
 	}
 }
 </style>

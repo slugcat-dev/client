@@ -11,7 +11,7 @@ import App from './App.vue'
 
 const app = createApp(App)
 
-// Use global pointer state instead of having listeners for each card
+// Use a global pointer state instead of having listeners for each card
 const { pointer, pointers } = usePointer()
 
 app.provide('pointer', pointer)

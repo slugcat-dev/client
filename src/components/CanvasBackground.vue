@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
 
-defineProps<{ scroll: Pos, gridSize: number }>()
+defineProps<{ canvas: Canvas }>()
 
 const { settings } = useSettings()
 </script>
@@ -12,10 +12,10 @@ const { settings } = useSettings()
 			<pattern
 				id="dot-pattern"
 				patternUnits="userSpaceOnUse"
-				:x="scroll.x"
-				:y="scroll.y"
-				:width="gridSize"
-				:height="gridSize"
+				:x="canvas.smoothScroll.x"
+				:y="canvas.smoothScroll.y"
+				:width="canvas.gridSize"
+				:height="canvas.gridSize"
 			>
 				<circle
 					cx=".75"
@@ -26,15 +26,15 @@ const { settings } = useSettings()
 			<pattern
 				id="grid-pattern"
 				patternUnits="userSpaceOnUse"
-				:x="scroll.x"
-				:y="scroll.y"
-				:width="gridSize"
-				:height="gridSize"
+				:x="canvas.smoothScroll.x"
+				:y="canvas.smoothScroll.y"
+				:width="canvas.gridSize"
+				:height="canvas.gridSize"
 			>
 				<line
 					x1="0"
 					y1="0"
-					:x2="gridSize"
+					:x2="canvas.gridSize"
 					y2="0"
 					stroke-width=".75"
 				/>
@@ -42,7 +42,7 @@ const { settings } = useSettings()
 					x1="0"
 					y1="0"
 					x2="0"
-					:y2="gridSize"
+					:y2="canvas.gridSize"
 					stroke-width=".75"
 				/>
 			</pattern>

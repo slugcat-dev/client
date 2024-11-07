@@ -9,6 +9,7 @@ export const useSettings = createGlobalState(() => {
 		fontMonospace: 'Fira Code',
 		boardBackground: 'dot',
 		doubleClickCreateCard: true,
+		typeAnywhere: true,
 		selectionMode: 'draw'
 	}, localStorage, { mergeDefaults: true }).value)
 	const settingsVisible = ref(false)

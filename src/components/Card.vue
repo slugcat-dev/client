@@ -44,11 +44,11 @@ watch([() => selection.box], () => {
 		// Check if the card is in the selection
 		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
 	}
-}, { flush: 'sync' })
+})
 
 watch([() => selection.cards], () => {
 	state.selected = selection.cards.includes(card)
-}, { flush: 'sync' })
+})
 
 watch([() => selection.draw], () => {
 	if (selection.draw) {

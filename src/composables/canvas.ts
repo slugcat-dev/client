@@ -1,4 +1,4 @@
-import { reactive, watch, type ShallowRef } from 'vue'
+import { computed, reactive, watch, type ShallowRef } from 'vue'
 import { clamp, prefersReducedMotion } from '../utils'
 
 export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
@@ -10,6 +10,15 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		scrollSpeed: { x: 0, y: 0 },
 		zoom: 1,
 		smoothZoom: 1,
+		gridSize: computed(() => {
+			// Adjust the background grid size to the zoom level
+			let value = 20 * canvas.smoothZoom as number
+
+			while (value <= 10) value *= 2
+			while (value >= 30) value /= 2
+
+			return value
+		}),
 		anyArrowKey: false
 	})
 	const animation = {

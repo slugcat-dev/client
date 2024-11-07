@@ -1,112 +1,113 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
+import { watch } from 'vue'
+import { useEventListener } from '@vueuse/core'
 import Toggle from './UI/Toggle.vue'
+import IconClose from './Icons/IconClose.vue'
+import IconDrawSelection from './Icons/IconDrawSelection.vue'
+import IconBoxSelection from './Icons/IconBoxSelection.vue'
 
 const { settings, settingsVisible } = useSettings()
+let keyListenerCleanup: Function
+
+// Close the image preview with escape
+watch(settingsVisible, () => {
+	if (settingsVisible.value) {
+		keyListenerCleanup = useEventListener('keydown', (event: KeyboardEvent) => {
+			if (event.key === 'Escape')
+				settingsVisible.value = false
+		})
+	} else
+		keyListenerCleanup()
+})
 </script>
 
 <template>
 	<Transition name="settings">
 		<div v-if="settingsVisible" class="settings">
 			<div class="settings-page">
-				<div class="settings-header">
+				<div class="settings-page-header">
 					<h1>Settings</h1>
-					<button class="button-close" @click="settingsVisible = false">✕</button>
+					<button
+						class="button-close"
+						data-tooltip="Close"
+						@click="settingsVisible = false"
+					>
+						<IconClose />
+					</button>
 				</div>
-				<h2 class="section-header">Appearance</h2>
 
-				<div class="settings-option">
-					<input
-						type="radio"
-						class="color-theme"
-						name="color-theme"
-						value="system"
-						v-model="settings.colorTheme"
-						style="background-color: gray;"
-					/>
-					<input
-						type="radio"
-						class="color-theme"
-						name="color-theme"
-						value="dark"
-						v-model="settings.colorTheme"
-						style="background-color: gray; background-image: url('/images/theme-dark.svg');"
-					/>
-					<input
-						type="radio"
-						class="color-theme"
-						name="color-theme"
-						value="light"
-						v-model="settings.colorTheme"
-						style="background-color: gray; background-image: url('/images/theme-light.svg');"
-					/>
+				<h2 class="settings-section-header">Appearance</h2>
+
+				<div class="accent-color">
 					<input
 						v-for="color in ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray']"
 						:key="color"
 						type="radio"
-						class="color"
 						name="accent-color"
 						:value="color"
 						v-model="settings.colorAccent"
 						:style="{ '--color-select': `var(--color-${color})` }"
 					/>
 				</div>
-				<label class="settings-option">
-					Board Background<br>
-					<select id="background-select" v-model="settings.boardBackground">
-						<option value="dot">Dot</option>
-						<option value="grid">Grid</option>
-						<option value="blank">Blank</option>
-					</select>
-				</label>
-				<label class="settings-option">
-					Content Font (eg Roboto, Inter, Noto Serif, ...)<br>
-					<input type="text" class="font" v-model="settings.fontContent">
-				</label>
-				<label class="settings-option">
-					Monospace Font (eg Ubuntu Mono, Menlo, JetBrains Mono, ...)<br>
-					<input type="text" class="font-mono" v-model="settings.fontMonospace">
-				</label>
-				<small style="opacity: .75;">WARNING: changing fonts can shift the sizes of your cards</small>
-				<h2 class="section-header">Interface</h2>
-				<label class="settings-option">
-					Require doubleclick to create cards
-					<Toggle v-model="settings.doubleClickCreateCard" />
-				</label>
-				<label class="settings-option">
-					Long press selection mode<br>
-					<input
-						type="radio"
-						name="selection-mode"
-						value="draw"
-						v-model="settings.selectionMode"
-					/>
-					Draw
-					<input
-						type="radio"
-						name="selection-mode"
-						value="box"
-						v-model="settings.selectionMode"
-					/>
-					Box
-				</label>
+
+				<h2 class="settings-section-header">Interface</h2>
+
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Require doubleclick to create cards</label>
+						<div class="description">Avoid accidentally creating new cards when using a mouse</div>
+					</div>
+					<div class="control">
+						<Toggle v-model="settings.doubleClickCreateCard" />
+					</div>
+				</div>
+
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Type anywhere</label>
+						<div class="description">Start typing anywhere to create a new card</div>
+					</div>
+					<div class="control">
+						<Toggle v-model="settings.typeAnywhere" />
+					</div>
+				</div>
+
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Selection mode</label>
+						<div class="description">Press and hold to start selecting cards</div>
+					</div>
+					<div class="control">
+						<div class="combobox">
+							<div class="option">
+								<IconDrawSelection />
+								<input
+									type="radio"
+									name="selection-mode"
+									value="draw"
+									v-model="settings.selectionMode"
+								>
+							</div>
+							<div class="option">
+								<IconBoxSelection />
+								<input
+									type="radio"
+									name="selection-mode"
+									value="box"
+									v-model="settings.selectionMode"
+								>
+							</div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 		</div>
 	</Transition>
 </template>
 
 <style>
-button,
-input[type="text"] {
-	padding: .25rem .5rem;
-	font-family: inherit;
-	font-size: inherit;
-	color: inherit;
-	background-color: light-dark(#d0d0d0, #404040);
-	border: none;
-	border-radius: .25rem;
-}
-
 .settings {
 	display: flex;
 	position: fixed;
@@ -117,92 +118,135 @@ input[type="text"] {
 	overflow-y: auto;
 	scrollbar-gutter: stable both-edges;
 	user-select: none;
+}
 
-	.settings-page {
+.settings-page {
+	display: flex;
+	width: 100%;
+	max-width: 960px;
+	padding: 2rem 1rem;
+	gap: 1rem;
+	flex-direction: column;
+
+	.settings-page-header {
 		display: flex;
-		width: 100%;
-		max-width: 960px;
-		padding: 2rem 1rem;
-		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
 
-		.settings-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
+		h1 {
+			margin-block: 0;
+			font-size: 2rem;
+		}
 
-			h1 {
-				margin-block: 0;
-				font-size: 2rem;
+		.button-close {
+			height: 2rem;
+			width: 2rem;
+			padding: .25rem;
+			background-color: transparent;
+			border-radius: 100%;
+
+			svg {
+				width: 1.5rem;
+				height: 1.5rem;
+				opacity: .75;
 			}
 
-			.button-close {
-				position: relative;
-				height: 2.25rem;
-				aspect-ratio: 1;
-				font-size: 1.5rem;
-				font-weight: bold;
-				border-radius: 100%;
-			}
-		}
-
-		.section-header {
-			margin-block: 2rem 1rem;
-			padding-bottom: .25rem;
-			font-size: 1.25rem;
-			border-bottom: 1px solid #303030;
-		}
-
-		.settings-option {
-			display: block;
-			user-select: none;
-		}
-
-		.color-theme {
-			appearance: none;
-			width: 100px;
-			height: 80px;
-			border-radius: .625rem;
-			border: 1px solid red;
-
+			&:hover,
 			&:focus-visible {
-				outline: 2px solid #f008;
-			}
+				background-color: light-dark(#e0e0e0, #404040);
 
-			&:focus-visible,
-			&:checked {
-				border: 2px solid red;
+				svg {
+					opacity: 1;
+				}
 			}
 		}
+	}
+}
 
-		.font {
-			margin-top: .25rem;
-			font-family: var(--font-content);
-			line-height: 1.25rem;
+.settings-section-header {
+	margin: 0;
+	margin-top: 1rem;
+	padding-bottom: 1rem;
+	font-size: 1.25rem;
+	border-bottom: 1px solid light-dark(#c8c8c8, #383838);
+}
+
+.settings-option {
+	display: flex;
+
+	.info {
+		display: flex;
+		flex-direction: column;
+		gap: .5rem;
+		flex-grow: 1;
+
+		.name {
+			font-weight: bold;
 		}
 
-		.font-mono {
-			margin-top: .25rem;
-			font-family: var(--font-monospace);
-			line-height: 1.25rem;
+		.description {
+			font-size: .75rem;
+			opacity: .75;
+		}
+	}
+}
+
+.accent-color {
+	display: flex;
+	gap: 1rem;
+
+	input[type="radio"] {
+		appearance: none;
+		width: 1.5rem;
+		height: 1.5rem;
+		margin: 0;
+		background-color: var(--color-select);
+		border-radius: 100%;
+
+		&:checked {
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent), transparent 50%);
+		}
+
+		&:focus-visible {
+			outline-color: var(--color-select);
+		}
+	}
+}
+
+.combobox {
+	display: flex;
+
+	.option {
+		svg {
+			position: absolute;
+			width: 1.5rem;
+			height: 1.5rem;
+			margin: .25rem;
+			pointer-events: none;
+		}
+
+		&:has(:checked) {
+			color: #202020;
 		}
 
 		input[type="radio"] {
-			margin: .25rem .5rem;
-		}
-
-		input[type="radio"].color {
 			appearance: none;
-			width: 1.5rem;
-			height: 1.5rem;
-			background-color: var(--color-select);
-			border-color: var(--color-select);
-			border-radius: 100%;
-			accent-color: var(--color-select);
+			width: 2rem;
+			height: 2rem;
+			margin: 0;
+			background-color: light-dark(#d0d0d0, #404040);
 
 			&:checked {
-				outline: 2px solid var(--color-select);
-				outline-offset: 4px;
+				background-color: var(--color-accent);
 			}
+		}
+
+		&:first-child input[type="radio"] {
+			border-radius: .375rem 0 0 .375rem;
+		}
+
+		&:last-child input[type="radio"] {
+			border-radius: 0 .375rem .375rem 0;
 		}
 	}
 }
@@ -211,21 +255,21 @@ input[type="text"] {
 	.settings-enter-active,
 	.settings-leave-active {
 		overflow-y: hidden;
-		transition: 400ms cubic-bezier(0.075, 0.820, 0.165, 1.000);
+		transition: 400ms cubic-bezier(.075, .820, .165, 1);
 	}
 
 	.settings-enter-from,
 	.settings-leave-to {
-		scale: 1.25;
+		scale: 1.125;
 		opacity: 0;
 	}
 
 	.board {
-		transition: 400ms cubic-bezier(0.075, 0.820, 0.165, 1.000);
+		transition: 400ms cubic-bezier(.075, .820, .165, 1);
 	}
 
 	.board:has(+ .settings:not(.settings-leave-active)) {
-		scale: .75;
+		scale: .875;
 	}
 }
 </style>
