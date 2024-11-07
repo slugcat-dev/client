@@ -30,7 +30,7 @@ const { settings, settingsVisible } = useSettings()
 						name="color-theme"
 						value="dark"
 						v-model="settings.colorTheme"
-						style="background-color: black;"
+						style="background-color: gray; background-image: url('/images/theme-dark.svg');"
 					/>
 					<input
 						type="radio"
@@ -38,7 +38,7 @@ const { settings, settingsVisible } = useSettings()
 						name="color-theme"
 						value="light"
 						v-model="settings.colorTheme"
-						style="background-color: white;"
+						style="background-color: gray; background-image: url('/images/theme-light.svg');"
 					/>
 					<input
 						v-for="color in ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray']"
@@ -96,6 +96,17 @@ const { settings, settingsVisible } = useSettings()
 </template>
 
 <style>
+button,
+input[type="text"] {
+	padding: .25rem .5rem;
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+	background-color: light-dark(#d0d0d0, #404040);
+	border: none;
+	border-radius: .25rem;
+}
+
 .settings {
 	display: flex;
 	position: fixed;

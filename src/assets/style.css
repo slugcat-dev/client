@@ -1,6 +1,4 @@
 @import 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
-@import 'https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap';
-@import 'https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap';
 @import 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap';
 
 * {
@@ -16,38 +14,28 @@
 	--color-purple: oklch(75% .125 310deg);
 	--color-pink: oklch(75% .125 340deg);
 	--color-gray: oklch(75% 0 0);
+
 	--color-accent: var(--color-blue);
 	--color-accent-25: color-mix(in srgb, var(--color-accent), transparent 75%);
 	--color-accent-50: color-mix(in srgb, var(--color-accent), transparent 50%);
+
+	--color-background: light-dark(white, #202020);
+	--color-text: light-dark(#202020, #d0d0d0);
+	--color-card-background: light-dark(white, #282828);
+	--color-card-border: light-dark(#e0e0e0, #303030);
+
 	--font-content: 'Roboto', sans-serif;
-	--font-monospace: 'Ubuntu Mono', monospace;
+	--font-monospace: 'Fira Code', monospace;
+	--shadow: 0 2px 4px light-dark(#0001, #0002);
+
 	accent-color: var(--color-accent);
-}
-
-:root {
-	--color-background: white;
-	--color-text: #202020;
-	--color-card-background: white;
-	--color-card-border: #e0e0e0;
-	--shadow: 0 2px 4px #0002;
-	color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--color-background: #202020;
-		--color-text: #d0d0d0;
-		--color-card-background: #282828;
-		--color-card-border: #303030;
-		color-scheme: dark;
-	}
+	color-scheme: light dark;
 }
 
 body {
 	margin: 0;
 	font-family: system-ui;
 	font-size: .875rem;
-	line-height: 1.25;
 	color: var(--color-text);
 	background-color: var(--color-background);
 	-webkit-tap-highlight-color: transparent;
@@ -55,17 +43,6 @@ body {
 
 a {
 	color: var(--color-accent);
-}
-
-button,
-input[type="text"] {
-	padding: .25rem .5rem;
-	font-family: inherit;
-	font-size: inherit;
-	color: inherit;
-	background-color: light-dark(#d0d0d0, #404040);
-	border: none;
-	border-radius: .25rem;
 }
 
 ::selection {

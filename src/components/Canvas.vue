@@ -99,7 +99,7 @@ useKeymap({
 	'End': canvas.overview,
 	'CtrlMeta +': keyboardZoom,
 	'CtrlMeta -': keyboardZoom,
-	'CtrlMeta A': () => selection.box = new DOMRect(-Infinity, -Infinity, Infinity, Infinity),
+	'CtrlMeta A': () => selection.cards = cards,
 	'CtrlMeta C': copySelectedCards,
 	'CtrlMeta X': () => {
 		copySelectedCards()
@@ -449,6 +449,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@pointerleave="state.pointerOver = false"
 		@pointercancel ="state.pointerOver = false"
 		@click.left.self="onClick"
+		@click.middle.self.prevent
 		@wheel.prevent="onWheel"
 		@dragenter="state.pointerOver = true"
 		@dragleave="state.pointerOver = false"

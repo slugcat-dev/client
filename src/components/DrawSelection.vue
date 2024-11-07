@@ -34,7 +34,7 @@ watch(() => selection.draw, () => {
 	if (selection.draw) {
 		path = []
 		points = new Array(10).fill(null).map(() => (toCanvasPos(pointer)))
-		colorAccent = getComputedStyle(canvas).getPropertyValue('--color-accent')
+		colorAccent = getComputedStyle(canvas).color
 
 		if (!animationLock) {
 			animationLock = true
@@ -140,6 +140,7 @@ function toCanvasPos(pos: Pos) {
 	position: absolute;
 	width: 100%;
 	height: 100%;
+	color: var(--color-accent);
 	transition: opacity 200ms ease-out;
 	pointer-events: none;
 }

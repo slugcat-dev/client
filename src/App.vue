@@ -9,15 +9,14 @@ import Toaster from './components/Toaster.vue'
 
 const { settings } = useSettings()
 const { toast, untoast } = useToaster()
+const root = document.documentElement
 let offlineToast: Toast
 
-// Update settings
 watch(settings, () => {
-	const rootStyle = document.documentElement.style
-
-	rootStyle.setProperty('--color-accent', `var(--color-${settings.colorAccent})`)
-	rootStyle.setProperty('--font-content', `'${settings.fontContent || 'sans-serif'}', sans-serif`)
-	rootStyle.setProperty('--font-monospace', `'${settings.fontMonospace || 'monospace'}', monospace`)
+	root.style.colorScheme = settings.colorTheme === 'system' ? 'light dark' : settings.colorTheme
+	root.style.setProperty('--color-accent', `var(--color-${settings.colorAccent})`)
+	root.style.setProperty('--font-content', `'${settings.fontContent || 'sans-serif'}', sans-serif`)
+	root.style.setProperty('--font-monospace', `'${settings.fontMonospace || 'monospace'}', monospace`)
 }, { immediate: true })
 
 useEventListener('offline', () => {

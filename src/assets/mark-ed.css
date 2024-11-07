@@ -65,7 +65,7 @@
 }
 
 .md-code {
-	padding-block: .125rem;
+	line-height: 1;
 	border-radius: .25em;
 
 	&:has(.md-hidden) {
