@@ -39,7 +39,7 @@ const { settingsVisible } = useSettings()
 	background-color: transparent;
 	border-radius: 100%;
 
-	svg {
+	.icon {
 		width: 1.5rem;
 		height: 1.5rem;
 		opacity: .75;
@@ -50,7 +50,7 @@ const { settingsVisible } = useSettings()
 	&:focus-visible {
 		background-color: light-dark(#e0e0e0, #404040);
 
-		svg {
+		.icon {
 			opacity: 1;
 			rotate: 60deg;
 		}

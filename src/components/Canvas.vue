@@ -40,7 +40,7 @@ const selection = reactive<CanvasSelection>({
 		selection.cards = []
 	}
 })
-const { settings } = useSettings()
+const { settings, settingsVisible } = useSettings()
 const { toast, untoast } = useToaster()
 const cursor = computed(() => {
 	if (state.panning && pointer.moved)
@@ -98,7 +98,8 @@ useKeymap({
 	},
 	'Backspace': deleteSelectedCards,
 	'Delete': deleteSelectedCards,
-	'Escape': selection.clear
+	'Escape': selection.clear,
+	'CtrlMeta ,': () => settingsVisible.value = true
 })
 
 // Pan the canvas using the arrow keys

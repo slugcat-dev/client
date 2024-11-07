@@ -4,6 +4,12 @@ import { watch } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import Toggle from './UI/Toggle.vue'
 import IconClose from './Icons/IconClose.vue'
+import IconComputer from './Icons/IconComputer.vue'
+import IconMoon from './Icons/IconMoon.vue'
+import IconSun from './Icons/IconSun.vue'
+import IconDots from './Icons/IconDots.vue'
+import IconGrid from './Icons/IconGrid.vue'
+import IconBlank from './Icons/IconBlank.vue'
 import IconDrawSelection from './Icons/IconDrawSelection.vue'
 import IconBoxSelection from './Icons/IconBoxSelection.vue'
 
@@ -39,16 +45,97 @@ watch(settingsVisible, () => {
 
 				<h2 class="settings-section-header">Appearance</h2>
 
-				<div class="accent-color">
-					<input
-						v-for="color in ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray']"
-						:key="color"
-						type="radio"
-						name="accent-color"
-						:value="color"
-						v-model="settings.colorAccent"
-						:style="{ '--color-select': `var(--color-${color})` }"
-					/>
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Accent Color</label>
+					</div>
+					<div class="control">
+						<div class="accent-color">
+							<input
+								v-for="color in ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray']"
+								:key="color"
+								type="radio"
+								name="accent-color"
+								:value="color"
+								v-model="settings.colorAccent"
+								:style="{ '--color-select': `var(--color-${color})` }"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Color Theme</label>
+					</div>
+					<div class="control">
+						<div class="combobox">
+							<div class="option">
+								<IconComputer />
+								<input
+									type="radio"
+									name="color-theme"
+									value="system"
+									v-model="settings.colorTheme"
+								>
+							</div>
+							<div class="option">
+								<IconMoon />
+								<input
+									type="radio"
+									name="color-theme"
+									value="dark"
+									v-model="settings.colorTheme"
+								>
+							</div>
+							<div class="option">
+								<IconSun />
+								<input
+									type="radio"
+									name="color-theme"
+									value="light"
+									v-model="settings.colorTheme"
+								>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="settings-option">
+					<div class="info">
+						<label class="name">Board background</label>
+					</div>
+					<div class="control">
+						<div class="combobox">
+							<div class="option">
+								<IconDots />
+								<input
+									type="radio"
+									name="board-background"
+									value="dot"
+									v-model="settings.boardBackground"
+								>
+							</div>
+							<div class="option">
+								<IconGrid />
+								<input
+									type="radio"
+									name="board-background"
+									value="grid"
+									v-model="settings.boardBackground"
+								>
+							</div>
+							<div class="option">
+								<IconBlank />
+								<input
+									type="radio"
+									name="board-background"
+									value="blank"
+									v-model="settings.boardBackground"
+								>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<h2 class="settings-section-header">Interface</h2>
@@ -145,7 +232,7 @@ watch(settingsVisible, () => {
 			background-color: transparent;
 			border-radius: 100%;
 
-			svg {
+			.icon {
 				width: 1.5rem;
 				height: 1.5rem;
 				opacity: .75;
@@ -155,7 +242,7 @@ watch(settingsVisible, () => {
 			&:focus-visible {
 				background-color: light-dark(#e0e0e0, #404040);
 
-				svg {
+				.icon {
 					opacity: 1;
 				}
 			}
@@ -194,6 +281,7 @@ watch(settingsVisible, () => {
 .accent-color {
 	display: flex;
 	gap: 1rem;
+	justify-content: center;
 
 	input[type="radio"] {
 		appearance: none;
@@ -201,10 +289,11 @@ watch(settingsVisible, () => {
 		height: 1.5rem;
 		margin: 0;
 		background-color: var(--color-select);
+		border: 4px solid var(--color-background);
 		border-radius: 100%;
 
 		&:checked {
-			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent), transparent 50%);
+			border-color: color-mix(in srgb, var(--color-select), transparent 50%);
 		}
 
 		&:focus-visible {
@@ -217,7 +306,7 @@ watch(settingsVisible, () => {
 	display: flex;
 
 	.option {
-		svg {
+		.icon {
 			position: absolute;
 			width: 1.5rem;
 			height: 1.5rem;
@@ -231,6 +320,7 @@ watch(settingsVisible, () => {
 
 		input[type="radio"] {
 			appearance: none;
+			display: block;
 			width: 2rem;
 			height: 2rem;
 			margin: 0;

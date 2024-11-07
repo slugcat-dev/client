@@ -1,10 +1,15 @@
 <script setup lang="ts">
 const model = defineModel()
+const { name } = defineProps<{ name?: string }>()
 </script>
 
 <template>
 	<div class="toggle">
-		<input type="checkbox" v-model="model">
+		<input
+			type="checkbox"
+			:name
+			v-model="model"
+		>
 	</div>
 </template>
 
@@ -15,7 +20,7 @@ const model = defineModel()
 	height: 1.5rem;
 	background-color: light-dark(#d0d0d0, #404040);
 	border-radius: .75rem;
-	transition: .2s;
+	transition: 200ms;
 
 	&::before {
 		content: '';
@@ -26,29 +31,29 @@ const model = defineModel()
 		margin: .25rem;
 		background-color: white;
 		border-radius: 1rem;
-		transition: .2s;
+		transition: 200ms;
 		pointer-events: none;
 	}
 
-	&:has(input[type="checkbox"]:checked) {
-		background-color: var(--color-accent);
-	}
-
-	&:has(input[type="checkbox"]:active)::before {
-		width: 2rem;
-	}
-
-	&:has(input[type="checkbox"]:checked:not(:active))::before {
-		left: 1rem;
-	}
-
-	input[type="checkbox"] {
+	input {
 		appearance: none;
 		margin: 0;
 		width: inherit;
 		height: inherit;
 		border-radius: inherit;
 		cursor: pointer;
+	}
+
+	&:has(:checked) {
+		background-color: var(--color-accent);
+	}
+
+	&:has(:active)::before {
+		width: 2rem;
+	}
+
+	&:has(:checked:not(:active))::before {
+		left: 1rem;
 	}
 }
 </style>
