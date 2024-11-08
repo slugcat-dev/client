@@ -344,7 +344,7 @@ function onClick(event: MouseEvent) {
 	if (pointer.type === 'mouse' && event.detail !== 2 && settings.doubleClickCreateCard)
 		return
 
-	createCard({ pos: canvas.toCanvasPos(pointer) })
+	createCard({ id: 'new', pos: canvas.toCanvasPos(pointer) })
 }
 
 function onWheel(event: WheelEvent) {

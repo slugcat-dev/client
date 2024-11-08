@@ -46,15 +46,16 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 	// Paste images
 	if (images.length) {
+		const now = Date.now()
 		let offset = 0
 
 		return {
 			type: 'image',
-			cards: await Promise.all(images.map(image => new Promise<Card>(async resolve => {
+			cards: await Promise.all(images.map((image, i) => new Promise<Card>(async resolve => {
 				const data = await fileToBase64(image)
 
 				resolve(createCard({
-					id: Date.now() + Math.random(),
+					id: now + i,
 					type: 'image',
 					pos: {
 						x: pos.x + offset,
@@ -74,12 +75,13 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 			const cards = JSON.parse(cardsItem.data) as Card[]
 
 			if (cards.length) {
+				const now = Date.now()
 				const corner = cards[0].pos
 
 				return {
 					type: 'card',
 					cards: cards.map((card, i) => createCard({
-						id: Date.now() + i,
+						id: now + i,
 						type: card.type,
 						pos: {
 							x: pos.x + card.pos.x - corner.x,
@@ -104,7 +106,6 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 				return {
 					type: 'image',
 					cards: [createCard({
-						id: Date.now(),
 						type: 'image',
 						pos,
 						content: text
@@ -127,7 +128,6 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		return {
 			type: vscodeItem ? 'code' : 'text',
 			cards: [createCard({
-				id: Date.now(),
 				type: 'text',
 				pos,
 				content: text

@@ -42,6 +42,7 @@ interface Card {
 	type: 'text' | 'image'
 	pos: Pos
 	content: string
+	modified: number
 }
 
 interface CanvasSelection {

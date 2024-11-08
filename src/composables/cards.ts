@@ -1,12 +1,13 @@
 import { createGlobalState } from '@vueuse/core'
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 
 export const useCards = createGlobalState(() => {
 	console.log('GET cards')
 
+	const now = Date.now()
 	const cards = reactive<Card[]>([
-		{ id: Date.now(), type: 'text', content: 'Test', pos: { x: 25, y: 100 } },
-		{ id: Date.now() + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 100, y: 25 } }
+		{ id: now, type: 'text', content: 'Test', pos: { x: 25, y: 100 }, modified: now },
+		{ id: now + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 100, y: 25 }, modified: now }
 	])
 
 	return cards
@@ -14,12 +15,20 @@ export const useCards = createGlobalState(() => {
 
 const cards = useCards()
 
+// Stack cards in the order they were modified
+watch(cards, () => {
+	cards.sort((a, b) => a.modified - b.modified)
+}, { deep: true })
+
 export function createCard(data: Partial<Card>) {
+	const now = Date.now()
+
 	const length = cards.push({
-		id: 'new',
+		id: now,
 		type: 'text',
 		content: '',
-		pos: { x: 0, y: 0},
+		pos: { x: 0, y: 0 },
+		modified: now,
 		...data
 	})
 
@@ -27,8 +36,12 @@ export function createCard(data: Partial<Card>) {
 }
 
 export function updateCard(card: Card) {
+	const now = Date.now()
+
+	card.modified = now
+
 	if (card.id === 'new') {
-		card.id = Date.now()
+		card.id = now
 
 		console.log('CREATE', card.id)
 	} else
@@ -36,6 +49,9 @@ export function updateCard(card: Card) {
 }
 
 export function updateMany(cards: Card[]) {
+	const now = Date.now()
+
+	cards.sort((a, b) => a.modified - b.modified).forEach((card, i) => card.modified = now + i)
 	console.log('UPDATE', ...cards.map(card => card.id))
 }
 
