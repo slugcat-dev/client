@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { onceChanged, rectsOverlap, suppressEvent } from '../utils'
+import { computed, type ComputedRef, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { onceChanged, rectContains, rectsOverlap, suppressEvent } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
+import type Card from './Card.vue'
+import CardContentBox from './CardContentBox.vue'
 import CardContentText from './CardContentText.vue'
 import CardContentImage from './CardContentImage.vue'
+
+type CardRef = InstanceType<typeof Card>
+type CardContentRef = InstanceType<ReturnType<typeof getContentComponent>>
+type CardContentBoxRef = InstanceType<typeof CardContentBox>
+type CardContentImageRef = InstanceType<typeof CardContentImage>
 
 const { card, canvas, selection } = defineProps<{
 	card: Card,
@@ -11,18 +18,22 @@ const { card, canvas, selection } = defineProps<{
 	selection: CanvasSelection
 }>()
 const cardRef = useTemplateRef('card-ref')
-const contentRef = useTemplateRef('content-ref')
+const contentRef = useTemplateRef<CardContentRef>('content-ref')
 const state = reactive({
 	selected: false,
 	dragging: false,
-	downOffset: {
-		x: 0,
-		y: 0,
-		zoom: 0
+	resizing: false as boolean | string,
+	downState: {
+		offsetX: 0,
+		offsetY: 0,
+		zoom: 0,
+		width: 0,
+		height: 0
 	}
 })
 const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
+const cardRefs = inject('card-refs') as ComputedRef<CardRef[]>
 const cursor = computed(() => {
 	if (contentRef.value?.active)
 		return 'auto'
@@ -33,35 +44,40 @@ const cursor = computed(() => {
 
 	return 'grab'
 })
+const zIndex = computed(() => {
+	const isActive = contentRef.value?.active || state.selected || state.dragging
+	const z = card.type === 'box' ? -1 : 0
+
+	return isActive ? z + 2 : z
+})
+let cardRefMap = new Map<Card, CardRef>()
+let relatedCards = new Set<Card>()
 let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
-
-watch([() => selection.box], () => {
-	if (selection.box) {
-		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
-
-		// Check if the card is in the selection
-		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
-	}
-})
 
 watch([() => selection.cards], () => {
 	state.selected = selection.cards.includes(card)
 })
 
+watch([() => selection.box], () => {
+	if (selection.box) {
+		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+
+		// Check if the card is in the selection box
+		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
+	}
+})
+
 watch([() => selection.draw], () => {
 	if (selection.draw) {
+		// Select the card when the pointer is moved over it during draw selection
 		unwatchPointer = watch(pointer, () => {
 			const cardRect = cardRef.value!.getBoundingClientRect()
 			const pointerRect = new DOMRect(pointer.x - 10, pointer.y - 10, 20, 20)
 
-			if (rectsOverlap(cardRect, pointerRect) && !selection.cards.includes(card)) {
-				if (navigator.vibrate)
-					navigator.vibrate(50)
-
+			if (rectsOverlap(cardRect, pointerRect))
 				state.selected = true
-			}
 		})
 	} else
 		unwatchPointer()
@@ -69,29 +85,67 @@ watch([() => selection.draw], () => {
 
 watch(() => state.selected, () => {
 	if (state.selected) {
-		if (!selection.cards.includes(card))
+		if (!selection.cards.includes(card)) {
 			selection.cards.push(card)
+
+			if (navigator.vibrate)
+				navigator.vibrate(50)
+		}
 	} else
 		selection.cards.splice(selection.cards.indexOf(card), 1)
 })
 
 function onPointerDown(event: PointerEvent) {
-	if (!state.selected)
-		selection.clear()
-
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	onceChanged(pointer, () => {
-		if (!cardInteractionAllowed())
+		if (typeof card.id !== 'number' || contentRef.value!.active || pointers.length !== 1)
 			return
+
+		cardRefMap = new Map(cardRefs.value
+			.filter(cardRef => cardRef.card !== card)
+			.map(cardRef => [cardRef.card, cardRef]))
+
+		const targetClassName = (event.target as HTMLElement).className
+
+		if (card.type === 'box' && targetClassName.startsWith('resize')) {
+			state.resizing = targetClassName
+
+			selection.clear()
+			relatedCards.clear()
+		} else {
+			state.dragging = true
+
+			if (!state.selected)
+				selection.clear()
+
+			// Add other selected cards to related cards
+			relatedCards = new Set(selection.cards.filter(c => c !== card))
+
+			if (card.type === 'box') {
+				const boxRect = (contentRef.value as CardContentBoxRef).boxRef!.getBoundingClientRect()
+
+				// Add cards inside the box to related cards
+				cardRefMap.forEach((cardRef, card) => {
+					if (rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
+						cardRef.dragging = true
+
+						relatedCards.add(card)
+					}
+				})
+			}
+		}
 
 		const cardRect = cardRef.value!.getBoundingClientRect()
 
-		state.dragging = true
-		state.downOffset = {
-			x: event.clientX - cardRect.x,
-			y: event.clientY - cardRect.y,
-			zoom: canvas.smoothZoom
+		state.downState.offsetX = event.clientX - cardRect.x
+		state.downState.offsetY = event.clientY - cardRect.y
+		state.downState.zoom = canvas.smoothZoom
+
+		if (card.type === 'box') {
+			state.downState.width = card.content.width
+			state.downState.height = card.content.height
 		}
+
 		unwatchPointerMove = watch([pointer, canvas], onPointerMove)
 		unwatchPointerUp = watch([
 			() => pointer.down,
@@ -104,22 +158,29 @@ function onPointerMove() {
 	if (!pointer.moved)
 		return
 
-	const prevPosition = card.pos
-
-	// Move the card
-	card.pos = canvas.toCanvasPos({
-		x: pointer.x - state.downOffset.x * canvas.smoothZoom / state.downOffset.zoom,
-		y: pointer.y - state.downOffset.y * canvas.smoothZoom / state.downOffset.zoom
+	const prevPos = card.pos
+	const newPos = canvas.toCanvasPos({
+		x: pointer.x - state.downState.offsetX * canvas.smoothZoom / state.downState.zoom,
+		y: pointer.y - state.downState.offsetY * canvas.smoothZoom / state.downState.zoom
 	})
 
-	// Move other selected cards
-	if (selection.cards.length > 1) {
-		selection.cards.filter((selected: Card) => selected !== card).forEach((c: Card) => {
-			c.pos = {
-				x: c.pos.x + card.pos.x - prevPosition.x,
-				y: c.pos.y + card.pos.y - prevPosition.y
-			}
-		})
+	if (state.dragging) {
+		card.pos = newPos
+
+		if (relatedCards.size) {
+			relatedCards.forEach(c => {
+				c.pos.x += card.pos.x - prevPos.x
+				c.pos.y += card.pos.y - prevPos.y
+			})
+		}
+	}
+
+	if (state.resizing) {
+		if (state.resizing === 'resize-h' || state.resizing === 'resize-d')
+			card.content.width = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
+
+		if (state.resizing === 'resize-v' || state.resizing === 'resize-d')
+			card.content.height = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
 	}
 
 	canvas.edgeScroll()
@@ -129,38 +190,36 @@ function onPointerUp() {
 	if (pointer.down && pointers.length === 1)
 		return
 
-	state.dragging = false
-
 	if (pointer.moved) {
 		if (pointer.type === 'mouse')
 			suppressEvent('click')
 
 		canvas.stopEdgeScroll()
 
-		if (selection.cards.length > 1)
-			updateMany(selection.cards)
+		if (relatedCards.size)
+			updateMany([card, ...relatedCards])
 		else
 			updateCard(card)
 	}
+
+	relatedCards.forEach(relatedCard => cardRefMap.get(relatedCard)!.dragging = false)
+
+	state.dragging = false
+	state.resizing = false
 
 	unwatchPointerMove()
 	unwatchPointerUp()
 }
 
-function cardInteractionAllowed() {
-	return (
-		typeof card.id === 'number'
-		&& pointers.length === 1
-		&& !contentRef.value?.active
-	)
-}
-
 function getContentComponent() {
 	switch (card.type) {
+		case 'box': return CardContentBox
 		case 'text': return CardContentText
 		case 'image': return CardContentImage
 	}
 }
+
+defineExpose({ card, ref: cardRef, dragging: toRef(state, 'dragging') })
 </script>
 
 <template>
@@ -171,7 +230,7 @@ function getContentComponent() {
 		:style="{
 			translate: `${card.pos.x}px ${card.pos.y}px`,
 			cursor,
-			zIndex: contentRef?.active || state.selected || state.dragging ? 1 : 0
+			zIndex
 		}"
 		@pointerdown.left.exact="onPointerDown"
 		@click.left.exact="selection.clear()"

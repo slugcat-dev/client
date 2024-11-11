@@ -1,6 +1,5 @@
-import { createCard } from './composables/cards'
+import { createCard, getCardText } from './composables/cards'
 import { fileToBase64, isURL, loadImage } from './utils'
-import { type Editor } from '@slugcat-dev/mark-ed'
 
 /**
  * Copy the given cards to the clipboard.
@@ -20,7 +19,7 @@ export function copyCards(cards: Card[]) {
 		})
 
 		event.preventDefault()
-		event.clipboardData.setData('text/plain', cards.map(card => card.content).join('\n\n'))
+		event.clipboardData.setData('text/plain', cards.map(getCardText).join('\n\n'))
 		event.clipboardData.setData('cards', JSON.stringify(cards.map(card => ({
 			type: card.type,
 			pos: card.pos,
@@ -61,7 +60,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 						x: pos.x + offset,
 						y: pos.y + offset
 					},
-					content: data
+					content: { src: data }
 				}))
 
 				offset += 20
@@ -108,7 +107,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 					cards: [createCard({
 						type: 'image',
 						pos,
-						content: text
+						content: { src: text }
 					})]
 				}
 			} catch {}

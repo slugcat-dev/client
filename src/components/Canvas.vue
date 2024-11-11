@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { computed, inject, provide, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
 import { useSettings } from '../composables/settings'
@@ -14,6 +14,7 @@ import DrawSelection from './DrawSelection.vue'
 
 const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
+const cardRefs = useTemplateRef('card-refs')
 const state = reactive({
 	selecing: false,
 	panning: false,
@@ -78,6 +79,9 @@ let unwatchCanvas: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 let unwatchGestureChange: WatchHandle
+
+// Provide access to other cards for boxes and snapping
+provide('card-refs', computed(() => cardRefs.value ?? []))
 
 // Clear the selection when cards are removed
 watch(() => cards.length, (length, oldLength) => {
@@ -448,7 +452,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@dragover.self.stop.prevent
 		@drop.self.prevent="onPaste"
 	>
-		<CanvasBackground :scroll="canvas.smoothScroll" :canvas />
+		<CanvasBackground :canvas />
 		<div
 			class="cards"
 			:style="{
@@ -460,6 +464,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 			<Card
 				v-for="card of cards"
 				:key="card.id"
+				ref="card-refs"
 				:card
 				:canvas
 				:selection

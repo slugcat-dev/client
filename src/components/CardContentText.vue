@@ -8,7 +8,7 @@ import { getDataTransferItems } from '../clipboard'
 import { deleteCard, updateCard } from '../composables/cards'
 
 const { card, canvas } = defineProps<{ card: Card, canvas: Canvas }>()
-const contentRef = useTemplateRef('content-ref')
+const editorRef = useTemplateRef('editor-ref')
 const caretRef = useTemplateRef('caret-ref')
 const state = reactive({
 	active: false,
@@ -18,7 +18,7 @@ const clearDeleteIntent = useDebounceFn(() => state.deleteIntent = false, 500)
 let editor: Editor
 
 onMounted(() => {
-	editor = new Editor(contentRef.value!, {
+	editor = new Editor(editorRef.value!, {
 		content: card.content,
 		readonly: true,
 		hideMarks: true,
@@ -63,7 +63,7 @@ function onKeyDelete(event: KeyboardEvent) {
 		return
 
 	if (state.deleteIntent || prefersReducedMotion)
-		return contentRef.value!.blur()
+		return editor.root.blur()
 
 	state.deleteIntent = true
 
@@ -103,12 +103,12 @@ function activate() {
 }
 
 async function wiggleAnimation() {
-  contentRef.value!.classList.remove('wiggle')
+  editor.root.classList.remove('wiggle')
 
 	// Trigger reflow to restart the animation
-  void contentRef.value!.offsetWidth
+  void editor.root.offsetWidth
 
-  contentRef.value!.classList.add('wiggle')
+  editor.root.classList.add('wiggle')
 }
 
 defineExpose({ active: toRef(state, 'active') })
@@ -117,7 +117,7 @@ defineExpose({ active: toRef(state, 'active') })
 <template>
 	<div class="card-content">
 		<div
-			ref="content-ref"
+			ref="editor-ref"
 			class="card-content-text"
 			role="textbox"
 			aria-multiline="true"

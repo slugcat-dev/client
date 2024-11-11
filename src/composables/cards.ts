@@ -6,8 +6,9 @@ export const useCards = createGlobalState(() => {
 
 	const now = Date.now()
 	const cards = reactive<Card[]>([
-		{ id: now, type: 'text', content: 'Test', pos: { x: 25, y: 100 }, modified: now },
-		{ id: now + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 100, y: 25 }, modified: now }
+		{ id: now, type: 'text', content: 'Test', pos: { x: 140, y: 120 }, modified: now },
+		{ id: now + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 220, y: 180 }, modified: now },
+		{ id: now + 2, type: 'box', content: { name: 'Box', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now }
 	])
 
 	return cards
@@ -16,9 +17,9 @@ export const useCards = createGlobalState(() => {
 const cards = useCards()
 
 // Stack cards in the order they were modified
-watch(cards, () => {
+watch(() => cards.map(card => card.modified), () => {
 	cards.sort((a, b) => a.modified - b.modified)
-}, { deep: true })
+})
 
 export function createCard(data: Partial<Card>) {
 	const now = Date.now()
@@ -65,4 +66,12 @@ export function deleteCard(id: 'new' | number) {
 export function deleteMany(cardsToDelte: Card[]) {
 	console.log('DELETE', ...cardsToDelte.map(card => card.id))
 	cards.splice(0, cards.length, ...cards.filter(card => !cardsToDelte.includes(card)))
+}
+
+export function getCardText(card: Card) {
+	switch (card.type) {
+		case 'box': return card.content.name
+		case 'text': return card.content
+		case 'image': return card.content.src
+	}
 }

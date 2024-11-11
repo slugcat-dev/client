@@ -6,7 +6,7 @@ export const useSettings = createGlobalState(() => {
 		colorTheme: 'system',
 		colorAccent: 'blue',
 		fontContent: 'Roboto',
-		fontMonospace: 'JetBrains Mono',
+		fontMonospace: 'Fira Code',
 		boardBackground: 'dot',
 		doubleClickCreateCard: true,
 		typeAnywhere: true,

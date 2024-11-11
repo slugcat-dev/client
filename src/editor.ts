@@ -37,7 +37,7 @@ export function moveLine(editor: Editor, up: boolean): void {
  * Balance backticks for inline code formatting.
  */
 export function balanceBackticks(text: string) {
-	const backtickSequences = new Set(text.match(/`+/g) || [])
+	const backtickSequences = new Set(text.match(/`+/g))
 	let backticks = '`'
 
 	while (backtickSequences.has(backticks))
@@ -198,7 +198,7 @@ export function highlightCodeAddon(editor: Editor) {
 	onChange()
 
 	function onChange() {
-		if (!editor.markdown.lineTypes.some(type => type === 'CodeBlock'))
+		if (!editor.markdown.lineTypes.includes('CodeBlock'))
 			return
 
 		const selection = editor.getSelection()

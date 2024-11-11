@@ -356,10 +356,12 @@ watch(settingsVisible, () => {
 
 	.board {
 		transition: 400ms cubic-bezier(.075, .820, .165, 1);
+		transition-property: scale, opacity;
 	}
 
 	.board:has(+ .settings:not(.settings-leave-active)) {
 		scale: .875;
+		opacity: 0;
 	}
 }
 </style>

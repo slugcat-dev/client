@@ -24,7 +24,7 @@ defineExpose({ active: toRef(state, 'active') })
 	<div class="card-content">
 		<img
 			class="card-content-image"
-			:src="card.content"
+			:src="card.content.src"
 			draggable="false"
 			@click.left.exact="state.active = true"
 		>
@@ -35,7 +35,7 @@ defineExpose({ active: toRef(state, 'active') })
 					class="image-preview"
 					@click="state.active = false"
 				>
-					<img :src="card.content">
+					<img :src="card.content.src">
 				</div>
 			</Transition>
 		</Teleport>
@@ -45,10 +45,8 @@ defineExpose({ active: toRef(state, 'active') })
 <style scoped>
 .card-content-image {
 	display: block;
-	width: auto;
-	max-width: 250px;
-	height: auto;
-	max-height: 200px;
+	max-width: 240px;
+	max-height: 240px;
 	border-radius: .375rem;
 	filter: drop-shadow(var(--shadow));
 	-webkit-touch-callout: none;
@@ -62,7 +60,7 @@ defineExpose({ active: toRef(state, 'active') })
 	pointer-events: none;
 }
 
-.card:hover .card-content::after {
+.card-content:hover::after {
 	box-shadow: 0 0 0 2px var(--color-card-border) inset;
 }
 
@@ -71,7 +69,7 @@ defineExpose({ active: toRef(state, 'active') })
 }
 
 .card.selected .card-content-image,
-.card:hover .card-content-image {
+.card-content:hover .card-content-image {
 	background-color: var(--color-card-background);
 }
 
@@ -82,7 +80,8 @@ defineExpose({ active: toRef(state, 'active') })
 	align-items: center;
 	justify-content: center;
 	padding: 2rem;
-	background-color: black;
+	background-color: #000a;
+	backdrop-filter: blur(8px);
 
 	img {
 		display: block;
@@ -92,10 +91,10 @@ defineExpose({ active: toRef(state, 'active') })
 	}
 }
 
-@media (prefers-reduced-transparency: no-preference) {
+@media (prefers-reduced-transparency: reduce) {
 	.image-preview {
-		background-color: #000a;
-		backdrop-filter: blur(8px);
+		background-color: black;
+		backdrop-filter: none;
 	}
 }
 
