@@ -103,9 +103,7 @@ function onPointerDown(event: PointerEvent) {
 		if (typeof card.id !== 'number' || contentRef.value!.active || pointers.length !== 1)
 			return
 
-		cardRefMap = new Map(cardRefs.value
-			.filter(cardRef => cardRef.card !== card)
-			.map(cardRef => [cardRef.card, cardRef]))
+		cardRefMap = new Map(cardRefs.value.map(cardRef => [cardRef.card, cardRef]))
 
 		const targetClassName = (event.target as HTMLElement).className
 
@@ -120,21 +118,27 @@ function onPointerDown(event: PointerEvent) {
 			if (!state.selected)
 				selection.clear()
 
-			// Add other selected cards to related cards
+			// Collect all cards that should be dragged along
 			relatedCards = new Set(selection.cards.filter(c => c !== card))
 
-			if (card.type === 'box') {
-				const boxRect = (contentRef.value as CardContentBoxRef).boxRef!.getBoundingClientRect()
+			function addRelatedBoxCards(boxCard: Card) {
+				if (boxCard.type !== 'box')
+					return
 
-				// Add cards inside the box to related cards
-				cardRefMap.forEach((cardRef, card) => {
-					if (rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
+				const boxCardRef = cardRefMap.get(boxCard)!
+				const boxRect = (boxCardRef.contentRef! as CardContentBoxRef).boxRef!.getBoundingClientRect()
+
+				cardRefMap.forEach(cardRef => {
+					if (cardRef.card !== card && rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
 						cardRef.dragging = true
 
-						relatedCards.add(card)
+						relatedCards.add(cardRef.card)
+						addRelatedBoxCards(cardRef.card)
 					}
 				})
 			}
+
+			[card, ...relatedCards].forEach(addRelatedBoxCards)
 		}
 
 		const cardRect = cardRef.value!.getBoundingClientRect()
@@ -240,7 +244,7 @@ function getContentComponent() {
 	}
 }
 
-defineExpose({ card, ref: cardRef, dragging: toRef(state, 'dragging') })
+defineExpose({ card, ref: cardRef, contentRef, dragging: toRef(state, 'dragging') })
 </script>
 
 <template>
