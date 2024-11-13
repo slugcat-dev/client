@@ -119,8 +119,6 @@ defineExpose({ active: toRef(state, 'active') })
 		<div
 			ref="editor-ref"
 			class="card-content-text"
-			role="textbox"
-			aria-multiline="true"
 			@click.left.exact="onClick"
 			@keydown.delete="onKeyDelete"
 			@paste.capture.stop.prevent="onPaste"

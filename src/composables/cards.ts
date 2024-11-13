@@ -8,7 +8,8 @@ export const useCards = createGlobalState(() => {
 	const cards = reactive<Card[]>([
 		{ id: now, type: 'text', content: 'Test', pos: { x: 140, y: 120 }, modified: now },
 		{ id: now + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 220, y: 180 }, modified: now },
-		{ id: now + 2, type: 'box', content: { name: 'Box', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now }
+		{ id: now + 2, type: 'box', content: { name: 'Box 1', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now },
+		{ id: now + 3, type: 'box', content: { name: 'Box 2', width: 40, height: 40 }, pos: { x: 400, y: 60 }, modified: now }
 	])
 
 	return cards
@@ -18,8 +19,18 @@ const cards = useCards()
 
 // Stack cards in the order they were modified
 watch(() => cards.map(card => card.modified), () => {
-	cards.sort((a, b) => a.modified - b.modified)
-})
+	cards.sort((a, b) => {
+		// Sort boxes before other cards
+		if (a.type === 'box' && b.type !== 'box') return -1
+    if (a.type !== 'box' && b.type === 'box') return 1
+
+		// Sort boxes by position
+		if (a.type === 'box' && b.type === 'box')
+			return (a.pos.x + a.pos.y) - (b.pos.x + b.pos.y)
+
+		return a.modified - b.modified
+	})
+}, { immediate: true })
 
 export function createCard(data: Partial<Card>) {
 	const now = Date.now()

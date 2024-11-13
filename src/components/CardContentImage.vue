@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { reactive, toRef, watch } from 'vue'
+import { reactive, ref, toRef, watch } from 'vue'
 import { useEventListener } from '@vueuse/core'
 
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
 const state = reactive({ active: false })
+const imgWidth = ref(0)
+const imgHeight = ref(0)
 let keyListenerCleanup: Function
 
 // Close the image preview with escape
@@ -17,7 +19,29 @@ watch(state, () => {
 		keyListenerCleanup()
 })
 
-defineExpose({ active: toRef(state, 'active') })
+function onLoad(event: Event) {
+	const imgRef = event.target as HTMLImageElement
+
+	imgWidth.value = imgRef.naturalWidth
+	imgHeight.value = imgRef.naturalHeight
+
+	if (card.content.width === undefined || card.content.height === undefined) {
+		const aspectRatio = imgWidth.value / imgHeight.value
+
+		if (imgWidth.value <= 40 || imgHeight.value <= 40) {
+			card.content.width = imgWidth
+			card.content.height = imgHeight
+		} else if (aspectRatio > 1) {
+			card.content.width = Math.min(imgWidth.value, 240)
+			card.content.height = card.content.width / aspectRatio
+		} else {
+			card.content.height = Math.min(imgHeight.value, 240)
+			card.content.width = card.content.height * aspectRatio
+		}
+	}
+}
+
+defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 </script>
 
 <template>
@@ -26,8 +50,15 @@ defineExpose({ active: toRef(state, 'active') })
 			class="card-content-image"
 			:src="card.content.src"
 			draggable="false"
+			loading="lazy"
+			:style="{
+				width: `${card.content.width ?? 0}px`,
+				height: `${card.content.height ?? 0}px`
+			}"
+			@load="onLoad"
 			@click.left.exact="state.active = true"
 		>
+		<div v-if="imgWidth >= 60 && imgHeight >= 60" class="resize-d"></div>
 		<Teleport to="body">
 			<Transition name="image-preview">
 				<div
@@ -45,8 +76,6 @@ defineExpose({ active: toRef(state, 'active') })
 <style scoped>
 .card-content-image {
 	display: block;
-	max-width: 240px;
-	max-height: 240px;
 	border-radius: .375rem;
 	filter: drop-shadow(var(--shadow));
 	-webkit-touch-callout: none;
@@ -71,6 +100,11 @@ defineExpose({ active: toRef(state, 'active') })
 .card.selected .card-content-image,
 .card-content:hover .card-content-image {
 	background-color: var(--color-card-background);
+}
+
+.resize-d {
+	right: -.438rem;
+	bottom: -.438rem;
 }
 
 .image-preview {

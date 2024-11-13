@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, type ComputedRef, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
-import { onceChanged, rectContains, rectsOverlap, suppressEvent } from '../utils'
+import { onceChanged, rectContains, rectsOverlap, suppressClick } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
 import type Card from './Card.vue'
 import CardContentBox from './CardContentBox.vue'
@@ -45,10 +45,12 @@ const cursor = computed(() => {
 	return 'grab'
 })
 const zIndex = computed(() => {
-	const isActive = contentRef.value?.active || state.selected || state.dragging
-	const z = card.type === 'box' ? -1 : 0
+	const isActive = contentRef.value?.active
+		|| state.dragging
+		|| card.type !== 'box' && state.selected
+		|| card.type !== 'box' && state.resizing
 
-	return isActive ? z + 2 : z
+	return isActive ? 1 : 0
 })
 let cardRefMap = new Map<Card, CardRef>()
 let relatedCards = new Set<Card>()
@@ -107,7 +109,7 @@ function onPointerDown(event: PointerEvent) {
 
 		const targetClassName = (event.target as HTMLElement).className
 
-		if (card.type === 'box' && targetClassName.startsWith('resize')) {
+		if ((card.type === 'box' || card.type === 'image') && targetClassName.startsWith('resize')) {
 			state.resizing = targetClassName
 
 			selection.clear()
@@ -141,7 +143,7 @@ function onPointerDown(event: PointerEvent) {
 		state.downState.offsetY = event.clientY - cardRect.y
 		state.downState.zoom = canvas.smoothZoom
 
-		if (card.type === 'box') {
+		if (card.type === 'box' || card.type === 'image') {
 			state.downState.width = card.content.width
 			state.downState.height = card.content.height
 		}
@@ -176,11 +178,30 @@ function onPointerMove() {
 	}
 
 	if (state.resizing) {
-		if (state.resizing === 'resize-h' || state.resizing === 'resize-d')
-			card.content.width = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
+		// Boxes can be resized freely
+		if (card.type === 'box') {
+			if (state.resizing === 'resize-h' || state.resizing === 'resize-d')
+				card.content.width = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
 
-		if (state.resizing === 'resize-v' || state.resizing === 'resize-d')
-			card.content.height = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
+			if (state.resizing === 'resize-v' || state.resizing === 'resize-d')
+				card.content.height = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
+		}
+
+		// Images need to retain aspect ratio while resizing
+		if (card.type === 'image') {
+			const { imgWidth, imgHeight } = contentRef.value as CardContentImageRef
+			const aspectRatio = imgWidth / imgHeight
+			let newWidth = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
+			let newHeight = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
+
+			if (newWidth / newHeight < aspectRatio)
+				newWidth = newHeight * aspectRatio
+			else
+				newHeight = newWidth / aspectRatio
+
+			card.content.width = Math.min(newWidth, imgWidth)
+			card.content.height = Math.min(newHeight, imgHeight)
+		}
 	}
 
 	canvas.edgeScroll()
@@ -192,7 +213,7 @@ function onPointerUp() {
 
 	if (pointer.moved) {
 		if (pointer.type === 'mouse')
-			suppressEvent('click')
+			suppressClick()
 
 		canvas.stopEdgeScroll()
 
@@ -229,6 +250,7 @@ defineExpose({ card, ref: cardRef, dragging: toRef(state, 'dragging') })
 		:class="{ selected: state.selected }"
 		:style="{
 			translate: `${card.pos.x}px ${card.pos.y}px`,
+			willChange: state.dragging && pointer.moved ? 'transform' : 'auto',
 			cursor,
 			zIndex
 		}"

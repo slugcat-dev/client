@@ -25,7 +25,7 @@ defineExpose({ boxRef, active: false })
 	</div>
 </template>
 
-<style scoped>
+<style>
 .box-name {
 	width: max-content;
 	padding: .125rem .375rem;
@@ -61,10 +61,10 @@ defineExpose({ boxRef, active: false })
 }
 
 .resize-d {
-	right: -.25rem;
-	bottom: -.25rem;
-	width: 1rem;
-	height: 1rem;
+	right: -.5rem;
+	bottom: -.5rem;
+	width: .875rem;
+	height: .875rem;
 	cursor: se-resize;
 }
 
