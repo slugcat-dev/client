@@ -51,6 +51,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 			:src="card.content.src"
 			draggable="false"
 			loading="lazy"
+			decoding="async"
 			:style="{
 				width: `${card.content.width ?? 0}px`,
 				height: `${card.content.height ?? 0}px`
@@ -66,7 +67,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 					class="image-preview"
 					@click="state.active = false"
 				>
-					<img :src="card.content.src">
+					<img :src="card.content.src" decoding="async">
 				</div>
 			</Transition>
 		</Teleport>
@@ -103,8 +104,8 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 }
 
 .resize-d {
-	right: -.438rem;
-	bottom: -.438rem;
+	right: -.375rem;
+	bottom: -.375rem;
 }
 
 .image-preview {

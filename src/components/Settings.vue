@@ -291,6 +291,7 @@ watch(settingsVisible, () => {
 		background-color: var(--color-select);
 		border: 4px solid var(--color-background);
 		border-radius: 100%;
+		cursor: pointer;
 
 		&:checked {
 			border-color: color-mix(in srgb, var(--color-select), transparent 50%);
@@ -308,9 +309,9 @@ watch(settingsVisible, () => {
 	.option {
 		.icon {
 			position: absolute;
-			width: 1.5rem;
-			height: 1.5rem;
-			margin: .25rem;
+			width: 1.25rem;
+			height: 1.25rem;
+			margin: .125rem;
 			pointer-events: none;
 		}
 
@@ -321,10 +322,11 @@ watch(settingsVisible, () => {
 		input[type="radio"] {
 			appearance: none;
 			display: block;
-			width: 2rem;
-			height: 2rem;
+			width: 1.5rem;
+			height: 1.5rem;
 			margin: 0;
 			background-color: light-dark(#d0d0d0, #404040);
+			cursor: pointer;
 
 			&:checked {
 				background-color: var(--color-accent);

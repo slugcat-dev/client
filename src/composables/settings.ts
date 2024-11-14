@@ -10,7 +10,8 @@ export const useSettings = createGlobalState(() => {
 		boardBackground: 'dot',
 		doubleClickCreateCard: true,
 		typeAnywhere: true,
-		selectionMode: 'draw'
+		selectionMode: 'draw',
+		snap: 'cards'
 	}, localStorage, { mergeDefaults: true }).value)
 	const settingsVisible = ref(false)
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, type ComputedRef, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { useSettings } from '../composables/settings'
 import { onceChanged, rectContains, rectsOverlap, suppressClick } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
 import type Card from './Card.vue'
@@ -34,6 +35,7 @@ const state = reactive({
 const pointer = inject('pointer') as PointerState
 const pointers = inject('pointers') as PointerState[]
 const cardRefs = inject('card-refs') as ComputedRef<CardRef[]>
+const { settings } = useSettings()
 const cursor = computed(() => {
 	if (contentRef.value?.active)
 		return 'auto'
@@ -171,7 +173,10 @@ function onPointerMove() {
 	})
 
 	if (state.dragging) {
-		card.pos = newPos
+		card.pos = {
+			x: snap(newPos.x, 'x', 4, 0, true),
+			y: snap(newPos.y, 'y', 4, 0, true)
+		}
 
 		if (relatedCards.size) {
 			relatedCards.forEach(c => {
@@ -185,18 +190,18 @@ function onPointerMove() {
 		// Boxes can be resized freely
 		if (card.type === 'box') {
 			if (state.resizing === 'resize-h' || state.resizing === 'resize-d')
-				card.content.width = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
+				card.content.width = Math.max(snap(state.downState.width + newPos.x, 'x', 0, 4) - card.pos.x, 40)
 
 			if (state.resizing === 'resize-v' || state.resizing === 'resize-d')
-				card.content.height = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
+				card.content.height = Math.max(snap(state.downState.height + newPos.y, 'y', 0, 4, false, 28) - card.pos.y, 40)
 		}
 
 		// Images need to retain aspect ratio while resizing
 		if (card.type === 'image') {
 			const { imgWidth, imgHeight } = contentRef.value as CardContentImageRef
 			const aspectRatio = imgWidth / imgHeight
-			let newWidth = Math.max(state.downState.width + newPos.x - card.pos.x, 40)
-			let newHeight = Math.max(state.downState.height + newPos.y - card.pos.y, 40)
+			let newWidth = Math.max(snap(state.downState.width + newPos.x, 'x', 0, 4) - card.pos.x, 40)
+			let newHeight = Math.max(snap(state.downState.height + newPos.y, 'y', 0, 4) - card.pos.y, 40)
 
 			if (newWidth / newHeight < aspectRatio)
 				newWidth = newHeight * aspectRatio
@@ -234,6 +239,51 @@ function onPointerUp() {
 
 	unwatchPointerMove()
 	unwatchPointerUp()
+}
+
+function snap(value: number, direction: 'x' | 'y', marginEnd = 0, marginStart = 0, useSize = false, offset = 0) {
+	const gridSize = canvas.gridSize / canvas.smoothZoom
+
+	if (settings.snap === 'grid')
+		return Math.round(value / gridSize) * gridSize
+
+	// Snap cards to other cards
+	if (settings.snap === 'cards') {
+		const canvasRect = canvas.toCanvasRect(canvas.ref.getBoundingClientRect())
+		const cardRects = cardRefMap.values()
+			.filter(cardRef => cardRef.card !== card && !relatedCards.has(cardRef.card))
+			.map(cardRef => {
+				if (cardRef.card.type === 'box')
+					return canvas.toCanvasRect((cardRef.contentRef as CardContentBoxRef).boxRef!.getBoundingClientRect())
+
+				return canvas.toCanvasRect(cardRef.ref!.getBoundingClientRect())
+			})
+			.filter(cardRect => rectsOverlap(canvasRect, cardRect))
+
+		const ownRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+		const other = value + (direction === 'x' ? ownRect.width : ownRect.height)
+
+		for (const cardRect of cardRects) {
+			const primaryEdge = direction === 'x' ? cardRect.left - marginStart : cardRect.top - marginStart
+			const secondaryEdge = direction === 'x' ? cardRect.right + marginEnd : cardRect.bottom + marginEnd
+
+			if (Math.abs(value + offset - primaryEdge) < gridSize / 2)
+				return primaryEdge - offset
+
+			if (Math.abs(value + offset - secondaryEdge) < gridSize / 2)
+				return secondaryEdge - offset
+
+			if (useSize) {
+				if (Math.abs(other - primaryEdge) < gridSize / 2)
+					return primaryEdge - (direction === 'x' ? ownRect.width : ownRect.height) - marginEnd
+
+				if (Math.abs(other - secondaryEdge) < gridSize / 2)
+					return secondaryEdge - (direction === 'x' ? ownRect.width : ownRect.height) - marginEnd
+			}
+		}
+	}
+
+	return value
 }
 
 function getContentComponent() {
