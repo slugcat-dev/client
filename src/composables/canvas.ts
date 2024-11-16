@@ -97,10 +97,8 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: Point
 		const prevPos = toCanvasPos(adjust, false)
 
 		if (elastic) {
-			if (zoom > 2)
-				zoom = 2 + Math.log(zoom - 1)
-			if (zoom < .2)
-				zoom = (zoom / 0.2) ** Math.E * 0.1 + 0.1
+			if (zoom > 2) zoom = 2 + Math.log(zoom - 1)
+			if (zoom < .2) zoom = (zoom / 0.2) ** Math.E * 0.1 + 0.1
 		} else
 			zoom = clamp(zoom, .2, 2)
 

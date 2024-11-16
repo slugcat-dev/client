@@ -58,11 +58,8 @@ export function moveCaretWhereClicked(editor: Editor, event: MouseEvent) {
 		let start = caretRange.startOffset
 		let end = caretRange.startOffset
 
-		while (start > 0 && !/\s|\W/.test(text.charAt(start - 1)))
-			start--
-
-		while (end < text.length && !/\s|\W/.test(text.charAt(end)))
-			end++
+		while (start > 0 && !/\s|\W/.test(text.charAt(start - 1))) start--
+		while (end < text.length && !/\s|\W/.test(text.charAt(end))) end++
 
 		caretRange.setStart(caretRange.startContainer, end - caretRange.startOffset <= caretRange.startOffset - start ? end : start)
 		caretRange.collapse(true)

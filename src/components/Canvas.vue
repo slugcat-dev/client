@@ -44,12 +44,9 @@ const selection = reactive<CanvasSelection>({
 const { settings, settingsVisible } = useSettings()
 const { toast, untoast } = useToaster()
 const cursor = computed(() => {
-	if (state.panning && pointer.moved)
-		return 'move'
-	else if (state.selecing)
-		return 'crosshair'
-	else if (state.loading)
-		return 'wait'
+	if (state.panning && pointer.moved) return 'move'
+	if (state.selecing) return 'crosshair'
+	if (state.loading) return 'wait'
 
 	return 'default'
 })

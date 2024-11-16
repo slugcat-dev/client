@@ -37,12 +37,9 @@ const pointers = inject('pointers') as PointerState[]
 const cardRefs = inject('card-refs') as ComputedRef<CardRef[]>
 const { settings } = useSettings()
 const cursor = computed(() => {
-	if (contentRef.value?.active)
-		return 'auto'
-	else if (selection.boxVisible || selection.draw)
-		return 'inherit'
-	else if (state.dragging)
-		return 'grabbing'
+	if (contentRef.value?.active) return 'auto'
+	if (selection.boxVisible || selection.draw) return 'inherit'
+	if (state.dragging) return 'grabbing'
 
 	return 'grab'
 })
@@ -60,11 +57,11 @@ let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
-watch([() => selection.cards], () => {
+watch(() => selection.cards, () => {
 	state.selected = selection.cards.includes(card)
 })
 
-watch([() => selection.box], () => {
+watch(() => selection.box, () => {
 	if (selection.box) {
 		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
 
@@ -73,7 +70,7 @@ watch([() => selection.box], () => {
 	}
 })
 
-watch([() => selection.draw], () => {
+watch(() => selection.draw, () => {
 	if (selection.draw) {
 		// Select the card when the pointer is moved over it during draw selection
 		unwatchPointer = watch(pointer, () => {
@@ -174,8 +171,8 @@ function onPointerMove() {
 
 	if (state.dragging) {
 		card.pos = {
-			x: snap(newPos.x, 'x', 4, 0, true),
-			y: snap(newPos.y, 'y', 4, 0, true)
+			x: snap(newPos.x, 'x', 'drag'),
+			y: snap(newPos.y, 'y', 'drag')
 		}
 
 		if (relatedCards.size) {
@@ -190,18 +187,18 @@ function onPointerMove() {
 		// Boxes can be resized freely
 		if (card.type === 'box') {
 			if (state.resizing === 'resize-h' || state.resizing === 'resize-d')
-				card.content.width = Math.max(snap(state.downState.width + newPos.x, 'x', 0, 4) - card.pos.x, 40)
+				card.content.width = Math.max(snap(state.downState.width + newPos.x, 'x', 'resize') - card.pos.x, 40)
 
 			if (state.resizing === 'resize-v' || state.resizing === 'resize-d')
-				card.content.height = Math.max(snap(state.downState.height + newPos.y, 'y', 0, 4, false, 28) - card.pos.y, 40)
+				card.content.height = Math.max(snap(state.downState.height + newPos.y, 'y', 'resize') - card.pos.y, 40)
 		}
 
 		// Images need to retain aspect ratio while resizing
 		if (card.type === 'image') {
 			const { imgWidth, imgHeight } = contentRef.value as CardContentImageRef
 			const aspectRatio = imgWidth / imgHeight
-			let newWidth = Math.max(snap(state.downState.width + newPos.x, 'x', 0, 4) - card.pos.x, 40)
-			let newHeight = Math.max(snap(state.downState.height + newPos.y, 'y', 0, 4) - card.pos.y, 40)
+			let newWidth = Math.max(snap(state.downState.width + newPos.x, 'x', 'resize') - card.pos.x, 40)
+			let newHeight = Math.max(snap(state.downState.height + newPos.y, 'y', 'resize') - card.pos.y, 40)
 
 			if (newWidth / newHeight < aspectRatio)
 				newWidth = newHeight * aspectRatio
@@ -241,47 +238,75 @@ function onPointerUp() {
 	unwatchPointerUp()
 }
 
-function snap(value: number, direction: 'x' | 'y', marginEnd = 0, marginStart = 0, useSize = false, offset = 0) {
+function snap(value: number, direction: 'x' | 'y', mode: 'drag' | 'resize') {
 	const gridSize = canvas.gridSize / canvas.smoothZoom
 
-	if (settings.snap === 'grid')
-		return Math.round(value / gridSize) * gridSize
+	// Vertical offset between box label and box
+	const ownRect = canvas.toCanvasRect((card.type === 'box' ? (contentRef.value as CardContentBoxRef).boxRef : cardRef.value)!.getBoundingClientRect())
+	const boxLabelRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+	let offset = 0
 
-	// Snap cards to other cards
+	if (card.type === 'box' && direction === 'y')
+		offset = (ownRect.top - boxLabelRect.top)
+
+	// Snap to other cards
 	if (settings.snap === 'cards') {
+		const snap = gridSize / 2
+		const marginStart = mode === 'resize' ? 4 : 0
+		const marginEnd = mode === 'drag' ? 4 : 0
+		const size = direction === 'x' ? ownRect.width : ownRect.height
+
+		// Get visible card rects
 		const canvasRect = canvas.toCanvasRect(canvas.ref.getBoundingClientRect())
 		const cardRects = cardRefMap.values()
 			.filter(cardRef => cardRef.card !== card && !relatedCards.has(cardRef.card))
-			.map(cardRef => {
-				if (cardRef.card.type === 'box')
-					return canvas.toCanvasRect((cardRef.contentRef as CardContentBoxRef).boxRef!.getBoundingClientRect())
+			.flatMap(cardRef => {
+				const cardRect = canvas.toCanvasRect(cardRef.ref!.getBoundingClientRect())
 
-				return canvas.toCanvasRect(cardRef.ref!.getBoundingClientRect())
+				if (cardRef.card.type === 'box') {
+					const boxRef = (cardRef.contentRef as CardContentBoxRef).boxRef!
+					const boxRect = canvas.toCanvasRect(boxRef.getBoundingClientRect())
+
+					return [cardRect, boxRect]
+				}
+
+				return [cardRect]
 			})
 			.filter(cardRect => rectsOverlap(canvasRect, cardRect))
 
-		const ownRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
-		const other = value + (direction === 'x' ? ownRect.width : ownRect.height)
-
 		for (const cardRect of cardRects) {
-			const primaryEdge = direction === 'x' ? cardRect.left - marginStart : cardRect.top - marginStart
-			const secondaryEdge = direction === 'x' ? cardRect.right + marginEnd : cardRect.bottom + marginEnd
+			const [primaryEdge, secondaryEdge] = direction === 'x'
+				? [cardRect.left - marginStart, cardRect.right + marginEnd]
+				: [cardRect.top - marginStart, cardRect.bottom + marginEnd]
 
-			if (Math.abs(value + offset - primaryEdge) < gridSize / 2)
-				return primaryEdge - offset
+			if (Math.abs(value + offset - primaryEdge) < snap) return primaryEdge - offset
+			if (Math.abs(value + offset - secondaryEdge) < snap) return secondaryEdge - offset
 
-			if (Math.abs(value + offset - secondaryEdge) < gridSize / 2)
-				return secondaryEdge - offset
+			if (mode === 'drag') {
+				if (Math.abs(value + size + offset - primaryEdge) < snap) return primaryEdge - size - marginEnd - offset
+				if (Math.abs(value + size + offset - secondaryEdge) < snap) return secondaryEdge - size - marginEnd - offset
+			}
 
-			if (useSize) {
-				if (Math.abs(other - primaryEdge) < gridSize / 2)
-					return primaryEdge - (direction === 'x' ? ownRect.width : ownRect.height) - marginEnd
+			// Box label
+			if (card.type === 'box' && mode === 'drag') {
+				if (direction === 'x') {
+					const labelWidth = boxLabelRect.width
 
-				if (Math.abs(other - secondaryEdge) < gridSize / 2)
-					return secondaryEdge - (direction === 'x' ? ownRect.width : ownRect.height) - marginEnd
+					if (Math.abs(value + labelWidth + offset - primaryEdge) < snap) return primaryEdge - labelWidth - marginEnd - offset
+					if (Math.abs(value + labelWidth + offset - secondaryEdge) < snap) return secondaryEdge - labelWidth - marginEnd - offset
+				}
+
+				if (direction === 'y') {
+					if (Math.abs(value - primaryEdge) < snap) return primaryEdge
+					if (Math.abs(value - secondaryEdge) < snap) return secondaryEdge
+				}
 			}
 		}
 	}
+
+	// Snap to grid
+	if (settings.snap === 'grid')
+		return Math.round((value + offset) / gridSize) * gridSize - offset
 
 	return value
 }
