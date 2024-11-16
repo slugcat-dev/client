@@ -40,6 +40,7 @@ const cursor = computed(() => {
 	if (contentRef.value?.active) return 'auto'
 	if (selection.boxVisible || selection.draw) return 'inherit'
 	if (state.dragging) return 'grabbing'
+	if (pointer.ctrlKey) return 'default'
 
 	return 'grab'
 })
@@ -239,6 +240,9 @@ function onPointerUp() {
 }
 
 function snap(value: number, direction: 'x' | 'y', mode: 'drag' | 'resize') {
+	if (!(pointer.ctrlKey || pointer.metaKey))
+		return value
+
 	const gridSize = canvas.gridSize / canvas.smoothZoom
 
 	// Vertical offset between box label and box

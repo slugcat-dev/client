@@ -15,7 +15,11 @@ export function usePointer() {
 		y: 0,
 		movementX: 0,
 		movementY: 0,
-		type: 'none'
+		type: 'none',
+		ctrlKey: false,
+		metaKey: false,
+		shiftKey: false,
+		altKey: false
 	})
 
 	useEventListener('pointerdown', (event: PointerEvent) => {
@@ -49,6 +53,11 @@ export function usePointer() {
 
 		if (!pointer.id || pointer.id === event.pointerId)
 			syncPointer(index)
+
+		pointer.ctrlKey = event.ctrlKey
+		pointer.metaKey = event.metaKey
+		pointer.shiftKey = event.shiftKey
+		pointer.altKey = event.altKey
 	})
 
 	useEventListener(['pointerup', 'pointercancel'], (event: PointerEvent) => {
@@ -67,6 +76,13 @@ export function usePointer() {
 			pointer.moved = false
 			pointer.id = 0
 		}
+	})
+
+	useEventListener(['keydown', 'keyup'], (event: KeyboardEvent) => {
+		pointer.ctrlKey = event.ctrlKey
+		pointer.metaKey = event.metaKey
+		pointer.shiftKey = event.shiftKey
+		pointer.altKey = event.altKey
 	})
 
 	function pointerIndex(event: PointerEvent) {
@@ -89,7 +105,11 @@ export function usePointer() {
 			y: event.clientY,
 			movementX: event.movementX,
 			movementY: event.movementY,
-			type: event.pointerType
+			type: event.pointerType,
+			ctrlKey: false,
+			metaKey: false,
+			shiftKey: false,
+			altKey: false
 		})
 	}
 

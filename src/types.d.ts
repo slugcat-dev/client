@@ -10,6 +10,10 @@ interface PointerState extends Pos {
 	movementX: number
 	movementY: number
 	type: string
+	ctrlKey: boolean
+	metaKey: boolean
+	shiftKey: boolean
+	altKey: boolean
 }
 
 interface Keymap {

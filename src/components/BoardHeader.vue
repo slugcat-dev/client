@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
-import IconBlank from './Icons/IconBlank.vue'
 import IconSnap from './Icons/IconSnap.vue'
 import IconGrid from './Icons/IconGrid.vue'
 import IconSettings from './Icons/IconSettings.vue'
@@ -12,15 +11,6 @@ const { settings, settingsVisible } = useSettings()
 	<header class="board-header">
 		<div>
 			<div class="combobox">
-				<div class="option">
-					<IconBlank />
-					<input
-						type="radio"
-						name="snap"
-						value="none"
-						v-model="settings.snap"
-					>
-				</div>
 				<div class="option">
 					<IconSnap />
 					<input
