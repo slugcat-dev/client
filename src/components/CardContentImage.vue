@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import { reactive, ref, toRef, watch } from 'vue'
 import { useEventListener } from '@vueuse/core'
+import { limitSize } from '../utils'
 
+const apiURL = import.meta.env.APP_API_URL as string
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
-const state = reactive({ active: false })
+const state = reactive({
+	cardLoading: true,
+	previewLoading: false,
+	active: false
+})
 const imgWidth = ref(0)
 const imgHeight = ref(0)
+const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(card.content.src)}`
 let keyListenerCleanup: Function
 
 // Close the image preview with escape
-watch(state, () => {
+watch(() => state.active, () => {
+	state.previewLoading = state.active
+
 	if (state.active) {
 		keyListenerCleanup = useEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Escape')
@@ -26,19 +35,13 @@ function onLoad(event: Event) {
 	imgHeight.value = imgRef.naturalHeight
 
 	if (card.content.width === undefined || card.content.height === undefined) {
-		const aspectRatio = imgWidth.value / imgHeight.value
+		const [width, height] = limitSize(imgWidth.value, imgHeight.value, 40, 240)
 
-		if (imgWidth.value <= 40 || imgHeight.value <= 40) {
-			card.content.width = imgWidth
-			card.content.height = imgHeight
-		} else if (aspectRatio > 1) {
-			card.content.width = Math.min(imgWidth.value, 240)
-			card.content.height = card.content.width / aspectRatio
-		} else {
-			card.content.height = Math.min(imgHeight.value, 240)
-			card.content.width = card.content.height * aspectRatio
-		}
+		card.content.width = width
+		card.content.height = height
 	}
+
+	state.cardLoading = false
 }
 
 defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
@@ -51,14 +54,15 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 			:src="card.content.src"
 			draggable="false"
 			loading="lazy"
-			decoding="async"
 			:style="{
 				width: `${card.content.width ?? 0}px`,
-				height: `${card.content.height ?? 0}px`
+				height: `${card.content.height ?? 0}px`,
+				backgroundImage: state.cardLoading ? `url(${lqip})` : 'none'
 			}"
 			@load="onLoad"
 			@click.left.exact="state.active = true"
 		>
+		<div v-if="state.cardLoading" class="loader"></div>
 		<div v-if="imgWidth >= 60 && imgHeight >= 60" class="resize-d"></div>
 		<Teleport to="body">
 			<Transition name="image-preview">
@@ -67,7 +71,12 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 					class="image-preview"
 					@click="state.active = false"
 				>
-					<img :src="card.content.src" decoding="async">
+					<div v-if="state.previewLoading" class="loader"></div>
+					<img
+						:src="card.content.src"
+						decoding="async"
+						@load="() => state.previewLoading = false"
+					>
 				</div>
 			</Transition>
 		</Teleport>
@@ -78,6 +87,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 .card-content-image {
 	display: block;
 	border-radius: .375rem;
+	background-size: cover;
 	filter: drop-shadow(var(--shadow));
 	-webkit-touch-callout: none;
 }
@@ -118,6 +128,11 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 	background-color: #000a;
 	backdrop-filter: blur(8px);
 
+	.loader {
+		transition: opacity 200ms 500ms;
+		z-index: -1;
+	}
+
 	img {
 		display: block;
 		max-width: 100%;
@@ -138,15 +153,27 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 	.image-preview-leave-active {
 		transition: 400ms;
 
+		.loader {
+			transition: 400ms 500ms;
+		}
+
 		img {
 			transition: 400ms cubic-bezier(.68, -.55, .265, 1.55);
 		}
+	}
+
+	.image-preview-leave-active .loader {
+		transition: 400ms;
 	}
 
 	.image-preview-enter-from,
 	.image-preview-leave-to {
 		background-color: transparent;
 		backdrop-filter: blur(0);
+
+		.loader {
+			opacity: 0;
+		}
 
 		img {
 			opacity: 0;

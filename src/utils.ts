@@ -208,3 +208,22 @@ export function fileToBase64(file: File) {
 export function isValidColor(color: string) {
 	return CSS.supports('color', color)
 }
+
+/**
+ * Limit width and height of, for example, an image while maintaining the aspect ratio.
+ */
+export function limitSize(width: number, height: number, min: number, max: number) {
+	const aspectRatio = width / height
+
+	if (width > min && height > min) {
+		if (aspectRatio > 1) {
+			width = Math.min(width, max)
+			height = width / aspectRatio
+		} else {
+			height = Math.min(height, max)
+			width = height * aspectRatio
+		}
+	}
+
+	return [width, height]
+}

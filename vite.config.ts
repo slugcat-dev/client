@@ -4,6 +4,7 @@ import autoprefixer from 'autoprefixer'
 
 export default defineConfig({
 	plugins: [vue()],
+	envPrefix: 'APP',
 	server: {
 		port: 8000
 	},

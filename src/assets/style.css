@@ -64,3 +64,43 @@ button {
 ::selection {
 	background-color: var(--color-accent-25);
 }
+
+.loader {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 2rem;
+	height: 2rem;
+	transform: translate(-50%, -50%);
+	filter: drop-shadow(var(--shadow));
+}
+
+.loader::before,
+.loader::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: .5rem;
+	height: .5rem;
+	margin: -.25rem 0 0 -.25rem;
+	background-color: white;
+	animation: loader-1 2s infinite, loader-2 1s infinite;
+}
+
+.loader::after {
+	animation-delay: -1s, 0s;
+}
+
+@keyframes loader-1 {
+	0% { top: 25%; left: 25%; }
+	25% { top: 75%; left: 25%; }
+	50% { top: 75%; left: 75%; }
+	75% { top: 25%; left: 75%; }
+	100% { top: 25%; left: 25%; }
+}
+
+@keyframes loader-2 {
+	40%, 50% { transform: rotate(.25turn) scale(.5); }
+	100% { transform: rotate(.5turn) scale(1); }
+}

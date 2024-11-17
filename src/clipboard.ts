@@ -1,5 +1,8 @@
 import { createCard, getCardText } from './composables/cards'
-import { fileToBase64, isURL, loadImage } from './utils'
+import { fileToBase64, limitSize, isURL } from './utils'
+import { ofetch } from 'ofetch'
+
+const apiURL = import.meta.env.APP_API_URL as string
 
 /**
  * Copy the given cards to the clipboard.
@@ -100,15 +103,23 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		// Test if the pasted text is an image URL
 		if (/^https?:\/\//.test(text) && isURL(text)) {
 			try {
-				await loadImage(text)
+				const imgData = await ofetch(`${apiURL}/image-data?url=${encodeURIComponent(text)}`)
 
-				return {
-					type: 'image',
-					cards: [createCard({
+				if (imgData.isImage) {
+					const [width, height] = limitSize(imgData.width, imgData.height, 40, 240)
+
+					return {
 						type: 'image',
-						pos,
-						content: { src: text }
-					})]
+						cards: [createCard({
+							type: 'image',
+							pos,
+							content: {
+								src: text,
+								width,
+								height
+							}
+						})]
+					}
 				}
 			} catch {}
 		}
