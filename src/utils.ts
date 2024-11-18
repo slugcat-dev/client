@@ -203,6 +203,22 @@ export function fileToBase64(file: File) {
 }
 
 /**
+ * Convert a Base64 string to a file.
+ */
+export function base64ToFile(base64: string, name: string, type: string) {
+	const data = atob(base64.split(',')[1])
+	const buffer = new Uint8Array(data.length)
+
+	for (let i = 0; i < data.length; i++)
+		buffer[i] = data.charCodeAt(i)
+
+	const blob = new Blob([buffer], { type })
+	const file = new File([blob], name, { type })
+
+	return file
+}
+
+/**
  * Check if a string is a valid CSS color.
  */
 export function isValidColor(color: string) {

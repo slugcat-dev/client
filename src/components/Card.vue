@@ -100,7 +100,7 @@ watch(() => state.selected, () => {
 function onPointerDown(event: PointerEvent) {
 	// Wait until the event has bubbled to the listener on the document that updates the pointer state
 	onceChanged(pointer, () => {
-		if (typeof card.id !== 'number' || contentRef.value!.active || pointers.length !== 1)
+		if (contentRef.value!.active || pointers.length !== 1)
 			return
 
 		cardRefMap = new Map(cardRefs.value.map(cardRef => [cardRef.card, cardRef]))

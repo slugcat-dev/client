@@ -34,55 +34,67 @@ watch(() => cards.map(card => card.modified), () => {
 
 export function createCard(data: Partial<Card>) {
 	const now = Date.now()
-
-	const length = cards.push({
+	const card = {
 		id: now,
 		type: 'text',
 		content: '',
 		pos: { x: 0, y: 0 },
 		modified: now,
 		...data
-	})
+	} as Card
 
-	return cards[length - 1]
+	if (!card.new)
+		console.log('CREATE', card.id)
+
+	return cards[cards.push(card) - 1]
 }
 
-export function updateCard(card: Card) {
+export function updateCard(card: Card, create = false) {
 	const now = Date.now()
 
-	card.modified = now
-
-	if (card.id === 'new') {
-		card.id = now
+	if (create) {
+		delete card.new
 
 		console.log('CREATE', card.id)
-	} else
+	} else {
+		card.modified = now
+
+		if (card.new)
+			console.log('UPDATE - NO FETCH', card.id)
+		else
 		console.log('UPDATE', card.id)
+}
 }
 
 export function updateMany(cards: Card[]) {
 	const now = Date.now()
 
 	cards.sort((a, b) => a.modified - b.modified).forEach((card, i) => card.modified = now + i)
-	console.log('UPDATE', ...cards.map(card => card.id))
+	console.log('UPDATE - NO FETCH', ...cards.filter(card => card.new).map(card => card.id))
+	console.log('UPDATE', ...cards.filter(card => !card.new).map(card => card.id))
 }
 
-export function deleteCard(id: 'new' | number) {
-	if (id !== 'new')
-		console.log('DELETE', id)
+export function deleteCard(card: Card) {
+	if (!card.new)
+		console.log('DELETE', card.id)
 
-	cards.splice(cards.findIndex(card => card.id === id), 1)
+	cards.splice(cards.findIndex(c => c.id === card.id), 1)
 }
 
 export function deleteMany(cardsToDelte: Card[]) {
-	console.log('DELETE', ...cardsToDelte.map(card => card.id))
+	console.log('DELETE', ...cardsToDelte.filter(card => !card.new).map(card => card.id))
 	cards.splice(0, cards.length, ...cards.filter(card => !cardsToDelte.includes(card)))
 }
 
-export function getCardText(card: Card) {
+export function getCardText(cards: Card[]) {
+	return cards
+		.filter(card => !(card.type === 'image' && card.content.src.startsWith('data')))
+		.map(card => {
 	switch (card.type) {
 		case 'box': return card.content.name
 		case 'text': return card.content
 		case 'image': return card.content.src
 	}
+		})
+		.join('\n\n')
 }

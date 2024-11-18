@@ -124,13 +124,17 @@ watch(arrowKeys, () => {
 
 // Allow typing anywhere on the canvas to create a new card
 useEventListener('keydown', (event: KeyboardEvent) => {
-	if (!settings.typeAnywhere || !state.pointerOver || usingInput() || event.ctrlKey || event.metaKey || (event.key !== 'Enter' && event.key.length !== 1))
+	if (!settings.typeAnywhere || !state.pointerOver || pointer.down || usingInput())
+		return
+
+	if (event.ctrlKey || event.metaKey || (event.key !== 'Enter' && event.key.length !== 1))
 		return
 
 	event.preventDefault()
+	selection.clear()
 
 	createCard({
-		id: 'new',
+		new: true,
 		pos: canvas.toCanvasPos(pointer),
 		content: event.key !== ' ' && event.key !== 'Enter' ? event.key : ''
 	})
@@ -345,7 +349,7 @@ function onClick(event: MouseEvent) {
 	if (pointer.type === 'mouse' && event.detail !== 2 && settings.doubleClickCreateCard)
 		return
 
-	createCard({ id: 'new', pos: canvas.toCanvasPos(pointer) })
+	createCard({ new: true, pos: canvas.toCanvasPos(pointer) })
 }
 
 function onWheel(event: WheelEvent) {

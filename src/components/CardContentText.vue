@@ -36,7 +36,7 @@ onMounted(() => {
 		editor.root.querySelectorAll('a').forEach(a => a.draggable = false)
 	})
 
-	if (card.id === 'new') {
+	if (card.new) {
 		activate()
 
 		if (card.content !== '')
@@ -90,9 +90,9 @@ function onBlur() {
 	card.content = editor.content
 
 	if (card.content === '')
-		deleteCard(card.id)
+		deleteCard(card)
 	else
-		updateCard(card)
+		updateCard(card, card.new)
 }
 
 function activate() {

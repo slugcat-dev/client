@@ -1,8 +1,8 @@
 import { createCard, getCardText } from './composables/cards'
-import { fileToBase64, limitSize, isURL } from './utils'
+import { limitSize, isURL, fileToBase64 } from './utils'
 import { ofetch } from 'ofetch'
 
-const apiURL = import.meta.env.APP_API_URL as string
+const apiURL = import.meta.env.APP_API_URL
 
 /**
  * Copy the given cards to the clipboard.
@@ -22,9 +22,10 @@ export function copyCards(cards: Card[]) {
 		})
 
 		event.preventDefault()
-		event.clipboardData.setData('text/plain', cards.map(getCardText).join('\n\n'))
+		event.clipboardData.setData('text/plain', getCardText(cards))
 		event.clipboardData.setData('cards', JSON.stringify(cards.map(card => ({
 			type: card.type,
+			new: card.new,
 			pos: card.pos,
 			content: card.content
 		}))))
@@ -58,12 +59,18 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 				resolve(createCard({
 					id: now + i,
+					new: true,
 					type: 'image',
 					pos: {
 						x: pos.x + offset,
 						y: pos.y + offset
 					},
-					content: { src: data }
+					content: {
+						src: data,
+						name: image.name,
+						type: image.type
+					},
+					modified: now + i
 				}))
 
 				offset += 20
@@ -89,7 +96,8 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 							x: pos.x + card.pos.x - corner.x,
 							y: pos.y + card.pos.y - corner.y
 						},
-						content: card.content
+						content: card.content,
+						modified: now + i
 					}))
 				}
 			}
@@ -103,10 +111,10 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		// Test if the pasted text is an image URL
 		if (/^https?:\/\//.test(text) && isURL(text)) {
 			try {
-				const imgData = await ofetch(`${apiURL}/image-data?url=${encodeURIComponent(text)}`)
+				const data = await ofetch(`${apiURL}/link-type?url=${encodeURIComponent(text)}`)
 
-				if (imgData.isImage) {
-					const [width, height] = limitSize(imgData.width, imgData.height, 40, 240)
+				if (data.type === 'image') {
+					const [width, height] = limitSize(data.width, data.height, 40, 240)
 
 					return {
 						type: 'image',

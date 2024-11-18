@@ -42,8 +42,9 @@ interface Canvas {
 }
 
 interface Card {
-	id: 'new' | number
-	type: 'box' | 'text' | 'image'
+	id: number
+	new?: boolean,
+	type: 'box' | 'text' | 'image' | 'link'
 	pos: Pos
 	content: any
 	modified: number
@@ -63,4 +64,10 @@ interface Toast {
 	color: 'red' | 'yellow' | 'green'
 	persistent: boolean
 	timeout: ReturnType<typeof setTimeout>
+}
+
+interface Base64File {
+	base64: string
+	name: string
+	type: string
 }
