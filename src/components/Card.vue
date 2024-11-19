@@ -8,6 +8,7 @@ import type Card from './Card.vue'
 import CardContentBox from './CardContentBox.vue'
 import CardContentText from './CardContentText.vue'
 import CardContentImage from './CardContentImage.vue'
+import CardContentLink from './CardContentLink.vue'
 
 type CardRef = InstanceType<typeof Card>
 type CardContentRef = InstanceType<ReturnType<typeof getContentComponent>>
@@ -320,6 +321,7 @@ function getContentComponent() {
 		case 'box': return CardContentBox
 		case 'text': return CardContentText
 		case 'image': return CardContentImage
+		case 'link': return CardContentLink
 	}
 }
 

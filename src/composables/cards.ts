@@ -62,8 +62,8 @@ export function updateCard(card: Card, create = false) {
 		if (card.new)
 			console.log('UPDATE - NO FETCH', card.id)
 		else
-		console.log('UPDATE', card.id)
-}
+			console.log('UPDATE', card.id)
+	}
 }
 
 export function updateMany(cards: Card[]) {
@@ -90,11 +90,12 @@ export function getCardText(cards: Card[]) {
 	return cards
 		.filter(card => !(card.type === 'image' && card.content.src.startsWith('data')))
 		.map(card => {
-	switch (card.type) {
-		case 'box': return card.content.name
-		case 'text': return card.content
-		case 'image': return card.content.src
-	}
+			switch (card.type) {
+				case 'box': return card.content.name
+				case 'text': return card.content
+				case 'image': return card.content.src
+				case 'link': return card.content.url
+			}
 		})
 		.join('\n\n')
 }

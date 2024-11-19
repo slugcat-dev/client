@@ -129,6 +129,18 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 						})]
 					}
 				}
+
+				if (data.type === 'link') {
+					return {
+						type: 'link',
+						cards: [createCard({
+							new: true,
+							type: 'link',
+							pos,
+							content: { url: text }
+						})]
+					}
+				}
 			} catch {}
 		}
 
