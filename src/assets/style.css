@@ -66,12 +66,8 @@ button {
 }
 
 .loader {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 2rem;
-	height: 2rem;
-	transform: translate(-50%, -50%);
+	width: 1rem;
+	height: 1rem;
 	filter: drop-shadow(var(--shadow));
 }
 
@@ -81,9 +77,9 @@ button {
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: .5rem;
-	height: .5rem;
-	margin: -.25rem 0 0 -.25rem;
+	width: 25%;
+	height: 25%;
+	margin: -12.5% 0 0 -12.5%;
 	background-color: white;
 	animation: loader-1 2s infinite, loader-2 1s infinite;
 }
@@ -101,6 +97,11 @@ button {
 }
 
 @keyframes loader-2 {
-	40%, 50% { transform: rotate(.25turn) scale(.5); }
-	100% { transform: rotate(.5turn) scale(1); }
+	40%, 50% { transform: rotate(90deg) scale(.5); }
+	100% { transform: rotate(180deg) scale(1); }
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }

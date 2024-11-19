@@ -4,9 +4,9 @@ import { limitSize, loadImage } from '../utils'
 import { useEventListener } from '@vueuse/core'
 import { uploadFile } from '../upload'
 import { updateCard } from '../composables/cards'
+import { useAppState } from '../composables/appState'
 import { useToaster } from '../composables/toaster'
 import UploadProgress from './UploadProgress.vue'
-
 
 const apiURL = import.meta.env.APP_API_URL
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
@@ -18,10 +18,11 @@ const state = reactive({
 	uploadProgress: 0,
 	uploadFailed: false,
 	previewLoading: false,
+	imgWidth: 0,
+	imgHeight: 0,
 	active: false
 })
-const imgWidth = ref(0)
-const imgHeight = ref(0)
+const appState = useAppState()
 const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(src)}`
 const { toast } = useToaster()
 let keyListenerCleanup: Function
@@ -48,11 +49,11 @@ async function onLoad(event: Event) {
 	const target = event.target as HTMLImageElement
 	const imageRef = isDataURL ? target : await loadImage(src)
 
-	imgWidth.value = imageRef.naturalWidth
-	imgHeight.value = imageRef.naturalHeight
+	state.imgWidth = imageRef.naturalWidth
+	state.imgHeight = imageRef.naturalHeight
 
 	if (card.content.width === undefined || card.content.height === undefined) {
-		const [width, height] = limitSize(imgWidth.value, imgHeight.value, 40, 240)
+		const [width, height] = limitSize(state.imgWidth, state.imgHeight, 40, 240)
 
 		card.content.width = width
 		card.content.height = height
@@ -61,7 +62,16 @@ async function onLoad(event: Event) {
 	state.cardLoading = false
 }
 
+function activate() {
+	if (state.uploading || state.uploadFailed)
+		return
+
+	state.active = true
+}
+
 async function uploadImage() {
+	appState.pendingWork.add(`upload-${card.id}`)
+
 	try {
 		state.uploading = true
 		state.uploadProgress = 0
@@ -80,6 +90,8 @@ async function uploadImage() {
 		state.uploading = false
 
 		updateCard(card, true)
+
+		appState.pendingWork.delete(`upload-${card.id}`)
 	} catch {
 		state.uploading = false
 		state.uploadFailed = true
@@ -88,7 +100,11 @@ async function uploadImage() {
 	}
 }
 
-defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
+defineExpose({
+	imgWidth: toRef(state, 'imgWidth'),
+	imgHeight: toRef(state, 'imgHeight'),
+	active: toRef(state, 'active')
+})
 </script>
 
 <template>
@@ -103,7 +119,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 				height: `${card.content.height ?? 0}px`,
 			}"
 			@load="onLoad"
-			@click.left.exact="state.active = true"
+			@click.left.exact="activate"
 		>
 		<UploadProgress
 			:uploading="state.uploading"
@@ -112,7 +128,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 			@retry="uploadImage"
 		/>
 		<div v-if="state.cardLoading" class="loader"></div>
-		<div v-if="imgWidth >= 60 && imgHeight >= 60" class="resize-d"></div>
+		<div v-if="state.imgWidth >= 60 && state.imgHeight >= 60" class="resize-d"></div>
 		<Teleport to="body">
 			<Transition name="image-preview">
 				<div
@@ -122,7 +138,7 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 				>
 					<div v-if="state.previewLoading" class="loader"></div>
 					<img
-						:src="src"
+						:src="card.content.src"
 						decoding="async"
 						@load="() => state.previewLoading = false"
 					>
@@ -159,6 +175,15 @@ defineExpose({ imgWidth, imgHeight, active: toRef(state, 'active') })
 .card.selected .card-content-image,
 .card-content:hover .card-content-image {
 	background-color: var(--color-card-background);
+}
+
+.loader {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 2rem;
+	height: 2rem;
+	transform: translate(-50%, -50%);
 }
 
 .resize-d {

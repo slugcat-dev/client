@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
+import { useAppState } from '../composables/appState'
 import { watch } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import Toggle from './UI/Toggle.vue'
@@ -13,15 +14,16 @@ import IconBlank from './Icons/IconBlank.vue'
 import IconDrawSelection from './Icons/IconDrawSelection.vue'
 import IconBoxSelection from './Icons/IconBoxSelection.vue'
 
-const { settings, settingsVisible } = useSettings()
+const settings = useSettings()
+const appState = useAppState()
 let keyListenerCleanup: Function
 
 // Close the image preview with escape
-watch(settingsVisible, () => {
-	if (settingsVisible.value) {
+watch(() => appState.settingsOpen, () => {
+	if (appState.settingsOpen) {
 		keyListenerCleanup = useEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Escape')
-				settingsVisible.value = false
+				appState.settingsOpen = false
 		})
 	} else
 		keyListenerCleanup()
@@ -30,14 +32,14 @@ watch(settingsVisible, () => {
 
 <template>
 	<Transition name="settings">
-		<div v-if="settingsVisible" class="settings">
+		<div v-if="appState.settingsOpen" class="settings">
 			<div class="settings-page">
 				<div class="settings-page-header">
 					<h1>Settings</h1>
 					<button
 						class="button-close"
 						data-tooltip="Close"
-						@click="settingsVisible = false"
+						@click="appState.settingsOpen = false"
 					>
 						<IconClose />
 					</button>

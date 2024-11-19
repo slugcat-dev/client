@@ -2,6 +2,7 @@
 import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
+import { useAppState } from '../composables/appState'
 import { useDebounceFn } from '@vueuse/core'
 import { prefersReducedMotion } from '../utils'
 import { getDataTransferItems } from '../clipboard'
@@ -14,6 +15,7 @@ const state = reactive({
 	active: false,
 	deleteIntent: false
 })
+const appState = useAppState()
 const clearDeleteIntent = useDebounceFn(() => state.deleteIntent = false, 500)
 let editor: Editor
 
@@ -93,9 +95,13 @@ function onBlur() {
 		deleteCard(card)
 	else
 		updateCard(card, card.new)
+
+	appState.pendingWork.delete(`edit-${card.id}`)
 }
 
 function activate() {
+	appState.pendingWork.add(`edit-${card.id}`)
+
 	state.active = true
 	editor.readonly = false
 

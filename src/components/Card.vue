@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, type ComputedRef, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { usePointer } from '../composables/pointer'
 import { useSettings } from '../composables/settings'
 import { onceChanged, rectContains, rectsOverlap, suppressClick } from '../utils'
 import { updateCard, updateMany } from '../composables/cards'
@@ -32,10 +33,9 @@ const state = reactive({
 		height: 0
 	}
 })
-const pointer = inject('pointer') as PointerState
-const pointers = inject('pointers') as PointerState[]
+const { pointer, pointers } = usePointer()
 const cardRefs = inject('card-refs') as ComputedRef<CardRef[]>
-const { settings } = useSettings()
+const settings = useSettings()
 const cursor = computed(() => {
 	if (contentRef.value?.active) return 'auto'
 	if (selection.boxVisible || selection.draw) return 'inherit'

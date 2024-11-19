@@ -1,7 +1,10 @@
+import { usePointer } from './pointer'
 import { computed, reactive, watch, type ShallowRef } from 'vue'
 import { clamp, prefersReducedMotion } from '../utils'
 
-export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, pointer: PointerState, pointers: PointerState[]) {
+const { pointer, pointers } = usePointer()
+
+export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 	const canvas = reactive({
 		ref,
 		active: false,

@@ -17,15 +17,16 @@ function updateProgress() {
 	const c = 2 * Math.PI * r
 	const offset = c - progress / 100 * c
 
-	circle.style.strokeDasharray = `${c} ${c}`
+	circle.style.strokeDasharray = `${c}, ${c}`
 	circle.style.strokeDashoffset = `${offset}`
+	circle.style.animation = 'none'
 }
 </script>
 
 <template>
 	<div v-if="uploading" class="upload-progress">
 		<svg class="upload-icon">
-			<circle ref="progress-ring-ref" class="progress-ring" cx="50%" cy="50%" r="33%" stroke-dasharray="100 100" stroke-dashoffset="100" />
+			<circle ref="progress-ring-ref" class="progress-ring" cx="50%" cy="50%" r="33%" stroke-dasharray="calc(25 / 4)" style="animation: spin 2s linear infinite;" />
 		</svg>
 		<div>Uploading...</div>
 	</div>
@@ -35,7 +36,7 @@ function updateProgress() {
 		@click="emit('retry')"
 	>
 		<svg class="retry-icon">
-			<ellipse cx="50%" cy="50%" rx="33%" ry="33%" stroke-dasharray="155% 55%" />
+			<ellipse cx="50%" cy="50%" rx="33%" ry="33%" stroke-dasharray="155%, 55%" />
   		<path d="M 19,2 19,8 13,8" />
 		</svg>
 		<div>Retry Upload</div>
@@ -59,33 +60,33 @@ function updateProgress() {
 	border-radius: 1rem;
 	box-shadow: var(--shadow);
 	z-index: 1;
+}
 
-	.upload-icon,
-	.retry-icon {
-		display: block;
-		width: 1.5rem;
-		height: 1.5rem;
-	}
+.upload-icon,
+.retry-icon {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+}
 
-	.upload-icon .progress-ring,
-	.retry-icon ellipse,
-	.retry-icon path {
-		fill: none;
-		stroke: currentcolor;
-		stroke-width: 2px;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-	}
+.upload-icon .progress-ring,
+.retry-icon ellipse,
+.retry-icon path {
+	fill: none;
+	stroke: currentcolor;
+	stroke-width: 2px;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
 
-	.upload-icon .progress-ring {
-		transform: rotate(-90deg);
-		transform-origin: center;
-	}
+.upload-icon .progress-ring {
+	transform: rotate(-90deg);
+	transform-origin: center;
+}
 
-	.retry-icon ellipse {
-		transform: rotate(45deg);
-		transform-origin: center;
-	}
+.retry-icon ellipse {
+	transform: rotate(45deg);
+	transform-origin: center;
 }
 
 .upload-retry {

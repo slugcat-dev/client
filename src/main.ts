@@ -6,14 +6,15 @@ import './assets/hljs.css'
 
 // Create Vue app
 import { createApp } from 'vue'
-import { usePointer } from './composables/pointer'
+import { useAppState } from './composables/appState'
 import App from './App.vue'
 
 const app = createApp(App)
+const appState = useAppState()
 
-// Use a global pointer state instead of having listeners for each card
-const { pointer, pointers } = usePointer()
+window.addEventListener('beforeunload', (event: Event) => {
+	if (appState.pendingWork.size)
+		event.preventDefault()
+})
 
-app.provide('pointer', pointer)
-app.provide('pointers', pointers)
 app.mount('#app')

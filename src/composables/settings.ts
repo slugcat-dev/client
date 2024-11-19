@@ -1,5 +1,5 @@
 import { createGlobalState, useStorage } from '@vueuse/core'
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 
 export const useSettings = createGlobalState(() => {
 	const settings = reactive(useStorage('settings', {
@@ -13,7 +13,6 @@ export const useSettings = createGlobalState(() => {
 		selectionMode: 'draw',
 		snap: 'cards'
 	}, localStorage, { mergeDefaults: true }).value)
-	const settingsVisible = ref(false)
 
-	return { settings, settingsVisible }
+	return settings
 })

@@ -3,7 +3,7 @@ import { useSettings } from '../composables/settings'
 
 defineProps<{ canvas: Canvas }>()
 
-const { settings } = useSettings()
+const settings = useSettings()
 </script>
 
 <template>

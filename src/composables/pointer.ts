@@ -1,11 +1,11 @@
 import { reactive } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { createGlobalState, useEventListener } from '@vueuse/core'
 import { isPointerCoarse, moveThreshold } from '../utils'
 
 // Add pointer events to the document, this prevents drag and drop from being
 // canceled when the mouse leaves the window
 
-export function usePointer() {
+export const usePointer = createGlobalState(() => {
 	const pointers = reactive<PointerState[]>([])
 	const pointer = reactive<PointerState>({
 		id: 0,
@@ -127,4 +127,4 @@ export function usePointer() {
 	}
 
 	return { pointer, pointers }
-}
+})

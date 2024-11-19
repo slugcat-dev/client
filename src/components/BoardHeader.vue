@@ -1,40 +1,41 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
+import { useAppState } from '../composables/appState'
 import IconSnap from './Icons/IconSnap.vue'
 import IconGrid from './Icons/IconGrid.vue'
 import IconSettings from './Icons/IconSettings.vue'
 
-const { settings, settingsVisible } = useSettings()
+const settings = useSettings()
+const appState = useAppState()
 </script>
 
 <template>
 	<header class="board-header">
-		<div>
-			<div class="combobox">
-				<div class="option">
-					<IconSnap />
-					<input
-						type="radio"
-						name="snap"
-						value="cards"
-						v-model="settings.snap"
-					>
-				</div>
-				<div class="option">
-					<IconGrid />
-					<input
-						type="radio"
-						name="snap"
-						value="grid"
-						v-model="settings.snap"
-					>
-				</div>
+		<div class="combobox">
+			<div class="option">
+				<IconSnap />
+				<input
+					type="radio"
+					name="snap"
+					value="cards"
+					v-model="settings.snap"
+				>
+			</div>
+			<div class="option">
+				<IconGrid />
+				<input
+					type="radio"
+					name="snap"
+					value="grid"
+					v-model="settings.snap"
+				>
 			</div>
 		</div>
+		<div class="header-spacer"></div>
 		<button
 			class="settings-button"
 			title="Settings"
-			@click="settingsVisible = true"
+			@click="appState.settingsOpen = true"
 		>
 			<IconSettings />
 		</button>
@@ -46,9 +47,12 @@ const { settings, settingsVisible } = useSettings()
 	display: flex;
 	padding: .25rem 1rem;
 	gap: 1rem;
-	justify-content: space-between;
 	align-items: center;
 	user-select: none;
+}
+
+.header-spacer {
+	flex-grow: 1;
 }
 
 .settings-button {

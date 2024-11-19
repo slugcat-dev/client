@@ -7,7 +7,7 @@ import Board from './components/Board.vue'
 import Settings from './components/Settings.vue'
 import Toaster from './components/Toaster.vue'
 
-const { settings } = useSettings()
+const settings = useSettings()
 const { toast, untoast } = useToaster()
 const root = document.documentElement
 let offlineToast: Toast

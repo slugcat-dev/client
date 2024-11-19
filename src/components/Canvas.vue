@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, inject, provide, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { computed, provide, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { usePointer } from '../composables/pointer'
 import { useCanvas } from '../composables/canvas'
 import { useArrowKeys, useKeymap } from '../composables/keys'
 import { useSettings } from '../composables/settings'
+import { useAppState } from '../composables/appState'
 import { useToaster } from '../composables/toaster'
 import { useEventListener } from '@vueuse/core'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
@@ -27,9 +29,8 @@ const state = reactive({
 	},
 	loading: false
 })
-const pointer = inject('pointer') as PointerState
-const pointers = inject('pointers') as PointerState[]
-const canvas = useCanvas(canvasRef, pointer, pointers)
+const { pointer, pointers } = usePointer()
+const canvas = useCanvas(canvasRef)
 const arrowKeys = useArrowKeys()
 const selection = reactive<CanvasSelection>({
 	cards: [],
@@ -41,7 +42,8 @@ const selection = reactive<CanvasSelection>({
 		selection.cards = []
 	}
 })
-const { settings, settingsVisible } = useSettings()
+const settings = useSettings()
+const appState = useAppState()
 const { toast, untoast } = useToaster()
 const cursor = computed(() => {
 	if (state.panning && pointer.moved) return 'move'
@@ -100,7 +102,7 @@ useKeymap({
 	'Backspace': deleteSelectedCards,
 	'Delete': deleteSelectedCards,
 	'Escape': selection.clear,
-	'CtrlMeta ,': () => settingsVisible.value = true
+	'CtrlMeta ,': () => appState.settingsOpen = true
 })
 
 // Pan the canvas using the arrow keys
