@@ -8,25 +8,23 @@ defineExpose({ boxRef, active: false })
 </script>
 
 <template>
-	<div class="card-content">
-		<div class="box-name">{{ card.content.name }}</div>
-		<div
-			ref="box-ref"
-			class="box"
-			:style="{
-				width: `${card.content.width}px`,
-				height: `${card.content.height}px`
-			}"
-		>
-			<div class="resize-h"></div>
-			<div class="resize-v"></div>
-			<div class="resize-d"></div>
-		</div>
+	<div class="box-label">{{ card.content.label }}</div>
+	<div
+		ref="box-ref"
+		class="box"
+		:style="{
+			width: `${card.content.width}px`,
+			height: `${card.content.height}px`
+		}"
+	>
+		<div class="resize-h"></div>
+		<div class="resize-v"></div>
+		<div class="resize-d"></div>
 	</div>
 </template>
 
-<style>
-.box-name {
+<style scoped>
+.box-label {
 	width: max-content;
 	padding: .125rem .375rem;
 	line-height: 1.25rem;
@@ -51,50 +49,5 @@ defineExpose({ boxRef, active: false })
 .card.selected .box {
 	outline: 2px solid var(--color-accent);
 	outline-offset: 2px;
-}
-
-.resize-d,
-.resize-h,
-.resize-v {
-	position: absolute;
-	pointer-events: all;
-}
-
-.resize-d {
-	right: -.5rem;
-	bottom: -.5rem;
-	width: .875rem;
-	height: .875rem;
-	cursor: se-resize;
-}
-
-.resize-h {
-	top: 0;
-	right: -.25rem;
-	width: .375rem;
-	height: 100%;
-	cursor: ew-resize;
-}
-
-.resize-v {
-	left: 0;
-	bottom: -.25rem;
-	width: 100%;
-	height: .375rem;
-	cursor: ns-resize;
-}
-
-@media (pointer: coarse) {
-	.resize-d {
-		scale: 2;
-	}
-
-	.resize-h {
-		scale: 2 1;
-	}
-
-	.resize-v {
-		scale: 1 2;
-	}
 }
 </style>

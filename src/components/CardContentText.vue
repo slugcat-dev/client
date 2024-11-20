@@ -121,18 +121,16 @@ defineExpose({ active: toRef(state, 'active') })
 </script>
 
 <template>
-	<div class="card-content">
-		<div
-			ref="editor-ref"
-			class="card-content-text"
-			@click.left.exact="onClick"
-			@keydown.delete="onKeyDelete"
-			@paste.capture.stop.prevent="onPaste"
-			@blur="onBlur"
-		></div>
-		<div class="selection-layer">
-			<div ref="caret-ref" class="caret"></div>
-		</div>
+	<div
+		ref="editor-ref"
+		class="card-content-text"
+		@click.left.exact="onClick"
+		@keydown.delete="onKeyDelete"
+		@paste.capture.stop.prevent="onPaste"
+		@blur="onBlur"
+	></div>
+	<div class="selection-layer">
+		<div ref="caret-ref" class="caret"></div>
 	</div>
 </template>
 

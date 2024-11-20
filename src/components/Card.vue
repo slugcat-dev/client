@@ -357,4 +357,49 @@ defineExpose({ card, ref: cardRef, contentRef, dragging: toRef(state, 'dragging'
 .card {
 	position: absolute;
 }
+
+.resize-d,
+.resize-h,
+.resize-v {
+	position: absolute;
+	pointer-events: all;
+}
+
+.resize-d {
+	right: -.5rem;
+	bottom: -.5rem;
+	width: .875rem;
+	height: .875rem;
+	cursor: se-resize;
+}
+
+.resize-h {
+	top: 0;
+	right: -.25rem;
+	width: .375rem;
+	height: 100%;
+	cursor: ew-resize;
+}
+
+.resize-v {
+	left: 0;
+	bottom: -.25rem;
+	width: 100%;
+	height: .375rem;
+	cursor: ns-resize;
+}
+
+@media (pointer: coarse) {
+	.resize-d {
+		scale: 2;
+	}
+
+	.resize-h {
+		scale: 2 1;
+	}
+
+	.resize-v {
+		scale: 1 2;
+	}
+}
 </style>

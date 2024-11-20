@@ -65,6 +65,10 @@ button {
 	background-color: var(--color-accent-25);
 }
 
+.flex-spacer {
+	flex-grow: 1;
+}
+
 .loader {
 	width: 1rem;
 	height: 1rem;

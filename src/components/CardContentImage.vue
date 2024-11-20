@@ -23,8 +23,8 @@ const state = reactive({
 	active: false
 })
 const appState = useAppState()
-const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(src)}`
 const { toast } = useToaster()
+const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(src)}`
 let keyListenerCleanup: Function
 
 onMounted(() => {
@@ -108,44 +108,42 @@ defineExpose({
 </script>
 
 <template>
-	<div class="card-content">
-		<img
-			class="card-content-image"
-			:src="state.cardLoading ? lqip : src"
-			draggable="false"
-			loading="lazy"
-			:style="{
-				width: `${card.content.width ?? 0}px`,
-				height: `${card.content.height ?? 0}px`,
-			}"
-			@load="onLoad"
-			@click.left.exact="activate"
-		>
-		<UploadProgress
-			:uploading="state.uploading"
-			:retry="state.uploadFailed"
-			:progress="state.uploadProgress"
-			@retry="uploadImage"
-		/>
-		<div v-if="state.cardLoading" class="loader"></div>
-		<div v-if="state.imgWidth >= 60 && state.imgHeight >= 60" class="resize-d"></div>
-		<Teleport to="body">
-			<Transition name="image-preview">
-				<div
-					v-if="state.active"
-					class="image-preview"
-					@click="state.active = false"
+	<img
+		class="card-content-image"
+		:src="state.cardLoading ? lqip : src"
+		draggable="false"
+		loading="lazy"
+		:style="{
+			width: `${card.content.width ?? 0}px`,
+			height: `${card.content.height ?? 0}px`,
+		}"
+		@load="onLoad"
+		@click.left.exact="activate"
+	>
+	<UploadProgress
+		:uploading="state.uploading"
+		:retry="state.uploadFailed"
+		:progress="state.uploadProgress"
+		@retry="uploadImage"
+	/>
+	<div v-if="state.cardLoading" class="loader"></div>
+	<div v-if="state.imgWidth >= 60 && state.imgHeight >= 60" class="resize-d"></div>
+	<Teleport to="body">
+		<Transition name="image-preview">
+			<div
+				v-if="state.active"
+				class="image-preview"
+				@click="state.active = false"
+			>
+				<img
+					:src="card.content.src"
+					decoding="async"
+					@load="() => state.previewLoading = false"
 				>
-					<div v-if="state.previewLoading" class="loader"></div>
-					<img
-						:src="card.content.src"
-						decoding="async"
-						@load="() => state.previewLoading = false"
-					>
-				</div>
-			</Transition>
-		</Teleport>
-	</div>
+				<div v-if="state.previewLoading" class="loader"></div>
+			</div>
+		</Transition>
+	</Teleport>
 </template>
 
 <style scoped>
@@ -156,25 +154,13 @@ defineExpose({
 	-webkit-touch-callout: none;
 }
 
-.card-content::after {
-	content: '';
-	position: absolute;
-	inset: 0;
-	border-radius: .375rem;
-	pointer-events: none;
-}
-
-.card-content:hover::after {
-	box-shadow: 0 0 0 2px var(--color-card-border) inset;
-}
-
-.card.selected .card-content::after {
-	box-shadow: 0 0 0 2px var(--color-accent) inset;
-}
-
 .card.selected .card-content-image,
-.card-content:hover .card-content-image {
+.card:hover .card-content-image {
 	background-color: var(--color-card-background);
+}
+
+.card.selected .card-content-image {
+	outline: 2px solid var(--color-accent);
 }
 
 .loader {
@@ -202,8 +188,7 @@ defineExpose({
 	backdrop-filter: blur(8px);
 
 	.loader {
-		transition: opacity 200ms 500ms;
-		z-index: -1;
+		transition: opacity 200ms 1s;
 	}
 
 	img {
@@ -226,17 +211,13 @@ defineExpose({
 	.image-preview-leave-active {
 		transition: 400ms;
 
-		.loader {
-			transition: 400ms 500ms;
-		}
-
 		img {
 			transition: 400ms cubic-bezier(.68, -.55, .265, 1.55);
 		}
 	}
 
 	.image-preview-leave-active .loader {
-		transition: 400ms;
+		transition: opacity 400ms;
 	}
 
 	.image-preview-enter-from,

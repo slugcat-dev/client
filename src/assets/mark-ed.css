@@ -15,7 +15,7 @@
 		visibility: hidden;
 		width: 2px;
 		left: -1px;
-		background-color: currentcolor;
+		background-color: currentColor;
 		animation: blink-1 1s steps(1) infinite;
 
 		&.visible {
@@ -30,7 +30,7 @@
 }
 
 .md-mark {
-	color: color-mix(in srgb, currentcolor, transparent 50%);
+	color: color-mix(in srgb, currentColor, transparent 50%);
 }
 
 .md-hidden {

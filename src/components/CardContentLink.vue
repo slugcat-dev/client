@@ -7,7 +7,7 @@ import { createCard, deleteCard, updateCard } from '../composables/cards'
 const apiURL = import.meta.env.APP_API_URL
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
 const { toast } = useToaster()
-const hostname = new URL(card.content.url).hostname
+const hostname = new URL(card.content.url).hostname.replace(/^www\./, '')
 
 onMounted(async () => {
 	if (card.new) {
@@ -18,7 +18,7 @@ onMounted(async () => {
 		} catch {
 			createCard({ pos: card.pos, content: card.content.url })
 			deleteCard(card)
-			toast('Could not get link preview')
+			toast('Could not get link preview', 'red')
 		}
 	}
 })
@@ -27,24 +27,24 @@ defineExpose({ active: false })
 </script>
 
 <template>
-	<div class="card-content">
-		<div class="card-content-link">
-			<img
-				class="link-icon"
-				:src="card.content.icon ?? 'vite.svg'"
-				draggable="false"
-				loading="lazy"
-				decoding="async"
+	<div class="card-content-link">
+		<img
+			class="link-icon"
+			:src="card.content.icon ?? 'vite.svg'"
+			draggable="false"
+			loading="lazy"
+			decoding="async"
+		>
+		<div class="link-text">
+			<a
+			class="link-title ellipsis"
+			:href="card.content.url"
+			target="_blank"
+			draggable="false"
 			>
-			<div class="link-text">
-				<a
-					class="link-title ellipsis"
-					:href="card.content.url"
-					target="_blank"
-					draggable="false"
-				>{{ card.content.title ?? card.content.url }}</a>
-				<div class="link-site-name">{{ card.content.siteName ?? hostname }}</div>
-			</div>
+				{{ card.content.title ?? card.content.url }}
+			</a>
+			<div class="link-site-name">{{ card.content.siteName ?? hostname }}</div>
 		</div>
 	</div>
 </template>

@@ -31,7 +31,7 @@ const appState = useAppState()
 				>
 			</div>
 		</div>
-		<div class="header-spacer"></div>
+		<div class="flex-spacer"></div>
 		<button
 			class="settings-button"
 			title="Settings"
@@ -49,10 +49,6 @@ const appState = useAppState()
 	gap: 1rem;
 	align-items: center;
 	user-select: none;
-}
-
-.header-spacer {
-	flex-grow: 1;
 }
 
 .settings-button {
