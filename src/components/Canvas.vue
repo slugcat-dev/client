@@ -138,7 +138,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 	createCard({
 		new: true,
 		pos: canvas.toCanvasPos(pointer),
-		content: event.key !== ' ' && event.key !== 'Enter' ? event.key : ''
+		content: { text: event.key !== ' ' && event.key !== 'Enter' ? event.key : '' }
 	})
 })
 

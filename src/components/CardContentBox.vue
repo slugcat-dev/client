@@ -28,7 +28,6 @@ defineExpose({ boxRef, active: false })
 	width: max-content;
 	padding: .125rem .375rem;
 	line-height: 1.25rem;
-	font-family: var(--font-content);
 	font-weight: bold;
 	color: #202020;
 	background-color: var(--color-accent);

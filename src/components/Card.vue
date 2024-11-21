@@ -9,6 +9,9 @@ import CardContentBox from './CardContentBox.vue'
 import CardContentText from './CardContentText.vue'
 import CardContentImage from './CardContentImage.vue'
 import CardContentLink from './CardContentLink.vue'
+import CardContentAudio from './CardContentAudio.vue'
+import CardContentVideo from './CardContentVideo.vue'
+import CardContentPDF from './CardContentPDF.vue'
 
 type CardRef = InstanceType<typeof Card>
 type CardContentRef = InstanceType<ReturnType<typeof getContentComponent>>
@@ -322,6 +325,9 @@ function getContentComponent() {
 		case 'text': return CardContentText
 		case 'image': return CardContentImage
 		case 'link': return CardContentLink
+		case 'audio': return CardContentAudio
+		case 'video': return CardContentVideo
+		case 'pdf': return CardContentPDF
 	}
 }
 

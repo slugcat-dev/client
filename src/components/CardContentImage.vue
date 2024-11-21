@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, toRef, watch } from 'vue'
-import { limitSize, loadImage } from '../utils'
+import { onMounted, reactive, toRef, watch } from 'vue'
+import { fileToBase64, limitSize, loadImage } from '../utils'
 import { useEventListener } from '@vueuse/core'
 import { uploadFile } from '../upload'
 import { updateCard } from '../composables/cards'
@@ -10,10 +10,9 @@ import UploadProgress from './UploadProgress.vue'
 
 const apiURL = import.meta.env.APP_API_URL
 const { card } = defineProps<{ card: Card, canvas: Canvas }>()
-const src = card.content.src
-const isDataURL = src.startsWith('data')
+const mustUpload = 'file' in card.content
 const state = reactive({
-	cardLoading: !isDataURL,
+	cardLoading: !mustUpload,
 	uploading: false,
 	uploadProgress: 0,
 	uploadFailed: false,
@@ -24,11 +23,11 @@ const state = reactive({
 })
 const appState = useAppState()
 const { toast } = useToaster()
-const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(src)}`
+const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(card.content.src)}`
 let keyListenerCleanup: Function
 
 onMounted(() => {
-	if (isDataURL)
+	if (mustUpload)
 		uploadImage()
 })
 
@@ -47,7 +46,7 @@ watch(() => state.active, () => {
 
 async function onLoad(event: Event) {
 	const target = event.target as HTMLImageElement
-	const imageRef = isDataURL ? target : await loadImage(src)
+	const imageRef = card.content.src.startsWith('data') ? target : await loadImage(card.content.src)
 
 	state.imgWidth = imageRef.naturalWidth
 	state.imgHeight = imageRef.naturalHeight
@@ -63,7 +62,7 @@ async function onLoad(event: Event) {
 }
 
 function activate() {
-	if (state.uploading || state.uploadFailed)
+	if (card.content.src.startsWith('data'))
 		return
 
 	state.active = true
@@ -72,6 +71,9 @@ function activate() {
 async function uploadImage() {
 	appState.pendingWork.add(`upload-${card.id}`)
 
+	if (!card.content.src)
+		card.content.src = await fileToBase64(card.content.file)
+
 	try {
 		state.uploading = true
 		state.uploadProgress = 0
@@ -79,12 +81,11 @@ async function uploadImage() {
 
 		const fileName = await uploadFile({
 			base64: card.content.src,
-			name: card.content.name,
-			type: card.content.type
+			name: card.content.file.name,
+			type: card.content.file.type
 		}, progress => state.uploadProgress = progress)
 
-		delete card.content.name
-		delete card.content.type
+		delete card.content.file
 
 		card.content.src = fileName
 		state.uploading = false
@@ -110,7 +111,7 @@ defineExpose({
 <template>
 	<img
 		class="card-content-image"
-		:src="state.cardLoading ? lqip : src"
+		:src="state.cardLoading ? lqip : card.content.src"
 		draggable="false"
 		loading="lazy"
 		:style="{

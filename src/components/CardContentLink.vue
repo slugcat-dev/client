@@ -30,7 +30,7 @@ defineExpose({ active: false })
 	<div class="card-content-link">
 		<img
 			class="link-icon"
-			:src="card.content.icon ?? 'vite.svg'"
+			:src="card.content.icon ?? 'default-icon.svg'"
 			draggable="false"
 			loading="lazy"
 			decoding="async"
@@ -55,7 +55,6 @@ defineExpose({ active: false })
 	width: 240px;
 	padding: .375rem;
 	gap: .375rem;
-	font-family: var(--font-content);
 	background-color: var(--color-card-background);
 	border: 2px solid var(--color-card-border);
 	border-radius: .375rem;

@@ -1,4 +1,5 @@
 @import 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap';
 @import 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap';
 
 * {
@@ -24,8 +25,6 @@
 	--color-card-background: light-dark(white, #282828);
 	--color-card-border: light-dark(#e0e0e0, #303030);
 
-	--font-content: 'Roboto', sans-serif;
-	--font-monospace: 'Fira Code', monospace;
 	--shadow: 0 2px 4px light-dark(#0001, #0002);
 
 	accent-color: var(--color-accent);
@@ -34,7 +33,7 @@
 
 body {
 	margin: 0;
-	font-family: system-ui;
+	font-family: 'Roboto', sans-serif;
 	font-size: .875rem;
 	color: var(--color-text);
 	background-color: var(--color-background);

@@ -21,7 +21,7 @@ let editor: Editor
 
 onMounted(() => {
 	editor = new Editor(editorRef.value!, {
-		content: card.content,
+		content: card.content.text,
 		readonly: true,
 		hideMarks: true,
 		keymap: {
@@ -41,8 +41,8 @@ onMounted(() => {
 	if (card.new) {
 		activate()
 
-		if (card.content !== '')
-			editor.setSelection(card.content.length)
+		if (card.content.text !== '')
+			editor.setSelection(card.content.text.length)
 		else
 			editor.setSelection(editor.getSelection())
 	}
@@ -89,9 +89,9 @@ async function onPaste(event: ClipboardEvent) {
 function onBlur() {
 	state.active = false
 	editor.readonly = true
-	card.content = editor.content
+	card.content.text = editor.content
 
-	if (card.content === '')
+	if (card.content.text === '')
 		deleteCard(card)
 	else
 		updateCard(card, card.new)

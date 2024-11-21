@@ -5,8 +5,6 @@ export const useSettings = createGlobalState(() => {
 	const settings = reactive(useStorage('settings', {
 		colorTheme: 'system',
 		colorAccent: 'blue',
-		fontContent: 'Roboto',
-		fontMonospace: 'Fira Code',
 		boardBackground: 'dot',
 		doubleClickCreateCard: true,
 		typeAnywhere: true,

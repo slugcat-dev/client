@@ -6,8 +6,8 @@ export const useCards = createGlobalState(() => {
 
 	const now = Date.now()
 	const cards = reactive<Card[]>([
-		{ id: now, type: 'text', content: 'Test', pos: { x: 140, y: 120 }, modified: now },
-		{ id: now + 1, type: 'text', content: 'Hello, **World**!', pos: { x: 220, y: 180 }, modified: now },
+		{ id: now, type: 'text', content: { text: 'Test' }, pos: { x: 140, y: 120 }, modified: now },
+		{ id: now + 1, type: 'text', content: { text: 'Hello, **World**!' }, pos: { x: 220, y: 180 }, modified: now },
 		{ id: now + 2, type: 'box', content: { label: 'Box 1', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now },
 		{ id: now + 3, type: 'box', content: { label: 'Box 2', width: 40, height: 40 }, pos: { x: 400, y: 60 }, modified: now }
 	])
@@ -37,7 +37,7 @@ export function createCard(data: Partial<Card>) {
 	const card = {
 		id: now,
 		type: 'text',
-		content: '',
+		content: { text: '' },
 		pos: { x: 0, y: 0 },
 		modified: now,
 		...data
@@ -88,11 +88,13 @@ export function deleteMany(cardsToDelte: Card[]) {
 
 export function getCardText(cards: Card[]) {
 	return cards
-		.filter(card => !(card.type === 'image' && card.content.src.startsWith('data')))
+		.filter(card => !card.new)
 		.map(card => {
 			switch (card.type) {
 				case 'box': return card.content.label
-				case 'text': return card.content
+				case 'text': return card.content.text
+				case 'audio':
+				case 'video':
 				case 'image': return card.content.src
 				case 'link': return card.content.url
 			}

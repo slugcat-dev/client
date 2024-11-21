@@ -15,8 +15,6 @@ let offlineToast: Toast
 watch(settings, () => {
 	root.style.colorScheme = settings.colorTheme === 'system' ? 'light dark' : settings.colorTheme
 	root.style.setProperty('--color-accent', `var(--color-${settings.colorAccent})`)
-	root.style.setProperty('--font-content', `'${settings.fontContent || 'sans-serif'}', sans-serif`)
-	root.style.setProperty('--font-monospace', `'${settings.fontMonospace || 'monospace'}', monospace`)
 }, { immediate: true })
 
 useEventListener('offline', () => {

@@ -1,5 +1,4 @@
 .md-editor {
-	font-family: var(--font-content);
 	font-size: .875rem;
 	line-height: 1.25rem;
 	outline: none;
@@ -60,7 +59,7 @@
 
 .md-code,
 .md-code-block {
-	font-family: var(--font-monospace);
+	font-family: 'Fira Code', monospace;
 	background-color: light-dark(#f0f0f0, #303030);
 }
 
@@ -125,7 +124,7 @@
 .md-task {
 	.md-checkmark {
 		line-height: 1;
-		font-family: var(--font-monospace);
+		font-family: 'Fira Code', monospace;
 		color: var(--color-text);
 	}
 
