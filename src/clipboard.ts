@@ -1,9 +1,11 @@
+import { useAppState } from './composables/appState'
 import { useToaster } from './composables/toaster'
 import { createCard, getCardText } from './composables/cards'
 import { limitSize, isURL } from './utils'
 import { ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
+const appState = useAppState()
 const { toast } = useToaster()
 
 /**
@@ -75,6 +77,14 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 	// Paste files
 	if (files.length) {
+		if (!appState.online) {
+			return {
+				type: null,
+				cards: [],
+				error: 'Can\'t upload files while offline'
+			}
+		}
+
 		const now = Date.now()
 		const cards = files
 			.filter(file => {
@@ -108,7 +118,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		let text = textItem.data
 
 		// Test if the pasted text is a link
-		if (/^https?:\/\//.test(text) && isURL(text)) {
+		if (/^https?:\/\//.test(text) && isURL(text) && appState.online) {
 			try {
 				const data = await ofetch(`${apiURL}/link-type?url=${encodeURIComponent(text)}`)
 				const content = (() => {

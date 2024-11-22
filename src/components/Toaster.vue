@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToaster } from '../composables/toaster'
 
-const { toasts } = useToaster()
+const { toast, toasts } = useToaster()
 </script>
 
 <template>
@@ -43,7 +43,13 @@ const { toasts } = useToaster()
 		opacity: 0;
 		transition: scale 200ms, opacity 1s 3s ease-in;
 
+		@starting-style {
+			scale: 0;
+			opacity: 1;
+		}
+
 		&.persistent {
+			order: 1;
 			opacity: 1;
 			transition: scale 200ms;
 		}
@@ -62,11 +68,6 @@ const { toasts } = useToaster()
 			@starting-style {
 				box-shadow: 0 0 0 0 var(--color-toast);
 			}
-		}
-
-		@starting-style {
-			scale: 0;
-			opacity: 1;
 		}
 	}
 }

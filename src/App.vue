@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSettings } from './composables/settings'
+import { useAppState } from './composables/appState'
 import { useToaster } from './composables/toaster'
 import { watch } from 'vue'
 import { useEventListener } from '@vueuse/core'
@@ -8,6 +9,7 @@ import Settings from './components/Settings.vue'
 import Toaster from './components/Toaster.vue'
 
 const settings = useSettings()
+const appState = useAppState()
 const { toast, untoast } = useToaster()
 const root = document.documentElement
 let offlineToast: Toast
@@ -18,10 +20,13 @@ watch(settings, () => {
 }, { immediate: true })
 
 useEventListener('offline', () => {
-	offlineToast = toast('Offline', 'red', true)
+	appState.online = false
+	offlineToast = toast('Offline, some features are not available', 'red', true)
 })
 
 useEventListener('online', () => {
+	appState.online = true
+
 	untoast(offlineToast)
 	toast('Back online')
 })

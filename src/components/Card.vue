@@ -69,9 +69,16 @@ watch(() => selection.cards, () => {
 watch(() => selection.box, () => {
 	if (selection.box) {
 		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+		let inBox = rectsOverlap(selection.box, cardRect)
+
+		if (card.type === 'box') {
+			const boxRect = canvas.toCanvasRect((contentRef.value as CardContentBoxRef).boxRef!.getBoundingClientRect())
+
+			inBox ||= rectsOverlap(selection.box, boxRect)
+		}
 
 		// Check if the card is in the selection box
-		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
+		state.selected = !!selection.box && inBox
 	}
 })
 
