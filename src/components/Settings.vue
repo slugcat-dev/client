@@ -144,6 +144,22 @@ watch(() => appState.settingsOpen, () => {
 
 				<div class="settings-option">
 					<div class="info">
+						<label class="name">Trackpad Sensitivity</label>
+						<div class="description">Scroll and zoom sensitivity when using a trackapd</div>
+					</div>
+					<div class="control">
+						<input
+							type="range"
+							min=".25"
+							max="1"
+							step=".25"
+							v-model="settings.trackpadSensitivity"
+						>
+					</div>
+				</div>
+
+				<div class="settings-option">
+					<div class="info">
 						<label class="name">Require doubleclick to create cards</label>
 						<div class="description">Avoid accidentally creating new cards when using a mouse</div>
 					</div>

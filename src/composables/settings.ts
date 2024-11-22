@@ -6,6 +6,7 @@ export const useSettings = createGlobalState(() => {
 		colorTheme: 'system',
 		colorAccent: 'blue',
 		boardBackground: 'dot',
+		trackpadSensitivity: 1,
 		doubleClickCreateCard: true,
 		typeAnywhere: true,
 		selectionMode: 'draw',

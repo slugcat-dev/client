@@ -366,8 +366,11 @@ function onWheel(event: WheelEvent) {
 	if (isMouseWheel) {
 		deltaX = Math.sign(deltaX) * 100
 		deltaY = Math.sign(deltaY) * 100
-	} else
+	} else {
+		deltaX *= settings.trackpadSensitivity
+		deltaY *= settings.trackpadSensitivity
 		lastTrackpadTime = Date.now()
+	}
 
 	if (event.ctrlKey || event.metaKey) {
 		// Zoom the canvas

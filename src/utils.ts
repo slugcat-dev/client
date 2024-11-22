@@ -79,8 +79,8 @@ export function caretRangeFromPoint(x: number, y: number) {
  * Detect if a wheel event comes from a trackpad.
  */
 export function isTrackpad(event: WheelEvent & { wheelDeltaX?: number, wheelDeltaY?: number }) {
-	if (event.deltaMode !== event.DOM_DELTA_PIXEL)
-		return false
+	/* if (event.deltaMode !== event.DOM_DELTA_PIXEL)
+		return false */
 
 	// See https://stackoverflow.com/q/10744645/13505160
 	return (
