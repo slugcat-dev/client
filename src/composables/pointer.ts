@@ -31,6 +31,19 @@ export const usePointer = createGlobalState(() => {
 		else
 			trackPointer(event)
 
+		// Ignore mouse while using a touch screen
+		if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+			const mouseIndex = pointers.findIndex(p => p.type === 'mouse')
+
+			if (mouseIndex !== -1) {
+				pointers.splice(mouseIndex, 1)
+
+				pointer.down = false
+				pointer.moved = false
+				pointer.id = 0
+			}
+		}
+
 		if (!pointer.id || pointer.id === event.pointerId)
 			syncPointer(index)
 	})
@@ -46,7 +59,7 @@ export const usePointer = createGlobalState(() => {
 			pointers[index].movementY = event.movementY
 
 			// Add a different move threshold for mouse and touch
-			if (pointers[index].down && moveThreshold(pointers[index].down, pointers[index], isPointerCoarse ? 10 : 4))
+			if (pointers[index].down && moveThreshold(pointers[index].down, pointers[index], isPointerCoarse() ? 10 : 4))
 				pointers[index].moved = true
 		} else
 			trackPointer(event)

@@ -6,8 +6,11 @@ export const isMac = /Mac/i.test(navigator.platform) || /iPhone/.test(navigator.
 export const isIOS = isMac && 'ontouchstart' in window
 export const isMobile = isAndroid || isIOS
 export const isDesktop = !isMobile
-export const isPointerCoarse = window.matchMedia('(pointer: coarse)').matches
 export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+export function isPointerCoarse() {
+	return window.matchMedia('(pointer: coarse)').matches
+}
 
 export function clamp(value: number, min: number, max: number) {
 	return Math.max(Math.min(value, max), min)

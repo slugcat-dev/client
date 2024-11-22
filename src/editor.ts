@@ -53,7 +53,7 @@ export function moveCaretWhereClicked(editor: Editor, event: MouseEvent) {
 	const caretRange = caretRangeFromPoint(event.clientX, event.clientY)
 
 	// Move the caret to the next word boundary
-	if (isPointerCoarse) {
+	if (isPointerCoarse()) {
 		const text = caretRange.startContainer.textContent ?? ''
 		let start = caretRange.startOffset
 		let end = caretRange.startOffset
