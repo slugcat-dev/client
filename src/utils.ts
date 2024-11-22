@@ -2,7 +2,7 @@ import { type MaybeRefOrGetter, watch } from 'vue'
 
 export const isFirefox = /Firefox/i.test(navigator.userAgent)
 export const isAndroid = /Android/i.test(navigator.userAgent)
-export const isMac = /Mac/i.test(navigator.platform)
+export const isMac = /Mac/i.test(navigator.platform) || /iPhone/.test(navigator.userAgent)
 export const isIOS = isMac && 'ontouchstart' in window
 export const isMobile = isAndroid || isIOS
 export const isDesktop = !isMobile

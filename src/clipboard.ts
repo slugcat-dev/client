@@ -1,8 +1,10 @@
+import { useToaster } from './composables/toaster'
 import { createCard, getCardText } from './composables/cards'
 import { limitSize, isURL } from './utils'
 import { ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
+const { toast } = useToaster()
 
 /**
  * Copy the given cards to the clipboard.
@@ -74,22 +76,29 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 	// Paste files
 	if (files.length) {
 		const now = Date.now()
-		const cards = files.map((file, i) => {
-			const type = /pdf/.test(file.type) ? 'pdf' : file.type.split('/')[0] as Card['type']
+		const cards = files
+			.filter(file => {
+				if (file.size > 1024 ** 3)
+					toast(`"${file.name}" is too big to upload`, 'red')
 
-			return createCard({
-				id: now + i,
-				new: true,
-				type,
-				pos: {
-					x: pos.x + i * 20,
-					y: pos.y + i * 20
-				},
-				content: { file },
-				modified: now + i
+				return file.size < 1024 ** 3
 			})
-		})
-		const type = new Set(cards.map(({ type }) => type)).size > 1 ? 'file' : cards[0].type
+			.map((file, i) => {
+				const type = /pdf/.test(file.type) ? 'pdf' : file.type.split('/')[0] as Card['type']
+
+				return createCard({
+					id: now + i,
+					new: true,
+					type,
+					pos: {
+						x: pos.x + i * 20,
+						y: pos.y + i * 20
+					},
+					content: { file },
+					modified: now + i
+				})
+			})
+		const type = new Set(cards.map(({ type }) => type)).size > 1 ? 'file' : cards[0]?.type
 
 		return { type, cards }
 	}
@@ -152,7 +161,11 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 	console.log(items)
 
-	return { type: null, cards: [] }
+	return {
+		type: null,
+		cards: [],
+		error: 'Type not supported'
+	}
 }
 
 export async function getDataTransferItems(dataTransfer: DataTransfer) {

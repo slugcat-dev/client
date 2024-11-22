@@ -430,8 +430,8 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		selection.clear()
 
 		selection.cards = pasted.cards
-	} else
-		toast('Type not supported', 'red')
+	} else if (pasted.error)
+		toast(pasted.error, 'red')
 
 	state.loading = false
 }

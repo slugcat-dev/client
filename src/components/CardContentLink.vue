@@ -85,7 +85,8 @@ defineExpose({ active: false })
 		text-decoration: none;
 		color: inherit;
 
-		&:hover {
+		&:hover,
+		&:focus-visible {
 			text-decoration: underline;
 		}
 	}
