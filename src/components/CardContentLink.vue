@@ -81,7 +81,7 @@ defineExpose({ active: false })
 
 	&::before,
 	&::after {
-		background-color: light-dark(#202020, white);
+		background-color: currentColor;
 	}
 }
 

@@ -53,10 +53,10 @@ export const usePointer = createGlobalState(() => {
 
 		if (index !== undefined) {
 			// Update pointer position and movement
+			pointers[index].movementX = event.clientX - pointers[index].x
+			pointers[index].movementY = event.clientY - pointers[index].y
 			pointers[index].x = event.clientX
 			pointers[index].y = event.clientY
-			pointers[index].movementX = event.movementX
-			pointers[index].movementY = event.movementY
 
 			// Add a different move threshold for mouse and touch
 			if (pointers[index].down && moveThreshold(pointers[index].down, pointers[index], isPointerCoarse() ? 10 : 4))
@@ -116,8 +116,8 @@ export const usePointer = createGlobalState(() => {
 			moved: false,
 			x: event.clientX,
 			y: event.clientY,
-			movementX: event.movementX,
-			movementY: event.movementY,
+			movementX: 0,
+			movementY: 0,
 			type: event.pointerType,
 			ctrlKey: false,
 			metaKey: false,
