@@ -187,16 +187,17 @@ defineExpose({
 	padding: 2rem;
 	background-color: #000a;
 	backdrop-filter: blur(8px);
-
-	.loader {
-		transition: opacity 200ms 1s;
-	}
+	z-index: 1;
 
 	img {
 		display: block;
 		max-width: 100%;
 		max-height: 100%;
 		user-select: none;
+	}
+
+	.loader {
+		transition: opacity 200ms 1s;
 	}
 }
 

@@ -36,11 +36,7 @@ watch(() => appState.settingsOpen, () => {
 			<div class="settings-page">
 				<div class="settings-page-header">
 					<h1>Settings</h1>
-					<button
-						class="button-close"
-						data-tooltip="Close"
-						@click="appState.settingsOpen = false"
-					>
+					<button class="button-close" @click="appState.settingsOpen = false">
 						<IconClose />
 					</button>
 				</div>
@@ -321,20 +317,28 @@ watch(() => appState.settingsOpen, () => {
 	}
 }
 
+input[type="range"] {
+	border-radius: .5rem;
+}
+
 .combobox {
 	display: flex;
 
 	.option {
+		position: relative;
+		z-index: 0;
+
+		&:has(:checked) {
+			color: #202020;
+			z-index: 1;
+		}
+
 		.icon {
 			position: absolute;
 			width: 1.25rem;
 			height: 1.25rem;
 			margin: .125rem;
 			pointer-events: none;
-		}
-
-		&:has(:checked) {
-			color: #202020;
 		}
 
 		input[type="radio"] {
@@ -344,6 +348,7 @@ watch(() => appState.settingsOpen, () => {
 			height: 1.5rem;
 			margin: 0;
 			background-color: light-dark(#d0d0d0, #404040);
+			border-radius: 0;
 			cursor: pointer;
 
 			&:checked {

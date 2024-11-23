@@ -28,7 +28,11 @@ defineExpose({ active: false })
 
 <template>
 	<div class="card-content-link">
+		<div v-if="card.new" class="link-icon">
+			<div class="loader"></div>
+		</div>
 		<img
+			v-else
 			class="link-icon"
 			:src="card.content.icon ?? 'default-icon.svg'"
 			draggable="false"
@@ -69,6 +73,16 @@ defineExpose({ active: false })
 	border-radius: .375rem;
 	box-shadow: var(--shadow);
 	-webkit-touch-callout: none;
+}
+
+.link-icon .loader {
+	width: 1.5rem;
+	height: 1.5rem;
+
+	&::before,
+	&::after {
+		background-color: light-dark(#202020, white);
+	}
 }
 
 .link-text {
