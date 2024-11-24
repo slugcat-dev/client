@@ -19,12 +19,12 @@ export function uploadFile(file: File | Base64File, onProgress?: (progress: numb
 			onProgress((event.loaded / event.total) * 100)
 	})
 
-	return new Promise((resolve, reject) => {
+	return new Promise<any>((resolve, reject) => {
 		xhr.addEventListener('load', () => {
 			if (xhr.status !== 200)
 				reject(new Error('Upload failed'))
 
-			resolve(`${apiURL}/uploads/${xhr.responseText}`)
+			resolve(JSON.parse(xhr.responseText))
 		})
 		xhr.addEventListener('error', () => reject(new Error('Upload failed')))
 		xhr.open('POST', `${apiURL}/upload`)

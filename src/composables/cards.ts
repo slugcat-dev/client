@@ -1,4 +1,5 @@
 import { createGlobalState } from '@vueuse/core'
+import { useAppState } from './appState'
 import { reactive, watch } from 'vue'
 
 export const useCards = createGlobalState(() => {
@@ -15,10 +16,11 @@ export const useCards = createGlobalState(() => {
 	return cards
 })
 
+const appState = useAppState()
 const cards = useCards()
 
-// Stack cards in the order they were modified
 watch(() => cards.map(card => card.modified), () => {
+	// Stack cards in the order they were modified
 	cards.sort((a, b) => {
 		// Sort boxes before other cards
 		if (a.type === 'box' && b.type !== 'box') return -1
@@ -30,6 +32,11 @@ watch(() => cards.map(card => card.modified), () => {
 
 		return a.modified - b.modified
 	})
+
+	if (cards.some(card => card.new))
+		appState.pendingWork.add('new-cards')
+	else
+		appState.pendingWork.delete('new-cards')
 }, { immediate: true })
 
 export function createCard(data: Partial<Card>) {

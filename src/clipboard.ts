@@ -89,7 +89,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 		const cards = files
 			.filter(file => {
 				if (file.size > 1024 ** 3)
-					toast(`"${file.name}" is too big to upload`, 'red')
+					toast(`"${file.name}" is too large to upload`, 'red')
 
 				return file.size < 1024 ** 3
 			})
@@ -122,25 +122,27 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 			try {
 				const data = await ofetch(`${apiURL}/link-type?url=${encodeURIComponent(text)}`)
 				const content = (() => {
-					if (data.type === 'image') {
-						const [width, height] = limitSize(data.width, data.height, 40, 240)
+					switch (data.type) {
+						case 'image': {
+							const [width, height] = limitSize(data.width, data.height, 40, 240)
 
-						return {
-							src: text,
-							width,
-							height
+							return {
+								src: text,
+								width,
+								height
+							}
 						}
-					} else if (data.type === 'link')
-						return { url: text }
-					else
-						return { src: text }
+						case 'audio': return { src: text, title: data.title }
+						case 'link': return { url: text }
+						default: return { src: text }
+					}
 				})()
 
 				return {
 					type: data.type,
 					cards: [createCard({
-						new: data.type !== 'image',
 						type: data.type,
+						new: data.type === 'link',
 						pos,
 						content
 					})]

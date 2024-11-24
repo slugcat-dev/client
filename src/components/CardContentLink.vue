@@ -91,8 +91,6 @@ defineExpose({ active: false })
 	flex-direction: column;
 	justify-content: center;
 	line-height: 1rem;
-	overflow: hidden;
-	white-space: nowrap;
 
 	.link-title {
 		font-weight: bold;
@@ -109,11 +107,6 @@ defineExpose({ active: false })
 		font-size: .75rem;
 		opacity: .75;
 	}
-}
-
-.ellipsis {
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 .card.selected .card-content-link {

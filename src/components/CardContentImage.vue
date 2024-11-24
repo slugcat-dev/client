@@ -4,7 +4,6 @@ import { fileToBase64, limitSize, loadImage } from '../utils'
 import { useEventListener } from '@vueuse/core'
 import { uploadFile } from '../upload'
 import { updateCard } from '../composables/cards'
-import { useAppState } from '../composables/appState'
 import { useToaster } from '../composables/toaster'
 import UploadProgress from './UploadProgress.vue'
 
@@ -21,7 +20,6 @@ const state = reactive({
 	imgHeight: 0,
 	active: false
 })
-const appState = useAppState()
 const { toast } = useToaster()
 const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(card.content.src)}`
 let keyListenerCleanup: Function
@@ -69,8 +67,6 @@ function activate() {
 }
 
 async function uploadImage() {
-	appState.pendingWork.add(`upload-${card.id}`)
-
 	if (!card.content.src)
 		card.content.src = await fileToBase64(card.content.file)
 
@@ -79,7 +75,7 @@ async function uploadImage() {
 		state.uploadProgress = 0
 		state.uploadFailed = false
 
-		const fileName = await uploadFile({
+		const { filename } = await uploadFile({
 			base64: card.content.src,
 			name: card.content.file.name,
 			type: card.content.file.type
@@ -87,18 +83,21 @@ async function uploadImage() {
 
 		delete card.content.file
 
-		card.content.src = fileName
+		card.content.src = `${apiURL}/uploads/${filename}`
 		state.uploading = false
 
 		updateCard(card, true)
-
-		appState.pendingWork.delete(`upload-${card.id}`)
 	} catch {
 		state.uploading = false
 		state.uploadFailed = true
 
 		toast('Upload failed', 'red')
 	}
+}
+
+function retryUpload() {
+	updateCard(card)
+	uploadImage()
 }
 
 defineExpose({
@@ -125,7 +124,7 @@ defineExpose({
 		:uploading="state.uploading"
 		:retry="state.uploadFailed"
 		:progress="state.uploadProgress"
-		@retry="uploadImage"
+		@retry="retryUpload"
 	/>
 	<div v-if="state.cardLoading" class="loader"></div>
 	<div v-if="state.imgWidth >= 60 && state.imgHeight >= 60" class="resize-d"></div>
