@@ -12,5 +12,6 @@ export default defineConfig({
 		postcss: {
 			plugins: [autoprefixer()]
 		}
-	}
+	},
+	base: ''
 })
