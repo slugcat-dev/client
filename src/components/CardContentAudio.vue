@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, useTemplateRef } from 'vue'
 import { useToaster } from '../composables/toaster'
-import { useEventListener } from '@vueuse/core';
 import { uploadFile } from '../upload'
 import { updateCard } from '../composables/cards'
 import UploadProgress from './UploadProgress.vue'
