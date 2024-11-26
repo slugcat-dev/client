@@ -32,6 +32,8 @@ interface Canvas {
 	anyArrowKey: boolean
 	toCanvasPos: (pos: Pos, smooth?: boolean) => Pos
 	toCanvasRect: (rect: DOMRect, smooth?: boolean) => DOMRect
+	getCardRect: (card: Card) => DOMRect
+	getCardRects: (cards?: Card[]) => DOMRect | undefined
 	zoomTo: (zoom: number, adjust: Pos, elastic?: boolean) => void
 	home: () => void
 	overview: () => void

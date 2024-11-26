@@ -142,6 +142,18 @@ export function distance(positions: Pos[]) {
 }
 
 /**
+ * Merge two rects.
+ */
+export function mergeRects(a: DOMRect, b: DOMRect) {
+	const x = Math.min(a.x, b.x)
+	const y = Math.min(a.y, b.y)
+	const width = Math.max(a.right, b.right) - x
+	const height = Math.max(a.bottom, b.bottom) - y
+
+	return new DOMRect(x, y, width, height)
+}
+
+/**
  * Check if two rects overlap.
  */
 export function rectsOverlap(a: DOMRect, b: DOMRect) {

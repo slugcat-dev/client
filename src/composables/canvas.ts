@@ -1,10 +1,15 @@
 import { usePointer } from './pointer'
 import { computed, reactive, watch, type ShallowRef } from 'vue'
-import { clamp, prefersReducedMotion } from '../utils'
+import { clamp, mergeRects, prefersReducedMotion } from '../utils'
+import type Card from '../components/Card.vue'
+import type CardContentBox from '../components/CardContentBox.vue'
+
+type CardRef = InstanceType<typeof Card>
+type CardContentBoxRef = InstanceType<typeof CardContentBox>
 
 const { pointer, pointers } = usePointer()
 
-export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
+export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, cardRefs: ShallowRef<(CardRef | null)[] | null>) {
 	const canvas = reactive({
 		ref,
 		active: false,
@@ -95,6 +100,36 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 		)
 	}
 
+	function getCardRect(card: Card) {
+		const cardRef = (cardRefs.value as CardRef[]).find(cardRef => cardRef.card === card)!
+		const cardRect = toCanvasRect(cardRef.ref!.getBoundingClientRect())
+
+		if (cardRef.card.type !== 'box')
+			return cardRect
+
+		const boxRect = toCanvasRect((cardRef.contentRef as CardContentBoxRef).boxRef!.getBoundingClientRect())
+
+		return mergeRects(cardRect, boxRect)
+	}
+
+	function getCardRects(cards = (cardRefs.value as CardRef[]).map(cardRef => cardRef.card)) {
+		const neededCardRefs = (cardRefs.value as CardRef[]).filter(cardRef => cards.includes(cardRef.card))
+
+		return neededCardRefs.reduce<DOMRect | undefined>((rect, cardRef) => {
+			const cardRect = getCardRect(cardRef.card)
+
+			if (!rect)
+				return cardRect
+
+			const minX = Math.min(rect.x, cardRect.x)
+			const minY = Math.min(rect.y, cardRect.y)
+			const maxX = Math.max(rect.x + rect.width, cardRect.x + cardRect.width)
+			const maxY = Math.max(rect.y + rect.height, cardRect.y + cardRect.height)
+
+			return new DOMRect(minX, minY, maxX - minX, maxY - minY)
+		}, undefined)
+	}
+
 	// Zoom and adjust scroll to the pointer position
 	function zoomTo(zoom: number, adjust: Pos, elastic = false) {
 		const prevPos = toCanvasPos(adjust, false)
@@ -126,21 +161,7 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 	// Zoom out to fit all cards into view
 	function overview() {
 		const canvasRect = canvas.ref!.getBoundingClientRect()
-		const cardRefs = Array.from(canvas.ref!.querySelectorAll('.card'))
-
-		const rect = cardRefs.reduce<DOMRect | undefined>((rect, cardRef) => {
-			const cardRect = toCanvasRect(cardRef.getBoundingClientRect(), false)
-
-			if (!rect)
-				return cardRect
-
-			const minX = Math.min(rect.x, cardRect.x)
-			const minY = Math.min(rect.y, cardRect.y)
-			const maxX = Math.max(rect.x + rect.width, cardRect.x + cardRect.width)
-			const maxY = Math.max(rect.y + rect.height, cardRect.y + cardRect.height)
-
-			return new DOMRect(minX, minY, maxX - minX, maxY - minY)
-		}, undefined)
+		const rect = getCardRects()
 
 		if (!rect)
 			return home()
@@ -247,6 +268,8 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>) {
 	return Object.assign(canvas, {
 		toCanvasPos,
 		toCanvasRect,
+		getCardRect,
+		getCardRects,
 		zoomTo,
 		home,
 		overview,

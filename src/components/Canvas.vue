@@ -30,7 +30,7 @@ const state = reactive({
 	loading: false
 })
 const { pointer, pointers } = usePointer()
-const canvas = useCanvas(canvasRef)
+const canvas = useCanvas(canvasRef, cardRefs)
 const arrowKeys = useArrowKeys()
 const selection = reactive<CanvasSelection>({
 	cards: [],
@@ -99,6 +99,7 @@ useKeymap({
 		copySelectedCards()
 		deleteSelectedCards()
 	},
+	'CtrlMeta B': surroundWithBox,
 	'Backspace': deleteSelectedCards,
 	'Delete': deleteSelectedCards,
 	'Escape': selection.clear,
@@ -164,6 +165,28 @@ function copySelectedCards() {
 function deleteSelectedCards() {
 	if (selection.cards.length)
 		deleteMany(selection.cards)
+}
+
+function surroundWithBox() {
+	if (!selection.cards.length)
+		return
+
+	const rect = canvas.getCardRects(selection.cards)!
+
+	createCard({
+		type: 'box',
+		pos: {
+			x: rect.x - 20,
+			y: rect.y - 48
+		},
+		content: {
+			label: `Box ${cards.filter(card => card.type === 'box').length + 1}`,
+			width: rect.width + 40,
+			height: rect.height + 40
+		}
+	})
+
+	selection.clear()
 }
 
 function onPointerDown(event: PointerEvent) {
