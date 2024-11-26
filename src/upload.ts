@@ -10,9 +10,9 @@ export function uploadFile(file: File | Base64File, onProgress?: (progress: numb
 	const xhr = new XMLHttpRequest()
 
 	if (file instanceof File)
-		data.append('image', file)
+		data.append('file', file)
 	else
-		data.append('image', base64ToFile(file.base64, file.name, file.type))
+		data.append('file', base64ToFile(file.base64, file.name, file.type))
 
 	xhr.upload.addEventListener('progress', (event: ProgressEvent) => {
 		if (onProgress && event.lengthComputable)

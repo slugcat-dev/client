@@ -11,7 +11,6 @@ import CardContentImage from './CardContentImage.vue'
 import CardContentLink from './CardContentLink.vue'
 import CardContentAudio from './CardContentAudio.vue'
 import CardContentVideo from './CardContentVideo.vue'
-import CardContentPDF from './CardContentPDF.vue'
 
 type CardRef = InstanceType<typeof Card>
 type CardContentRef = InstanceType<ReturnType<typeof getContentComponent>>
@@ -67,10 +66,17 @@ watch(() => selection.cards, () => {
 
 watch(() => selection.box, () => {
 	if (selection.box) {
-		const cardRect = canvas.getCardRect(card)
+		const cardRect = canvas.toCanvasRect(cardRef.value!.getBoundingClientRect())
+		let inBox = rectsOverlap(selection.box, cardRect)
+
+		if (card.type === 'box') {
+			const boxRect = canvas.toCanvasRect((contentRef.value as CardContentBoxRef).boxRef!.getBoundingClientRect())
+
+			inBox ||= rectsOverlap(selection.box, boxRect)
+		}
 
 		// Check if the card is in the selection box
-		state.selected = !!selection.box && rectsOverlap(selection.box, cardRect)
+		state.selected = !!selection.box && inBox
 	}
 })
 
@@ -157,7 +163,7 @@ function onPointerMove() {
 			const boxRect = (boxCardRef.contentRef! as CardContentBoxRef).boxRef!.getBoundingClientRect()
 
 			cardRefMap.forEach(cardRef => {
-				if (cardRef.card !== card && rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
+				if (cardRef.card !== card && !relatedCards.has(cardRef.card) && rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
 					cardRef.dragging = true
 
 					relatedCards.add(cardRef.card)
@@ -328,7 +334,6 @@ function getContentComponent() {
 		case 'link': return CardContentLink
 		case 'audio': return CardContentAudio
 		case 'video': return CardContentVideo
-		case 'pdf': return CardContentPDF
 	}
 }
 

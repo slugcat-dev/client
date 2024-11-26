@@ -46,7 +46,7 @@ interface Canvas {
 interface Card {
 	id: number
 	new?: boolean,
-	type: 'box' | 'text' | 'image' | 'link' | 'audio' | 'video' | 'pdf'
+	type: 'box' | 'text' | 'image' | 'link' | 'audio' | 'video'
 	pos: Pos
 	content: any
 	modified: number

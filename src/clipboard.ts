@@ -43,7 +43,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 	if (!dataTransfer)
 		return { type: null, cards: [] }
 
-	const files = Array.from(dataTransfer.files).filter(({ type }) => /image|audio|video|pdf/.test(type))
+	const files = Array.from(dataTransfer.files).filter(({ type }) => /image|audio|video/.test(type))
 	const items = await getDataTransferItems(dataTransfer)
 	const cardsItem = items.find(item => item.type === 'cards')
 	const textItem = items.find(item => item.type === 'text/plain')
@@ -94,7 +94,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 				return file.size < 1024 ** 3
 			})
 			.map((file, i) => {
-				const type = /pdf/.test(file.type) ? 'pdf' : file.type.split('/')[0] as Card['type']
+				const type = file.type.split('/')[0] as Card['type']
 
 				return createCard({
 					id: now + i,

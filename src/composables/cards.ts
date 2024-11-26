@@ -10,7 +10,7 @@ export const useCards = createGlobalState(() => {
 		{ id: now, type: 'text', content: { text: 'Test' }, pos: { x: 140, y: 120 }, modified: now },
 		{ id: now + 1, type: 'text', content: { text: 'Hello, **World**!' }, pos: { x: 220, y: 180 }, modified: now },
 		{ id: now + 2, type: 'box', content: { label: 'Box 1', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now },
-		{ id: now + 3, type: 'box', content: { label: 'Box 2', width: 40, height: 40 }, pos: { x: 400, y: 60 }, modified: now }
+		{ id: now + 3, type: 'image', content: { src: 'https://www.datocms-assets.com/12893/1702587045-2a66eeeb-5dc4-4a95-846e-405830053e52.jpeg', width: 192, height: 240 }, pos: { x: 400, y: 88 }, modified: now }
 	])
 
 	return cards
