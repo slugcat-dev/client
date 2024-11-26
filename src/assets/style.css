@@ -49,7 +49,7 @@ button {
 	font-family: inherit;
 	font-size: inherit;
 	color: inherit;
-	background-color: light-dark(#d0d0d0, #404040);
+	background-color: #80808040;
 	border: none;
 	border-radius: .25rem;
 	cursor: pointer;

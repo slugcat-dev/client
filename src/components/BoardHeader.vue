@@ -67,7 +67,7 @@ const appState = useAppState()
 
 	&:hover,
 	&:focus-visible {
-		background-color: light-dark(#e0e0e0, #404040);
+		background-color: #80808040;
 
 		.icon {
 			opacity: 1;

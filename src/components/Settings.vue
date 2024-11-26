@@ -254,7 +254,7 @@ watch(() => appState.settingsOpen, () => {
 
 			&:hover,
 			&:focus-visible {
-				background-color: light-dark(#e0e0e0, #404040);
+				background-color: #80808040;
 
 				.icon {
 					opacity: 1;
@@ -269,7 +269,7 @@ watch(() => appState.settingsOpen, () => {
 	margin-top: 1rem;
 	padding-bottom: 1rem;
 	font-size: 1.25rem;
-	border-bottom: 1px solid light-dark(#c8c8c8, #383838);
+	border-bottom: 1px solid #80808040;
 }
 
 .settings-option {
@@ -347,7 +347,7 @@ input[type="range"] {
 			width: 1.5rem;
 			height: 1.5rem;
 			margin: 0;
-			background-color: light-dark(#d0d0d0, #404040);
+			background-color: #80808040;
 			border-radius: 0;
 			cursor: pointer;
 

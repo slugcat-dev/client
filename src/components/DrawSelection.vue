@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef, watch } from 'vue'
 import { usePointer } from '../composables/pointer'
-import { useEventListener } from '@vueuse/core'
+import { useDebounceFn, useEventListener } from '@vueuse/core'
 
 // "canvas" refers to the canvas element the pointer trail is drawn to in this file,
 // not the Canvas component or the canvas state object
@@ -18,6 +18,16 @@ let canvasRect: DOMRect
 let ctx: CanvasRenderingContext2D
 let colorAccent: string
 let prevTimestamp: number
+
+const setup = useDebounceFn(() => {
+	const dpr = window.devicePixelRatio
+	const computedStyle = getComputedStyle(canvas)
+
+	canvas.width = Number.parseFloat(computedStyle.width) * dpr
+	canvas.height = Number.parseFloat(computedStyle.height) * dpr
+
+	ctx.scale(dpr, dpr)
+}, 250)
 
 onMounted(() => {
 	canvas = canvasRef.value!
@@ -111,16 +121,6 @@ function drawTail(timestamp: number) {
 		requestAnimationFrame(drawTail)
 
 	prevTimestamp = timestamp
-}
-
-function setup() {
-	const dpr = window.devicePixelRatio
-	const computedStyle = getComputedStyle(canvas)
-
-	canvas.width = Number.parseFloat(computedStyle.width) * dpr
-	canvas.height = Number.parseFloat(computedStyle.height) * dpr
-
-	ctx.scale(dpr, dpr)
 }
 
 function toCanvasPos(pos: Pos) {

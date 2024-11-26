@@ -176,7 +176,7 @@ defineExpose({ active: false })
 	height: .25rem;
 	margin-block: .25rem;
 	flex-grow: 1;
-	background-color: light-dark(#d0d0d0, #404040);
+	background-color: #80808040;
 	border-radius: .125rem;
 
 	.elapsed {

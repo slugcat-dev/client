@@ -28,51 +28,73 @@ defineExpose({ active: false })
 
 <template>
 	<div class="card-content-link">
-		<div v-if="card.new" class="link-icon">
-			<div class="loader"></div>
+		<div class="link-info">
+			<div v-if="card.new" class="link-icon">
+				<div class="loader"></div>
+			</div>
+			<img
+				v-else
+				class="link-icon"
+				:src="card.content.icon ?? 'default-icon.svg'"
+				draggable="false"
+				loading="lazy"
+				decoding="async"
+			>
+			<div class="link-text">
+				<a
+				class="link-title ellipsis"
+				:href="card.content.url"
+				target="_blank"
+				draggable="false"
+				>
+					{{ card.content.title ?? card.content.url }}
+				</a>
+				<div class="link-site-name">{{ card.content.siteName ?? hostname }}</div>
+			</div>
 		</div>
 		<img
-			v-else
-			class="link-icon"
-			:src="card.content.icon ?? 'default-icon.svg'"
+			v-if="card.content.image"
+			:src="card.content.image"
+			class="link-image"
 			draggable="false"
 			loading="lazy"
 			decoding="async"
-		>
-		<div class="link-text">
-			<a
-			class="link-title ellipsis"
-			:href="card.content.url"
-			target="_blank"
-			draggable="false"
-			>
-				{{ card.content.title ?? card.content.url }}
-			</a>
-			<div class="link-site-name">{{ card.content.siteName ?? hostname }}</div>
-		</div>
+		/>
 	</div>
 </template>
 
 <style scoped>
 .card-content-link {
-	display: flex;
 	width: 240px;
 	padding: .375rem;
-	gap: .375rem;
 	background-color: var(--color-card-background);
 	border: 2px solid var(--color-card-border);
 	border-radius: .375rem;
 	box-shadow: var(--shadow);
 }
 
+.card.selected .card-content-link {
+	border-color: var(--color-accent);
+}
+
+.link-info {
+	display: flex;
+	gap: .375rem;
+}
+
+.link-icon,
+.link-image {
+	display: block;
+	border-radius: .375rem;
+	-webkit-touch-callout: none;
+}
+
 .link-icon {
 	width: 2rem;
 	height: 2rem;
 	padding: .25rem;
-	background-color: light-dark(#e0e0e0, #383838);
-	border-radius: .375rem;
+	background-color: #80808040;
 	box-shadow: var(--shadow);
-	-webkit-touch-callout: none;
 }
 
 .link-icon .loader {
@@ -109,7 +131,9 @@ defineExpose({ active: false })
 	}
 }
 
-.card.selected .card-content-link {
-	border-color: var(--color-accent);
+.link-image {
+	max-width: 100%;
+	margin-inline: auto;
+	margin-top: .375rem;
 }
 </style>

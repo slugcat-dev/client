@@ -21,7 +21,6 @@ let editor: Editor
 
 onMounted(() => {
 	editor = new Editor(editorRef.value!, {
-		content: card.content.text,
 		readonly: true,
 		hideMarks: true,
 		keymap: {
@@ -37,6 +36,8 @@ onMounted(() => {
 	editor.addEventListener('change', () => {
 		editor.root.querySelectorAll('a').forEach(a => a.draggable = false)
 	})
+
+	editor.content = card.content.text
 
 	if (card.new) {
 		activate()

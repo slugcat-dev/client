@@ -1,10 +1,3 @@
-
-// Import stylesheets
-import './assets/style.css'
-import './assets/mark-ed.css'
-import './assets/hljs.css'
-
-// Create Vue app
 import { createApp } from 'vue'
 import { useAppState } from './composables/appState'
 import App from './App.vue'

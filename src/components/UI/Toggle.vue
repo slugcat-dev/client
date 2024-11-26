@@ -18,7 +18,7 @@ const { name } = defineProps<{ name?: string }>()
 	position: relative;
 	width: 2.5rem;
 	height: 1.5rem;
-	background-color: light-dark(#d0d0d0, #404040);
+	background-color: #80808040;
 	border-radius: .75rem;
 	transition: 200ms;
 
