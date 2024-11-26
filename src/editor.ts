@@ -1,6 +1,5 @@
 import { Editor } from '@slugcat-dev/mark-ed'
 import { caretRangeFromPoint, isDesktop, isFirefox, isMobile, isPointerCoarse, selectRange } from './utils'
-import hljs from 'highlight.js'
 
 /**
  * Move selected lines up or down.
@@ -190,9 +189,11 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
 /**
  * Highlight fenced code blocks.
  */
-export function highlightCodeAddon(editor: Editor) {
+export async function highlightCodeAddon(editor: Editor) {
 	editor.addEventListener('change', onChange)
 	onChange()
+
+	const hljs = await import('highlight.js')
 
 	function onChange() {
 		if (!editor.markdown.lineTypes.includes('CodeBlock'))
@@ -230,7 +231,7 @@ export function highlightCodeAddon(editor: Editor) {
 				inCodeBlock = true
 				start = lineNum + 1
 				mark = openMatch[2]
-				language = hljs.getLanguage(openMatch[4]) ? openMatch[4] : 'plaintext'
+				language = hljs.default.getLanguage(openMatch[4]) ? openMatch[4] : 'plaintext'
 
 				// Make the language label red if the language is not supported
 				if (codeLangElm && language !== openMatch[4])
@@ -250,7 +251,7 @@ export function highlightCodeAddon(editor: Editor) {
 		for (let i = start; i < start + code.length; i++)
 			editor.root.children[start].remove()
 
-		const highlighted = hljs.highlight(code.join('\n'), { language, ignoreIllegals: true }).value
+		const highlighted = hljs.default.highlight(code.join('\n'), { language, ignoreIllegals: true }).value
 
 		// Insert the highlighted code lines
 		fixMultilineTags(highlighted).split('\n').reverse().forEach((line, i) => {
