@@ -1,22 +1,18 @@
-import { createGlobalState } from '@vueuse/core'
 import { useAppState } from './appState'
+import { useCache } from './cache'
+import { createGlobalState } from '@vueuse/core'
 import { reactive, watch } from 'vue'
 
-export const useCards = createGlobalState(() => {
-	console.log('GET cards')
+const appState = useAppState()
+const storage = useCache()
+const storageCards = storage.boards[0].cards
 
-	const now = Date.now()
-	const cards = reactive<Card[]>([
-		{ id: now, type: 'text', content: { text: 'Test' }, pos: { x: 140, y: 120 }, modified: now },
-		{ id: now + 1, type: 'text', content: { text: 'Hello, **World**!' }, pos: { x: 220, y: 180 }, modified: now },
-		{ id: now + 2, type: 'box', content: { label: 'Box 1', width: 220, height: 160 }, pos: { x: 120, y: 60 }, modified: now },
-		{ id: now + 3, type: 'image', content: { src: 'https://www.datocms-assets.com/12893/1702587045-2a66eeeb-5dc4-4a95-846e-405830053e52.jpeg', width: 192, height: 240 }, pos: { x: 400, y: 88 }, modified: now }
-	])
+export const useCards = createGlobalState(() => {
+	const cards = reactive([...storageCards.map(card => clone(card))])
 
 	return cards
 })
 
-const appState = useAppState()
 const cards = useCards()
 
 // Stack cards in the order they were modified
@@ -53,7 +49,7 @@ export function createCard(data: Partial<Card>) {
 	} as Card
 
 	if (!card.new)
-		console.log('CREATE', card.id)
+		storageCards.push(clone(card))
 
 	return cards[cards.push(card) - 1]
 }
@@ -64,14 +60,12 @@ export function updateCard(card: Card, create = false) {
 	if (create) {
 		delete card.new
 
-		console.log('CREATE', card.id)
+		storageCards.push(clone(card))
 	} else {
 		card.modified = now
 
-		if (card.new)
-			console.log('UPDATE - NO FETCH', card.id)
-		else
-			console.log('UPDATE', card.id)
+		if (!card.new)
+			storageCards[storageCards.findIndex(c => c.id === card.id)] = clone(card)
 	}
 }
 
@@ -79,19 +73,20 @@ export function updateMany(cards: Card[]) {
 	const now = Date.now()
 
 	cards.sort((a, b) => a.modified - b.modified).forEach((card, i) => card.modified = now + i)
-	console.log('UPDATE - NO FETCH', ...cards.filter(card => card.new).map(card => card.id))
-	console.log('UPDATE', ...cards.filter(card => !card.new).map(card => card.id))
+	cards.filter(card => !card.new).forEach(card => storageCards[storageCards.findIndex(c => c.id === card.id)] = clone(card))
 }
 
 export function deleteCard(card: Card) {
 	if (!card.new)
-		console.log('DELETE', card.id)
+		storageCards.splice(storageCards.findIndex(c => c.id === card.id), 1)
 
 	cards.splice(cards.findIndex(c => c.id === card.id), 1)
 }
 
 export function deleteMany(cardsToDelte: Card[]) {
-	console.log('DELETE', ...cardsToDelte.filter(card => !card.new).map(card => card.id))
+	cardsToDelte.filter(card => !card.new).forEach(card => {
+		storageCards.splice(storageCards.findIndex(c => c.id === card.id), 1)
+	})
 	cards.splice(0, cards.length, ...cards.filter(card => !cardsToDelte.includes(card)))
 }
 
@@ -109,4 +104,8 @@ export function getCardText(cards: Card[]) {
 			}
 		})
 		.join('\n\n')
+}
+
+function clone(obj: any) {
+	return JSON.parse(JSON.stringify(obj))
 }

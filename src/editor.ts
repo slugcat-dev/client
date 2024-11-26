@@ -190,10 +190,10 @@ export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Can
  * Highlight fenced code blocks.
  */
 export async function highlightCodeAddon(editor: Editor) {
+	const hljs = await import('highlight.js')
+
 	editor.addEventListener('change', onChange)
 	onChange()
-
-	const hljs = await import('highlight.js')
 
 	function onChange() {
 		if (!editor.markdown.lineTypes.includes('CodeBlock'))

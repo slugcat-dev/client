@@ -34,6 +34,7 @@ const { toasts } = useToaster()
 	pointer-events: none;
 
 	.toast {
+		width: max-content;
 		padding: .5rem .75rem;
 		color: #d0d0d0;
 		background-color: #181818;
