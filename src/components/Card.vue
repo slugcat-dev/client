@@ -43,8 +43,7 @@ const settings = useSettings()
 const cursor = computed(() => {
 	if (contentRef.value?.active) return 'auto'
 	if (selection.boxVisible || selection.draw) return 'inherit'
-	if (state.dragging) return 'grabbing'
-	if (pointer.ctrlKey) return 'default'
+	if (pointer.down) return 'grabbing'
 
 	return 'grab'
 })
@@ -111,38 +110,11 @@ function onPointerDown(event: PointerEvent) {
 
 		const targetClassName = (event.target as HTMLElement).className
 
-		if ((card.type === 'box' || card.type === 'image') && targetClassName.startsWith('resize')) {
+		if (targetClassName.startsWith('resize')) {
 			state.resizing = targetClassName
 
 			selection.clear()
 			relatedCards.clear()
-		} else {
-			state.dragging = true
-
-			if (!state.selected)
-				selection.clear()
-
-			// Collect all cards that should be dragged along
-			relatedCards = new Set(selection.cards.filter(c => c !== card))
-
-			function addRelatedBoxCards(boxCard: Card) {
-				if (boxCard.type !== 'box')
-					return
-
-				const boxCardRef = cardRefMap.get(boxCard)!
-				const boxRect = (boxCardRef.contentRef! as CardContentBoxRef).boxRef!.getBoundingClientRect()
-
-				cardRefMap.forEach(cardRef => {
-					if (cardRef.card !== card && rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
-						cardRef.dragging = true
-
-						relatedCards.add(cardRef.card)
-						addRelatedBoxCards(cardRef.card)
-					}
-				})
-			}
-
-			[card, ...relatedCards].forEach(addRelatedBoxCards)
 		}
 
 		const cardRect = cardRef.value!.getBoundingClientRect()
@@ -167,6 +139,35 @@ function onPointerDown(event: PointerEvent) {
 function onPointerMove() {
 	if (!pointer.moved)
 		return
+
+	if (!state.dragging && !state.resizing) {
+		state.dragging = true
+
+		if (!state.selected)
+			selection.clear()
+
+		// Collect all cards that should be dragged along
+		relatedCards = new Set(selection.cards.filter(c => c !== card))
+
+		function addRelatedBoxCards(boxCard: Card) {
+			if (boxCard.type !== 'box')
+				return
+
+			const boxCardRef = cardRefMap.get(boxCard)!
+			const boxRect = (boxCardRef.contentRef! as CardContentBoxRef).boxRef!.getBoundingClientRect()
+
+			cardRefMap.forEach(cardRef => {
+				if (cardRef.card !== card && rectContains(boxRect, cardRef.ref!.getBoundingClientRect())) {
+					cardRef.dragging = true
+
+					relatedCards.add(cardRef.card)
+					addRelatedBoxCards(cardRef.card)
+				}
+			})
+		}
+
+		[card, ...relatedCards].forEach(addRelatedBoxCards)
+	}
 
 	const prevPos = card.pos
 	const newPos = canvas.toCanvasPos({
@@ -345,7 +346,7 @@ defineExpose({ card, ref: cardRef, contentRef, dragging: toRef(state, 'dragging'
 			cursor,
 			zIndex
 		}"
-		@pointerdown.left.exact="onPointerDown"
+		@pointerdown.left="onPointerDown"
 		@click.left.exact="selection.clear()"
 		@click.left.ctrl.exact="state.selected = !state.selected"
 		@click.left.meta.exact="state.selected = !state.selected"
