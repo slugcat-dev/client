@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
-import { useAppState } from '../composables/appState'
 import IconSnap from './Icons/IconSnap.vue'
 import IconGrid from './Icons/IconGrid.vue'
 import IconSettings from './Icons/IconSettings.vue'
 
 const settings = useSettings()
-const appState = useAppState()
 </script>
 
 <template>
@@ -31,14 +29,11 @@ const appState = useAppState()
 				>
 			</div>
 		</div>
+		<RouterLink to="/">Board List</RouterLink>
 		<div class="flex-spacer"></div>
-		<button
-			class="settings-button"
-			title="Settings"
-			@click="appState.settingsOpen = true"
-		>
+		<RouterLink to="/settings" class="settings-button">
 			<IconSettings />
-		</button>
+		</RouterLink>
 	</header>
 </template>
 
@@ -55,6 +50,7 @@ const appState = useAppState()
 	width: 2rem;
 	height: 2rem;
 	padding: .25rem;
+	color: inherit;
 	background-color: transparent;
 	border-radius: 100%;
 

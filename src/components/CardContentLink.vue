@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { inject, onMounted } from 'vue'
 import { useToaster } from '../composables/toaster'
-import { onMounted } from 'vue'
 import { ofetch } from 'ofetch'
-import { createCard, deleteCard, updateCard } from '../composables/cards'
 
 const apiURL = import.meta.env.APP_API_URL
-const { card } = defineProps<{ card: Card, canvas: Canvas }>()
+const { card } = defineProps<{ card: Card }>()
+const { createCard, deleteCard, updateCard } = inject('cards') as Cards
 const { toast } = useToaster()
 const hostname = new URL(card.content.url).hostname.replace(/^www\./, '')
 
@@ -35,7 +35,7 @@ defineExpose({ active: false })
 			<img
 				v-else
 				class="link-icon"
-				:src="card.content.icon ?? 'default-icon.svg'"
+				:src="card.content.icon ? `${apiURL}/proxy?url=${card.content.icon}` : 'default-icon.svg'"
 				draggable="false"
 				loading="lazy"
 				decoding="async"
@@ -54,7 +54,7 @@ defineExpose({ active: false })
 		</div>
 		<img
 			v-if="card.content.image"
-			:src="card.content.image"
+			:src="`${apiURL}/proxy?url=${card.content.image}`"
 			class="link-image"
 			draggable="false"
 			loading="lazy"

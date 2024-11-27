@@ -43,6 +43,11 @@ interface Canvas {
 	stopEdgeScroll: () => void
 }
 
+interface Board {
+	id: number
+	cards: Card[]
+}
+
 interface Card {
 	id: number
 	new?: boolean,
@@ -50,6 +55,15 @@ interface Card {
 	pos: Pos
 	content: any
 	modified: number
+}
+
+interface Cards {
+	cards: Card[]
+	createCard: (data: Partial<Card>) => Card
+	updateCard: (card: Card, create?: boolean) => void
+	updateMany: (cards: Card[]) => void
+	deleteCard: (card: Card) => void
+	deleteMany: (cards: Card[]) => void
 }
 
 interface CanvasSelection {

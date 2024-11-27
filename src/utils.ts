@@ -16,6 +16,10 @@ export function clamp(value: number, min: number, max: number) {
 	return Math.max(Math.min(value, max), min)
 }
 
+export function clone(obj: any) {
+	return JSON.parse(JSON.stringify(obj))
+}
+
 /**
  * Wait for a value to change before executing a function.
  */

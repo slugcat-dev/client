@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, useTemplateRef } from 'vue'
+import { inject, onMounted, reactive, useTemplateRef } from 'vue'
 import { useToaster } from '../composables/toaster'
 import { uploadFile } from '../upload'
-import { updateCard } from '../composables/cards'
 import UploadProgress from './UploadProgress.vue'
 
 const apiURL = import.meta.env.APP_API_URL
-const { card } = defineProps<{ card: Card, canvas: Canvas }>()
+const { card } = defineProps<{ card: Card }>()
 const audioRef = useTemplateRef('audioRef')
 const state = reactive({
 	uploading: false,
@@ -17,6 +16,7 @@ const state = reactive({
 	durationTimestamp: '-:--',
 	elapsedTimestamp: '0:00'
 })
+const { updateCard } = inject('cards') as Cards
 const { toast } = useToaster()
 let audio: HTMLAudioElement
 

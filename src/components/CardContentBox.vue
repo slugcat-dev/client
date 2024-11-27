@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue'
 
-const { card } = defineProps<{ card: Card, canvas: Canvas }>()
+const { card } = defineProps<{ card: Card }>()
 const boxRef = useTemplateRef('box-ref')
 
 defineExpose({ boxRef, active: false })

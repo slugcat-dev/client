@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRef, watch } from 'vue'
+import { inject, onMounted, reactive, toRef, watch } from 'vue'
 import { fileToBase64, limitSize, loadImage } from '../utils'
 import { useEventListener } from '@vueuse/core'
 import { uploadFile } from '../upload'
-import { updateCard } from '../composables/cards'
 import { useToaster } from '../composables/toaster'
 import UploadProgress from './UploadProgress.vue'
 
 const apiURL = import.meta.env.APP_API_URL
-const { card } = defineProps<{ card: Card, canvas: Canvas }>()
+const { card } = defineProps<{ card: Card }>()
 const mustUpload = 'file' in card.content
 const state = reactive({
 	cardLoading: !mustUpload,
@@ -20,6 +19,7 @@ const state = reactive({
 	imgHeight: 0,
 	active: false
 })
+const { updateCard } = inject('cards') as Cards
 const { toast } = useToaster()
 const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(card.content.src)}`
 let keyListenerCleanup: Function

@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRef, useTemplateRef } from 'vue'
+import { inject, onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useAppState } from '../composables/appState'
 import { useDebounceFn } from '@vueuse/core'
 import { prefersReducedMotion } from '../utils'
 import { getDataTransferItems } from '../clipboard'
-import { deleteCard, updateCard } from '../composables/cards'
 
-const { card, canvas } = defineProps<{ card: Card, canvas: Canvas }>()
+const { card } = defineProps<{ card: Card }>()
 const editorRef = useTemplateRef('editor-ref')
 const caretRef = useTemplateRef('caret-ref')
 const state = reactive({
 	active: false,
 	deleteIntent: false
 })
+const canvas = inject('canvas') as Canvas
+const { deleteCard, updateCard } = inject('cards') as Cards
 const appState = useAppState()
 const clearDeleteIntent = useDebounceFn(() => state.deleteIntent = false, 500)
 let editor: Editor

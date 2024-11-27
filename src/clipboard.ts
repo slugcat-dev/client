@@ -1,6 +1,5 @@
 import { useAppState } from './composables/appState'
 import { useToaster } from './composables/toaster'
-import { createCard, getCardText } from './composables/cards'
 import { limitSize, isURL } from './utils'
 import { ofetch } from 'ofetch'
 
@@ -26,7 +25,7 @@ export function copyCards(cards: Card[]) {
 		}).filter(card => !card.new)
 
 		event.preventDefault()
-		event.clipboardData.setData('text/plain', getCardText(cards))
+		event.clipboardData.setData('text/plain', (() => cards.map(getCardText).join('\n\n'))())
 		event.clipboardData.setData('cards', JSON.stringify(cards.map(card => ({
 			type: card.type,
 			pos: card.pos,
@@ -60,7 +59,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 				return {
 					type: 'card',
-					cards: cards.map((card, i) => createCard({
+					cards: cards.map((card, i) => ({
 						id: now + i,
 						type: card.type,
 						pos: {
@@ -96,7 +95,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 			.map((file, i) => {
 				const type = file.type.split('/')[0] as Card['type']
 
-				return createCard({
+				return {
 					id: now + i,
 					new: true,
 					type,
@@ -106,7 +105,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 					},
 					content: { file },
 					modified: now + i
-				})
+				}
 			})
 		const type = new Set(cards.map(({ type }) => type)).size > 1 ? 'file' : cards[0]?.type
 
@@ -140,12 +139,12 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 				return {
 					type: data.type,
-					cards: [createCard({
+					cards: [{
 						type: data.type,
 						new: data.type === 'link',
 						pos,
 						content
-					})]
+					}]
 				}
 			} catch {}
 		}
@@ -163,11 +162,11 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 		return {
 			type: vscodeItem ? 'code' : 'text',
-			cards: [createCard({
+			cards: [{
 				type: 'text',
 				pos,
 				content: { text }
-			})]
+			}]
 		}
 	}
 
@@ -186,6 +185,17 @@ export async function getDataTransferItems(dataTransfer: DataTransfer) {
 		.map(async item => ({ type: item.type, data: await getAsString(item) }))
 
 	return Promise.all(items)
+}
+
+function getCardText(card: Card) {
+	switch (card.type) {
+		case 'box': return card.content.label
+		case 'text': return card.content.text
+		case 'audio':
+		case 'video':
+		case 'image': return card.content.src
+		case 'link': return card.content.url
+	}
 }
 
 function getAsString(item: DataTransferItem) {

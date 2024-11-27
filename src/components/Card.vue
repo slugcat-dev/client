@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, type ComputedRef, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { computed, type Ref, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { useSettings } from '../composables/settings'
 import { onceChanged, rectContains, rectsOverlap, suppressClick } from '../utils'
-import { updateCard, updateMany } from '../composables/cards'
 import type Card from './Card.vue'
 import CardContentBox from './CardContentBox.vue'
 import CardContentText from './CardContentText.vue'
@@ -17,13 +16,12 @@ type CardContentRef = InstanceType<ReturnType<typeof getContentComponent>>
 type CardContentBoxRef = InstanceType<typeof CardContentBox>
 type CardContentImageRef = InstanceType<typeof CardContentImage>
 
-const { card, canvas, selection } = defineProps<{
-	card: Card,
-	canvas: Canvas,
-	selection: CanvasSelection
-}>()
+const { card } = defineProps<{ card: Card }>()
 const cardRef = useTemplateRef('card-ref')
 const contentRef = useTemplateRef<CardContentRef>('content-ref')
+const selection = inject('selection') as CanvasSelection
+const canvas = inject('canvas') as Canvas
+const { updateCard, updateMany } = inject('cards') as Cards
 const state = reactive({
 	selected: false,
 	dragging: false,
@@ -37,7 +35,7 @@ const state = reactive({
 	}
 })
 const { pointer, pointers } = usePointer()
-const cardRefs = inject('card-refs') as ComputedRef<CardRef[]>
+const cardRefs = inject('card-refs') as Ref<CardRef[]>
 const settings = useSettings()
 const cursor = computed(() => {
 	if (contentRef.value?.active) return 'auto'
@@ -360,7 +358,6 @@ defineExpose({ card, ref: cardRef, contentRef, dragging: toRef(state, 'dragging'
 			ref="content-ref"
 			:is="getContentComponent()"
 			:card
-			:canvas
 		/>
 	</div>
 </template>

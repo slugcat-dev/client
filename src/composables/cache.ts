@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 
 export const useCache = createGlobalState(() => {
 	const cache = reactive(useStorage('data', {
-		boards: [{ cards: [] as Card[] }]
+		boards: [] as Board[]
 	}, localStorage, { mergeDefaults: true }).value)
 
 	return cache

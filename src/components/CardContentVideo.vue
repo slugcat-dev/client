@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ card: Card, canvas: Canvas }>()
+defineProps<{ card: Card }>()
 defineExpose({ active: false })
 </script>
 

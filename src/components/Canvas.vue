@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { computed, provide, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
+import { computed, inject, nextTick, provide, reactive, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { useCanvas } from '../composables/canvas'
+import { useRouter } from 'vue-router'
 import { useArrowKeys, useKeymap } from '../composables/keys'
 import { useSettings } from '../composables/settings'
-import { useAppState } from '../composables/appState'
 import { useToaster } from '../composables/toaster'
 import { useEventListener } from '@vueuse/core'
 import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
-import { createCard, deleteMany } from '../composables/cards'
 import { copyCards, pasteOnCanvas } from '../clipboard'
 import CanvasBackground from './CanvasBackground.vue'
 import Card from './Card.vue'
 import DrawSelection from './DrawSelection.vue'
 
-const { cards } = defineProps<{ cards: Card[] }>()
 const canvasRef = useTemplateRef('canvas-ref')
 const cardRefs = useTemplateRef('card-refs')
 const state = reactive({
@@ -30,8 +28,6 @@ const state = reactive({
 	loading: false
 })
 const { pointer, pointers } = usePointer()
-const canvas = useCanvas(canvasRef, cardRefs)
-const arrowKeys = useArrowKeys()
 const selection = reactive<CanvasSelection>({
 	cards: [],
 	box: null,
@@ -42,8 +38,11 @@ const selection = reactive<CanvasSelection>({
 		selection.cards = []
 	}
 })
+const canvas = useCanvas(canvasRef, cardRefs)
+const { cards, createCard, deleteMany } = inject('cards') as Cards
+const router = useRouter()
+const arrowKeys = useArrowKeys()
 const settings = useSettings()
-const appState = useAppState()
 const { toast, untoast } = useToaster()
 const cursor = computed(() => {
 	if (state.panning && pointer.moved) return 'move'
@@ -79,8 +78,24 @@ let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 let unwatchGestureChange: WatchHandle
 
-// Provide access to other cards for boxes and snapping
-provide('card-refs', computed(() => cardRefs.value ?? []))
+provide('card-refs', cardRefs)
+provide('canvas', canvas)
+provide('selection', selection)
+
+// Stack cards in the order they were modified
+watch(() => cards.map(card => card.modified), () => {
+	cards.sort((a, b) => {
+		// Sort boxes before other cards
+		if (a.type === 'box' && b.type !== 'box') return -1
+		if (a.type !== 'box' && b.type === 'box') return 1
+
+		// Sort boxes by position
+		if (a.type === 'box' && b.type === 'box')
+			return (a.pos.x + a.pos.y) - (b.pos.x + b.pos.y)
+
+		return a.modified - b.modified
+	})
+}, { immediate: true })
 
 // Clear the selection when cards are removed
 watch(() => cards.length, (length, oldLength) => {
@@ -103,7 +118,7 @@ useKeymap({
 	'Backspace': deleteSelectedCards,
 	'Delete': deleteSelectedCards,
 	'Escape': selection.clear,
-	'CtrlMeta ,': () => appState.settingsOpen = true
+	'CtrlMeta ,': () => router.push('/settings')
 })
 
 // Pan the canvas using the arrow keys
@@ -441,21 +456,19 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 	const dataTransfer = isClipboardEvent ? event.clipboardData : event.dataTransfer
 	const pos = canvas.toCanvasPos(isClipboardEvent ? pointer : { x: event.clientX, y: event.clientY })
 	const pasted = await pasteOnCanvas(dataTransfer, pos)
+	const pastedCards = (pasted.cards as Card[]).map(card => createCard(card))
 
 	untoast(pasteToast)
 
-	if (pasted.cards.length) {
-		let message = `${pasted.type}`
+	if (pastedCards.length) {
+		if (pastedCards.length > 1)
+			toast(`Pasted ${pastedCards.length} ${pasted.type}s`)
+		else
+			toast(`Pasted ${pasted.type}`)
 
-		if (pasted.cards.length > 1)
-			message = `${pasted.cards.length} ${message}s`
+		await nextTick()
 
-		toast(`Pasted ${message}`)
-
-		// Select the pasted cards
-		selection.clear()
-
-		selection.cards = pasted.cards
+		selection.cards = pastedCards
 	} else if (pasted.error)
 		toast(pasted.error, 'red')
 
@@ -476,6 +489,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		@click.left.self="onClick"
 		@click.middle.self.prevent
 		@wheel.prevent="onWheel"
+		@contextmenu.self.prevent
 		@dragenter="state.pointerOver = true"
 		@dragleave="state.pointerOver = false"
 		@dragover.self.stop.prevent
@@ -495,15 +509,13 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 				:key="card.id"
 				ref="card-refs"
 				:card
-				:canvas
-				:selection
 			/>
 		</div>
 		<div
 			class="box-selection"
 			:style="boxSelectionStyle"
 		/>
-		<DrawSelection :selection />
+		<DrawSelection />
 	</div>
 </template>
 

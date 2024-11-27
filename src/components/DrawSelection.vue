@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { onMounted, useTemplateRef, watch } from 'vue'
+import { inject, onMounted, useTemplateRef, watch } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { useDebounceFn, useEventListener } from '@vueuse/core'
 
 // "canvas" refers to the canvas element the pointer trail is drawn to in this file,
 // not the Canvas component or the canvas state object
 
-const { selection } = defineProps<{ selection: CanvasSelection }>()
 const canvasRef = useTemplateRef('canvas-ref')
+const selection = inject('selection') as CanvasSelection
 const { pointer } = usePointer()
 let animationLock = false
 let sizeModifier = 4
