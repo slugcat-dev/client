@@ -1,13 +1,5 @@
 {
-  "name": "client",
   "type": "module",
-  "version": "0.0.0",
-  "description": "Place virtual cards on a virtual canvas virtually anywhere",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/slugcat-dev/client.git"
-  },
-  "keywords": [],
   "scripts": {
     "dev": "vite",
     "build": "vite build"

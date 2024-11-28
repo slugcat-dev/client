@@ -6,10 +6,11 @@ import Index from './views/Index.vue'
 import Board from './views/Board.vue'
 import Settings from './views/Settings.vue'
 
+const base = import.meta.env.APP_BASE_PATH
 const app = createApp(App)
 const appState = useAppState()
 const router = createRouter({
-	history: createWebHistory(),
+	history: createWebHistory(base),
 	routes: [
 		{ path: '/', component: Index },
 		{ path: '/:board', component: Board },
