@@ -43,6 +43,12 @@ interface Canvas {
 	stopEdgeScroll: () => void
 }
 
+interface User {
+	id: number
+	email: string
+	created: string
+}
+
 interface Board {
 	id: number
 	cards: Card[]

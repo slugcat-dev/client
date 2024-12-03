@@ -8,6 +8,8 @@ const state = reactive({
 	otp: ''
 })
 
+// TOOD: resend after 1 min
+
 async function sendOTP() {
 	await ofetch(`${apiURL}/auth/send-otp`, {
 		method: 'POST',

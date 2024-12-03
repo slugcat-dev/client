@@ -3,7 +3,8 @@ import { reactive } from 'vue'
 
 export const useAppState = createGlobalState(() => {
 	const state = reactive({
-		online: true,
+		online: false,
+		loggedIn: false,
 		pendingWork: new Set()
 	})
 

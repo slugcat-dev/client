@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAppState } from '../composables/appState'
 import { useCache } from '../composables/cache'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoard } from '../composables/board'
@@ -6,10 +7,20 @@ import { provide } from 'vue'
 import BoardHeader from '../components/BoardHeader.vue'
 import Canvas from '../components/Canvas.vue'
 
+const appState = useAppState()
 const cache = useCache()
 const route = useRoute()
 const router = useRouter()
-const board = cache.boards.find(board => board.id === Number(route.params.board))
+let board: Board | undefined
+
+if (appState.loggedIn)
+	board = cache.boards.find(board => board.id === Number(route.params.board))
+else {
+	board = {
+		id: 0,
+		cards: []
+	}
+}
 
 if (board)
 	provide('cards', useBoard(board))
