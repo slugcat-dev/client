@@ -262,3 +262,16 @@ export function limitSize(width: number, height: number, min: number, max: numbe
 
 	return [width, height]
 }
+
+/**
+ * Fancier console logs!
+ */
+export function logBadge(color: string) {
+	return `
+		padding: 2px 4px;
+		color: black;
+		font-weight: bold;
+		background-color: ${color};
+		border-radius: 4px;
+	`
+}

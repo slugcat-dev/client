@@ -76,6 +76,14 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 
 	// Paste files
 	if (files.length) {
+		if (!appState.loggedIn) {
+			return {
+				type: null,
+				cards: [],
+				error: 'You need to be logged in to upload files'
+			}
+		}
+
 		if (!appState.online) {
 			return {
 				type: null,
