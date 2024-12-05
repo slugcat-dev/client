@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { loginUser } from './user'
+import BoardList from './views/BoardList.vue'
 import Login from './views/Login.vue'
 import Settings from './views/Settings.vue'
 import Board from './views/Board.vue'
@@ -11,22 +11,12 @@ export const router = createRouter({
 	routes: [
 		{
 			path: '/',
-			component: Settings
-			/*
-			TODO
-
-				- First visit? -> Demo board
-				- -> Most recent or default board
-			*/
+			component: BoardList
 		},
 		{
 			path: '/login',
 			name: 'login',
-			component: Login,
-			beforeEnter: async () => {
-				if (localStorage.getItem('token') && await loginUser())
-					return '/'
-			}
+			component: Login
 		},
 		{
 			path: '/settings',

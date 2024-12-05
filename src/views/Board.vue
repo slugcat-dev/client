@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { useCache } from '../composables/cache'
+import { useStorage } from '../composables/storage'
 import { useRoute } from 'vue-router'
 import { useBoard } from '../composables/board'
 import { provide } from 'vue'
 import BoardHeader from '../components/BoardHeader.vue'
 import Canvas from '../components/Canvas.vue'
 
-const cache = useCache()
+const storage = await useStorage()
 const route = useRoute()
-const board = cache.boards.find(board => board.id === Number(route.params.board))
+const board = storage.boards.find(board => board.id === route.params.board)
 
 if (board)
 	provide('cards', useBoard(board))
 </script>
 
 <template>
-	<div v-if="board" class="board">
+	<div v-if="board" class="board-view">
 		<BoardHeader />
 		<Canvas />
 	</div>
@@ -23,7 +23,7 @@ if (board)
 </template>
 
 <style>
-.board {
+.board-view {
 	display: flex;
 	width: 100dvw;
 	height: 100dvh;

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAppState } from '../composables/appState'
+import { useStorage } from '../composables/storage'
 import { ofetch } from 'ofetch'
-import { loginUser } from '../user'
-import { logBadge } from '../utils'
+import { loginUser, logoutUser } from '../user'
 
 const apiURL = import.meta.env.APP_API_URL
 const state = reactive({
@@ -12,6 +13,8 @@ const state = reactive({
 	otpSent: false
 })
 const router = useRouter()
+const appState = useAppState()
+const storage = await useStorage()
 
 async function sendOTP() {
 	await ofetch(`${apiURL}/auth/send-otp`, {
@@ -33,16 +36,22 @@ async function verifyOTP() {
 		}
 	})
 
-	localStorage.setItem('token', token)
-	await loginUser()
-	console.log('%cAUTH', logBadge('#f2cc60'), 'Logged in')
-	await router.push('/')
+	storage.token = token
 
+	await loginUser()
+	router.push('/')
 }
 </script>
 
 <template>
-	<div class="login">
+	<div v-if="appState.loggedIn" class="login-view">
+		<h1>You are logged in as</h1>
+		{{ storage.user }}
+		<br>
+		<button @click="logoutUser">Log Out</button>
+		<button @click="$router.push('/')">Go Home</button>
+	</div>
+	<div v-else class="login-view">
 		<div>
 			<input v-model="state.email" :disabled="state.otpSent" placeholder="E-Mail">
 			<button :disabled="state.otpSent" @click="sendOTP">Send OTP</button>
@@ -55,7 +64,7 @@ async function verifyOTP() {
 </template>
 
 <style>
-.login {
+.login-view {
 	position: fixed;
 	top: 50%;
 	left: 50%;

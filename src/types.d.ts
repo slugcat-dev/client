@@ -44,13 +44,15 @@ interface Canvas {
 }
 
 interface User {
-	id: number
+	id: string
 	email: string
 	created: string
 }
 
 interface Board {
-	id: number
+	id: string
+	owner: string
+	name: string
 	cards: Card[]
 }
 

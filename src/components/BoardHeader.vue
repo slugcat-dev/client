@@ -29,6 +29,7 @@ const settings = useSettings()
 				>
 			</div>
 		</div>
+		<RouterLink to="/">Board List</RouterLink>
 		<div class="flex-spacer"></div>
 		<RouterLink to="/settings" class="settings-button">
 			<IconSettings />

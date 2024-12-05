@@ -4,9 +4,9 @@ import { useToaster } from './composables/toaster'
 import { RouterView, useRouter } from 'vue-router'
 import { useSettings } from './composables/settings'
 import { useEventListener } from '@vueuse/core'
+import { logBadge } from './utils'
 import { watch, watchEffect } from 'vue'
 import { loginUser } from './user'
-import { logBadge } from './utils'
 import Toaster from './components/Toaster.vue'
 
 const root = document.documentElement
@@ -47,19 +47,20 @@ watchEffect(() => {
 		offlineToast = toast('Offline, some features are not available', 'red', true)
 })
 
-// Check if the auth token is still valid if the user was offline
-watch(() => appState.online, async () => {
-	if (appState.loggedIn && appState.online) {
-		const valid = await loginUser()
+// Check if the auth token is still valid
+if (appState.loggedIn) {
+	const unwatch = watchEffect(async () => {
+		if (appState.online) {
+			const valid = await loginUser()
 
-		if (valid)
-			console.log('%cAUTH', logBadge('#f2cc60'), 'Logged in')
-		else {
-			router.push('/login')
-			console.log('%cAUTH', logBadge('#f2cc60'), 'Invalid token')
-		}
-	}
-}, { immediate: true })
+			if (valid)
+				unwatch()
+			else
+				router.push('/login')
+		} else
+			console.log('%cAUTH', logBadge('#f2cc60'), 'Assuming valid token')
+	})
+}
 
 watch(settings, () => {
 	root.style.colorScheme = settings.colorTheme === 'system' ? 'light dark' : settings.colorTheme
@@ -68,10 +69,12 @@ watch(settings, () => {
 </script>
 
 <template>
-	<main>
-		<RouterView v-slot="{ Component }">
-			<component :is="Component" :key="$route" />
-		</RouterView>
-		<Toaster />
-	</main>
+	<Suspense>
+		<main>
+			<RouterView v-slot="{ Component }">
+				<component :is="Component" :key="$route" />
+			</RouterView>
+			<Toaster />
+		</main>
+	</Suspense>
 </template>
