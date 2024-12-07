@@ -28,7 +28,7 @@ export async function loginUser() {
 
 		return true
 	} catch {
-		console.log('%cAUTH', logBadge('#f2cc60'), 'Invalid token')
+		console.error('%cAUTH', logBadge('#f2cc60'), 'Invalid token')
 		logoutUser()
 
 		return false

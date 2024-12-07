@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
 
-defineProps<{ canvas: Canvas }>()
+defineProps<{ canvas: CanvasContext }>()
 
 const settings = useSettings()
 </script>

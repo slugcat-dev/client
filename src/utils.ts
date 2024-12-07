@@ -1,5 +1,7 @@
+import { customAlphabet } from 'nanoid'
 import { type MaybeRefOrGetter, watch } from 'vue'
 
+export const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 20)
 export const isFirefox = /Firefox/i.test(navigator.userAgent)
 export const isAndroid = /Android/i.test(navigator.userAgent)
 export const isMac = /Mac/i.test(navigator.platform) || /iPhone/.test(navigator.userAgent)
@@ -10,14 +12,6 @@ export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: 
 
 export function isPointerCoarse() {
 	return window.matchMedia('(pointer: coarse)').matches
-}
-
-export function clamp(value: number, min: number, max: number) {
-	return Math.max(Math.min(value, max), min)
-}
-
-export function clone(obj: any) {
-	return JSON.parse(JSON.stringify(obj))
 }
 
 /**
@@ -274,4 +268,16 @@ export function logBadge(color: string) {
 		background-color: ${color};
 		border-radius: 4px;
 	`
+}
+
+export function clamp(value: number, min: number, max: number) {
+	return Math.max(Math.min(value, max), min)
+}
+
+export function clone(obj: any) {
+	return JSON.parse(JSON.stringify(obj))
+}
+
+export function pluralize(word: string, amount: number) {
+	return `${amount} ${word}${amount === 1 ? '' : 's'}`
 }

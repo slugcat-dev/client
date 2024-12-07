@@ -20,8 +20,8 @@ const { card } = defineProps<{ card: Card }>()
 const cardRef = useTemplateRef('card-ref')
 const contentRef = useTemplateRef<CardContentRef>('content-ref')
 const selection = inject('selection') as CanvasSelection
-const canvas = inject('canvas') as Canvas
-const { updateCard, updateMany } = inject('cards') as Cards
+const canvas = inject('canvas') as CanvasContext
+const { updateCard, updateMany } = inject('board') as BoardContext
 const state = reactive({
 	selected: false,
 	dragging: false,
@@ -57,6 +57,8 @@ let relatedCards = new Set<Card>()
 let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
+
+console.debug('Rerender card', card)
 
 watch(() => selection.cards, () => {
 	state.selected = selection.cards.includes(card)

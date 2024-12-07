@@ -12,7 +12,6 @@ const { pointer, pointers } = usePointer()
 export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, cardRefs: ShallowRef<(CardRef | null)[] | null>) {
 	const canvas = reactive({
 		ref,
-		active: false,
 		scroll: { x: 0, y: 0 },
 		smoothScroll: { x: 0, y: 0 },
 		scrollSpeed: { x: 0, y: 0 },
@@ -277,5 +276,5 @@ export function useCanvas(ref: ShallowRef<HTMLDivElement | null>, cardRefs: Shal
 		kineticScroll,
 		edgeScroll,
 		stopEdgeScroll
-	}) as Canvas
+	}) as CanvasContext
 }

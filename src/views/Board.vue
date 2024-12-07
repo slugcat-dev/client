@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import { useStorage } from '../composables/storage'
 import { useRoute } from 'vue-router'
 import { useBoard } from '../composables/board'
 import { provide } from 'vue'
 import BoardHeader from '../components/BoardHeader.vue'
 import Canvas from '../components/Canvas.vue'
 
-const storage = await useStorage()
 const route = useRoute()
-const board = storage.boards.find(board => board.id === route.params.board)
+const board = await useBoard(route)
 
-if (board)
-	provide('cards', useBoard(board))
+provide('board', board)
 </script>
 
 <template>
@@ -19,7 +16,10 @@ if (board)
 		<BoardHeader />
 		<Canvas />
 	</div>
-	<div v-else>404</div>
+	<div v-else class="board-view not-found">
+		<h1>404</h1>
+		BOARD NOT FOUND
+	</div>
 </template>
 
 <style>
@@ -28,5 +28,18 @@ if (board)
 	width: 100dvw;
 	height: 100dvh;
 	flex-direction: column;
+}
+
+.not-found {
+	justify-content: center;
+	text-align: center;
+	font-family: 'Fira Code', monospace;
+
+	h1 {
+		margin: 0;
+		font-size: 4rem;
+		font-weight: normal;
+		filter: drop-shadow(2px 2px 0 #80808080);
+	}
 }
 </style>

@@ -16,7 +16,7 @@ const state = reactive({
 	durationTimestamp: '-:--',
 	elapsedTimestamp: '0:00'
 })
-const { updateCard } = inject('cards') as Cards
+const { updateCard } = inject('board') as BoardContext
 const { toast } = useToaster()
 let audio: HTMLAudioElement
 

@@ -3,6 +3,43 @@ interface Pos {
 	y: number
 }
 
+interface User {
+	id: string
+	email: string
+	created: number
+}
+
+interface Board {
+	id: string
+	owner: string
+	name: string
+	cards: Card[]
+	modified: number
+	created: number
+}
+
+interface Card {
+	id: string
+	type: 'box' | 'text' | 'image' | 'link' | 'audio' | 'video'
+	new?: boolean,
+	pos: Pos
+	content: any
+	modified: number
+	created: number
+}
+
+interface Queue {
+	boards: {
+		type: 'create' | 'update' | 'delete'
+		board: Partial<Board>
+	}[]
+	cards: {
+		type: 'create' | 'update' | 'delete'
+		board: string
+		card: Partial<Card>
+	}[]
+}
+
 interface PointerState extends Pos {
 	id: number
 	down: Pos | false
@@ -16,13 +53,18 @@ interface PointerState extends Pos {
 	altKey: boolean
 }
 
-interface Keymap {
-	[key: string]: (event: KeyboardEvent) => void
+interface BoardContext {
+	board: Board
+	cards: Card[]
+	createCard: (data: Partial<Card>) => Card
+	updateCard: (card: Card, create?: boolean) => void
+	updateMany: (cards: Card[]) => void
+	deleteCard: (card: Card) => void
+	deleteMany: (cards: Card[]) => void
 }
 
-interface Canvas {
+interface CanvasContext {
 	ref: HTMLElement
-	active: boolean
 	scroll: Pos
 	smoothScroll: Pos
 	scrollSpeed: Pos
@@ -43,37 +85,6 @@ interface Canvas {
 	stopEdgeScroll: () => void
 }
 
-interface User {
-	id: string
-	email: string
-	created: string
-}
-
-interface Board {
-	id: string
-	owner: string
-	name: string
-	cards: Card[]
-}
-
-interface Card {
-	id: number
-	new?: boolean,
-	type: 'box' | 'text' | 'image' | 'link' | 'audio' | 'video'
-	pos: Pos
-	content: any
-	modified: number
-}
-
-interface Cards {
-	cards: Card[]
-	createCard: (data: Partial<Card>) => Card
-	updateCard: (card: Card, create?: boolean) => void
-	updateMany: (cards: Card[]) => void
-	deleteCard: (card: Card) => void
-	deleteMany: (cards: Card[]) => void
-}
-
 interface CanvasSelection {
 	cards: Card[]
 	box: DOMRect | null
@@ -88,6 +99,10 @@ interface Toast {
 	color: 'red' | 'yellow' | 'green'
 	persistent: boolean
 	timeout: ReturnType<typeof setTimeout>
+}
+
+interface Keymap {
+	[key: string]: (event: KeyboardEvent) => void
 }
 
 interface Base64File {

@@ -20,7 +20,7 @@ async function sendOTP() {
 	await ofetch(`${apiURL}/auth/send-otp`, {
 		method: 'POST',
 		body: {
-			email: state.email
+			email: state.email.trim()
 		}
 	})
 
@@ -31,8 +31,8 @@ async function verifyOTP() {
 	const { token } = await ofetch(`${apiURL}/auth/verify-otp`, {
 		method: 'POST',
 		body: {
-			email: state.email,
-			otp: state.otp
+			email: state.email.trim(),
+			otp: state.otp.trim()
 		}
 	})
 

@@ -5,7 +5,7 @@ import { ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
 const { card } = defineProps<{ card: Card }>()
-const { createCard, deleteCard, updateCard } = inject('cards') as Cards
+const { createCard, deleteCard, updateCard } = inject('board') as BoardContext
 const { toast } = useToaster()
 const hostname = new URL(card.content.url).hostname.replace(/^www\./, '')
 

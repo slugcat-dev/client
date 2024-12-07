@@ -92,7 +92,7 @@ export function toggleCheckbox(editor: Editor, event: Event) {
 /**
  * Add a smooth animated caret.
  */
-export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: Canvas) {
+export function smoothCaretAddon(editor: Editor, caret: HTMLElement, canvas: CanvasContext) {
 	let transitionEndListener = false
 
 	if (isMobile)

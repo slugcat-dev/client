@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, reactive, toRef, useTemplateRef } from 'vue'
+import { inject, onBeforeUnmount, onMounted, reactive, toRef, useTemplateRef } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useAppState } from '../composables/appState'
@@ -14,8 +14,8 @@ const state = reactive({
 	active: false,
 	deleteIntent: false
 })
-const canvas = inject('canvas') as Canvas
-const { deleteCard, updateCard } = inject('cards') as Cards
+const canvas = inject('canvas') as CanvasContext
+const { deleteCard, updateCard } = inject('board') as BoardContext
 const appState = useAppState()
 const clearDeleteIntent = useDebounceFn(() => state.deleteIntent = false, 500)
 let editor: Editor
@@ -48,6 +48,10 @@ onMounted(() => {
 		else
 			editor.setSelection(editor.getSelection())
 	}
+})
+
+onBeforeUnmount(() => {
+	editor.destroy()
 })
 
 function onClick(event: MouseEvent) {

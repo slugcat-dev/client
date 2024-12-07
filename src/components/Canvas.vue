@@ -39,7 +39,7 @@ const selection = reactive<CanvasSelection>({
 	}
 })
 const canvas = useCanvas(canvasRef, cardRefs)
-const { cards, createCard, deleteMany } = inject('cards') as Cards
+const { cards, createCard, deleteMany } = inject('board') as BoardContext
 const router = useRouter()
 const arrowKeys = useArrowKeys()
 const settings = useSettings()
@@ -506,7 +506,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		>
 			<Card
 				v-for="card of cards"
-				:key="card.id"
+				:key="card as any"
 				ref="card-refs"
 				:card
 			/>

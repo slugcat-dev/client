@@ -1,6 +1,6 @@
 import { openDB } from 'idb'
 import { clone, logBadge } from '../utils'
-import { createGlobalState, SerializerAsync, useStorageAsync } from '@vueuse/core'
+import { createGlobalState, type SerializerAsync, useStorageAsync } from '@vueuse/core'
 import { reactive, ref, watch } from 'vue'
 
 const loading = ref(new Set<string>())
@@ -41,6 +41,7 @@ export const useStorage = createGlobalState(async () => {
 		user: createStorage('user', null as User | null),
 		token: createStorage('token', null as string | null),
 		boards: createStorage('boards', [] as Board[]),
+		queue: createStorage('queue', { boards: [], cards: [] } as Queue)
 	})
 
 	await new Promise<void>(resolve => {
@@ -48,10 +49,9 @@ export const useStorage = createGlobalState(async () => {
 			if (loading.value.size)
 				return
 
-			console.log('%cSTORAGE', logBadge('#d2a8ff'), 'Loaded')
-
 			unwatch()
 			resolve()
+			console.log('%cSTORAGE', logBadge('#d2a8ff'), 'Loaded')
 		}, { deep: true })
 	})
 

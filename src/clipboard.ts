@@ -1,6 +1,6 @@
 import { useAppState } from './composables/appState'
 import { useToaster } from './composables/toaster'
-import { limitSize, isURL } from './utils'
+import { limitSize, isURL, nanoid } from './utils'
 import { ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
@@ -60,7 +60,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 				return {
 					type: 'card',
 					cards: cards.map((card, i) => ({
-						id: now + i,
+						id: nanoid(),
 						type: card.type,
 						pos: {
 							x: pos.x + card.pos.x - corner.x,
@@ -104,7 +104,7 @@ export async function pasteOnCanvas(dataTransfer: DataTransfer | null, pos: Pos)
 				const type = file.type.split('/')[0] as Card['type']
 
 				return {
-					id: now + i,
+					id: nanoid(),
 					new: true,
 					type,
 					pos: {

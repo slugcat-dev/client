@@ -1,11 +1,15 @@
-import { base64ToFile } from './utils'
+import { useStorage } from './composables/storage'
+import { base64ToFile, logBadge } from './utils'
 
 const apiURL = import.meta.env.APP_API_URL
+const storage = await useStorage()
 
 /**
- * Upload a file to the server
+ * Upload a file to the server.
  */
 export function uploadFile(file: File | Base64File, onProgress?: (progress: number) => void) {
+	console.log('%cUPLOAD', logBadge('#7ee787'), file.name)
+
 	const data = new FormData()
 	const xhr = new XMLHttpRequest()
 
@@ -26,8 +30,11 @@ export function uploadFile(file: File | Base64File, onProgress?: (progress: numb
 
 			resolve(JSON.parse(xhr.responseText))
 		})
+
 		xhr.addEventListener('error', () => reject(new Error('Upload failed')))
+
 		xhr.open('POST', `${apiURL}/upload`)
+		xhr.setRequestHeader('Authorization', `Bearer ${storage.token}`)
 		xhr.send(data)
 	})
 }

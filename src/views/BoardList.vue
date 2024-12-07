@@ -1,56 +1,29 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { useStorage } from '../composables/storage'
-import { ofetch } from 'ofetch'
-import { nanoid } from 'nanoid'
+import { useAppState } from '../composables/appState'
+import { createBoard, deleteBoard } from '../composables/board'
 
-const apiURL = import.meta.env.APP_API_URL
 const storage = await useStorage()
-const router = useRouter()
-
-async function createBoard() {
-	// TODO: create everything on client
-	// TODO: token in cache
-
-	const board = {
-		id: nanoid(),
-		owner: storage.user?.id ?? 'nope',
-		name: 'New Board',
-		cards: [],
-		created: new Date().toISOString()
-	}
-
-	await ofetch(`${apiURL}/board`, {
-		method: 'POST',
-		headers: {
-			'Authorization': `Bearer ${storage.token}`
-		},
-		body: board
-	})
-
-	storage.boards.push(board)
-
-	router.push(board.id)
-}
-
-// TODO: if logged in
-ofetch(`${apiURL}/user/boards`, {
-	headers: {
-		'Authorization': `Bearer ${storage.token}`
-	}
-})
+const appState = useAppState()
 </script>
 
 <template>
 	<div class="board-list-view">
 		<div v-if="storage.boards.length">
-			<RouterLink
-				v-for="board of storage.boards"
-				:to="`/${board.id}`"
-			>{{ board.name }} <span class="md-code">{{ board.id }}</span></RouterLink>
+			<div v-for="board of storage.boards" style="display: flex; margin-bottom: .5rem;">
+				<RouterLink class="board-link ellipsis" :to="`/${board.id}`">
+					{{ board.name }}
+				</RouterLink>
+				<button @click="() => deleteBoard(board)" style="margin-left: .25rem; color: var(--color-red);">
+					<svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+						<path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3-4q.425 0 .713-.288T11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17m4 0q.425 0 .713-.288T15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17" />
+					</svg>
+				</button>
+			</div>
 		</div>
-		<div v-else>No Boards</div>
-		<button @click="createBoard">Create Board</button>
+		<div v-else style="margin-bottom: .5rem;">No Boards</div>
+		<button @click="() => $router.push(createBoard())">Create Board</button>
+		<button v-if="!appState.loggedIn" @click="$router.push('/login')">Log In</button>
 	</div>
 </template>
 
@@ -60,10 +33,20 @@ ofetch(`${apiURL}/user/boards`, {
 	top: 50%;
 	left: 50%;
 	translate: -50% -50%;
+}
 
-	a {
-		display: block;
-		margin-bottom: .5rem;
-	}
+.board-link {
+	display: block;
+	width: 240px;
+	padding: .25rem .5rem;
+	text-decoration: none;
+	color: inherit;
+	background-color: #80808040;
+	border-radius: .375rem;
+}
+
+.delete-icon {
+	display: flex;
+	margin-inline: -.25rem;
 }
 </style>

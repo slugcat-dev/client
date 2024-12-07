@@ -19,7 +19,7 @@ const state = reactive({
 	imgHeight: 0,
 	active: false
 })
-const { updateCard } = inject('cards') as Cards
+const { updateCard } = inject('board') as BoardContext
 const { toast } = useToaster()
 const lqip = `${apiURL}/image-lqip?url=${encodeURIComponent(card.content.src)}`
 let keyListenerCleanup: Function
