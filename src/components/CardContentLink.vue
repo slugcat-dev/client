@@ -100,11 +100,6 @@ defineExpose({ active: false })
 .link-icon .loader {
 	width: 1.5rem;
 	height: 1.5rem;
-
-	&::before,
-	&::after {
-		background-color: currentColor;
-	}
 }
 
 .link-text {

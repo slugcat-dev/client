@@ -54,6 +54,7 @@ interface PointerState extends Pos {
 }
 
 interface BoardContext {
+	available: boolean
 	board: Board
 	cards: Card[]
 	createCard: (data: Partial<Card>) => Card

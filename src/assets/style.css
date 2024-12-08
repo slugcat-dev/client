@@ -82,6 +82,7 @@ button {
 	width: 1rem;
 	height: 1rem;
 	filter: drop-shadow(var(--shadow));
+	pointer-events: none;
 }
 
 .loader::before,
@@ -93,7 +94,7 @@ button {
 	width: 25%;
 	height: 25%;
 	margin: -12.5% 0 0 -12.5%;
-	background-color: white;
+	background-color: currentColor;
 	animation: loader-1 2s infinite, loader-2 1s infinite;
 }
 

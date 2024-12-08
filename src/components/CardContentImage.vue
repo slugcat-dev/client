@@ -117,7 +117,7 @@ defineExpose({
 			width: `${card.content.width ?? 0}px`,
 			height: `${card.content.height ?? 0}px`,
 		}"
-		@load="onLoad"
+		@load.once="onLoad"
 		@click.left.exact="activate"
 	>
 	<UploadProgress
@@ -127,7 +127,7 @@ defineExpose({
 		@retry="retryUpload"
 	/>
 	<div v-if="state.cardLoading" class="loader"></div>
-	<div v-if="state.imgWidth >= 60 && state.imgHeight >= 60" class="resize-d"></div>
+	<div v-if="state.imgWidth >= 40 && state.imgHeight >= 40" class="resize-d"></div>
 	<Teleport to="body">
 		<Transition name="image-preview">
 			<div

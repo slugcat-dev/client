@@ -506,7 +506,7 @@ async function onPaste(event: ClipboardEvent | DragEvent) {
 		>
 			<Card
 				v-for="card of cards"
-				:key="card as any"
+				:key="card.id"
 				ref="card-refs"
 				:card
 			/>

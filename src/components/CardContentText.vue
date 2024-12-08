@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onBeforeUnmount, onMounted, reactive, toRef, useTemplateRef } from 'vue'
+import { inject, onBeforeUnmount, onMounted, reactive, toRef, useTemplateRef, watch } from 'vue'
 import { Editor } from '@slugcat-dev/mark-ed'
 import { highlightCodeAddon, moveCaretWhereClicked, moveLine, smoothCaretAddon, toggleCheckbox } from '../editor'
 import { useAppState } from '../composables/appState'
@@ -48,6 +48,11 @@ onMounted(() => {
 		else
 			editor.setSelection(editor.getSelection())
 	}
+})
+
+watch(() => card.content.text, () => {
+	if (editor.content !== card.content.text)
+		editor.content = card.content.text
 })
 
 onBeforeUnmount(() => {

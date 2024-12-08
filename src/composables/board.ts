@@ -1,10 +1,10 @@
 import { useAppState } from './appState'
 import { useStorage } from './storage'
 import { type RouteLocation } from 'vue-router'
+import { computed, reactive, watch } from 'vue'
 import { reactiveComputed } from '@vueuse/core'
-import { reactive, watch } from 'vue'
 import { clone, logBadge, nanoid } from '../utils'
-import { ofetch } from 'ofetch'
+import { FetchError, ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
 const appState = useAppState()
@@ -12,33 +12,46 @@ const storage = await useStorage()
 
 export async function useBoard(route: RouteLocation) {
 	const id = route.params.board as string
-	const storedBoard = storage.boards.find(board => board.id === id)
-	const board = reactiveComputed(() => storage.boards.find(b => b.id === id) ?? {} as Board)
+	const available = computed(() => storage.boards.some(board => board.id === id))
+	const board = reactiveComputed(() => storage.boards.find(board => board.id === id) ?? {} as Board)
 	const cards = reactive([] as Card[])
+	const isCached = available.value
 
-	if (!storedBoard) {
-		console.debug('Board not cached, trying to fetch...')
+	if (!isCached) {
+		console.warn('%cSTORAGE', logBadge('#d2a8ff'), 'Board not cached, trying to fetch')
 
-		try {
-			if (appState.loggedIn && appState.online)
+		if (appState.loggedIn && appState.online) {
+			try {
 				await fetchBoard(id)
-			else
-				return undefined
-		} catch {
-			return undefined
+			} catch {}
 		}
 	}
 
 	watch(() => appState.loggedIn && appState.online, () => {
-		console.debug('online watcher')
-
 		if (appState.loggedIn && appState.online)
 			fetchBoard(id)
-	}, { immediate: !!storedBoard })
+	}, { immediate: isCached })
 
 	watch(() => board.cards, () => {
-		console.debug('card watcher')
-		cards.splice(0, cards.length, ...board.cards.map(card => clone(card)))
+		if (!board.cards)
+			return
+
+		const boardCardMap = new Map(board.cards.map(card => [card.id, card]))
+
+		for (let i = cards.length - 1; i >= 0; i--) {
+			const card = cards[i]
+
+			if (card.new)
+				continue
+
+			if (boardCardMap.has(card.id)) {
+				Object.assign(card, clone(boardCardMap.get(card.id)))
+				boardCardMap.delete(card.id)
+			} else
+				cards.splice(i, 1)
+		}
+
+		boardCardMap.forEach(card => cards.push(clone(card)))
 	}, { immediate: true })
 
 	watch(() => cards.map(card => card.new), () => {
@@ -161,6 +174,7 @@ export async function useBoard(route: RouteLocation) {
 	}
 
 	return {
+		available,
 		board,
 		cards,
 		createCard,
@@ -253,26 +267,37 @@ export async function fetchBoards() {
 export async function fetchBoard(id: string) {
 	console.log('%cSYNC', logBadge('#79c0ff'), `Fetching board`, { id })
 
-	const boardData = await ofetch<Board>(`${apiURL}/board/${id}`, {
-		headers: {
-			'Authorization': `Bearer ${storage.token}`
+	try {
+		const boardData = await ofetch<Board>(`${apiURL}/board/${id}`, {
+			headers: {
+				'Authorization': `Bearer ${storage.token}`
+			}
+		})
+		const board = {
+			...boardData,
+			created: new Date(boardData.created).getTime(),
+			modified: new Date(boardData.modified).getTime(),
+			cards: boardData.cards.map(card => ({
+				...card,
+				created: new Date(card.created).getTime(),
+				modified: new Date(card.modified).getTime()
+			}))
 		}
-	})
-	const boardIndex = storage.boards.findIndex(b => b.id === boardData.id)
-	const board = {
-		...boardData,
-		created: new Date(boardData.created).getTime(),
-		modified: new Date(boardData.modified).getTime(),
-		cards: boardData.cards.map(card => ({
-			...card,
-			created: new Date(card.created).getTime(),
-			modified: new Date(card.modified).getTime()
-		}))
-	}
+		const boardIndex = storage.boards.findIndex(b => b.id === id)
 
-	if (boardIndex !== -1) {
-		storage.boards.splice(boardIndex, 1, board)
-	} else {
-		storage.boards.push(board)
+		if (boardIndex !== -1)
+			storage.boards.splice(boardIndex, 1, board)
+		else
+			storage.boards.push(board)
+	} catch (err) {
+		if (err instanceof FetchError && err.response?.status === 404) {
+			console.warn('%cSYNC', logBadge('#79c0ff'), 'Board not found', { id })
+
+			const boardIndex = storage.boards.findIndex(b => b.id === id)
+
+			if (boardIndex !== -1)
+				storage.boards.splice(boardIndex, 1)
+		} else
+			throw err
 	}
 }

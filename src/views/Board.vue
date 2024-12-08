@@ -7,23 +7,24 @@ import Canvas from '../components/Canvas.vue'
 
 const route = useRoute()
 const board = await useBoard(route)
+const { available } = board
 
 provide('board', board)
 </script>
 
 <template>
-	<div v-if="board" class="board-view">
+	<div v-if="available" class="board">
 		<BoardHeader />
 		<Canvas />
 	</div>
-	<div v-else class="board-view not-found">
+	<div v-else class="board not-found">
 		<h1>404</h1>
 		BOARD NOT FOUND
 	</div>
 </template>
 
 <style>
-.board-view {
+.board {
 	display: flex;
 	width: 100dvw;
 	height: 100dvh;

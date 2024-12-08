@@ -44,14 +44,14 @@ async function verifyOTP() {
 </script>
 
 <template>
-	<div v-if="appState.loggedIn" class="login-view">
+	<div v-if="appState.loggedIn" class="login">
 		<h1>You are logged in as</h1>
 		{{ storage.user }}
 		<br>
 		<button @click="logoutUser">Log Out</button>
 		<button @click="$router.push('/')">Go Home</button>
 	</div>
-	<div v-else class="login-view">
+	<div v-else class="login">
 		<div>
 			<input v-model="state.email" :disabled="state.otpSent" placeholder="E-Mail">
 			<button :disabled="state.otpSent" @click="sendOTP">Send OTP</button>
@@ -64,7 +64,7 @@ async function verifyOTP() {
 </template>
 
 <style>
-.login-view {
+.login {
 	position: fixed;
 	top: 50%;
 	left: 50%;

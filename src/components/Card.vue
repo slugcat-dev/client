@@ -58,8 +58,6 @@ let unwatchPointer: WatchHandle
 let unwatchPointerMove: WatchHandle
 let unwatchPointerUp: WatchHandle
 
-console.debug('Rerender card', card)
-
 watch(() => selection.cards, () => {
 	state.selected = selection.cards.includes(card)
 })
@@ -273,7 +271,7 @@ function snap(value: number, direction: 'x' | 'y', mode: 'drag' | 'resize') {
 
 		// Get visible card rects
 		const canvasRect = canvas.toCanvasRect(canvas.ref.getBoundingClientRect())
-		const cardRects = cardRefMap.values()
+		const cardRects = Array.from(cardRefMap.values())
 			.filter(cardRef => cardRef.card !== card && !relatedCards.has(cardRef.card))
 			.flatMap(cardRef => {
 				const cardRect = canvas.toCanvasRect(cardRef.ref!.getBoundingClientRect())

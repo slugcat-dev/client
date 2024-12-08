@@ -8,7 +8,7 @@ const appState = useAppState()
 </script>
 
 <template>
-	<div class="board-list-view">
+	<div class="board-list">
 		<div v-if="storage.boards.length">
 			<div v-for="board of storage.boards" style="display: flex; margin-bottom: .5rem;">
 				<RouterLink class="board-link ellipsis" :to="`/${board.id}`">
@@ -28,7 +28,7 @@ const appState = useAppState()
 </template>
 
 <style>
-.board-list-view {
+.board-list {
 	position: fixed;
 	top: 50%;
 	left: 50%;

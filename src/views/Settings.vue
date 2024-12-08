@@ -24,7 +24,7 @@ useKeymap({
 </script>
 
 <template>
-	<div class="settings-view">
+	<div class="settings">
 		<div class="settings-page">
 			<div class="settings-page-header">
 				<h1>Settings</h1>
@@ -200,7 +200,7 @@ useKeymap({
 </template>
 
 <style>
-.settings-view {
+.settings {
 	display: flex;
 	position: fixed;
 	inset: 0;
