@@ -241,6 +241,8 @@ export function deleteBoard(board: Board) {
  * Fetch all boards, cards excluded.
  */
 export async function fetchBoards() {
+	await queueSynced()
+
 	console.log('%cSYNC', logBadge('#79c0ff'), 'Fetching board list...')
 
 	const boards = await ofetch<Omit<Board, 'cards'>[]>(`${apiURL}/user/me/boards`, {
@@ -265,6 +267,8 @@ export async function fetchBoards() {
  * Fetch one board, cards included.
  */
 export async function fetchBoard(id: string) {
+	await queueSynced()
+
 	console.log('%cSYNC', logBadge('#79c0ff'), `Fetching board`, { id })
 
 	try {
@@ -300,4 +304,14 @@ export async function fetchBoard(id: string) {
 		} else
 			throw err
 	}
+}
+
+function queueSynced() {
+	return new Promise<void>(resolve => {
+		const queueEmpty = () => storage.queue.boards.length + storage.queue.cards.length === 0
+
+		watch(queueEmpty, () => {
+			resolve()
+		}, { once: true, immediate: queueEmpty() })
+	})
 }

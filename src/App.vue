@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useAppState } from './composables/appState'
 import { useToaster } from './composables/toaster'
-import { type RouterView, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useSettings } from './composables/settings'
 import { onMounted, onUnmounted, watch, watchEffect, type WatchHandle } from 'vue'
 import { useStorage } from './composables/storage'
 import { loginUser } from './user'
 import { logBadge, pluralize } from './utils'
-import { useEventListener, useThrottleFn } from '@vueuse/core'
+import { useDebounceFn, useEventListener } from '@vueuse/core'
 import { ofetch } from 'ofetch'
 import { fetchBoards } from './composables/board'
 import Toaster from './components/Toaster.vue'
@@ -41,7 +41,7 @@ onMounted(async () => {
 	}
 
 	// Sync boards and cards with the server
-	const sync = useThrottleFn(async () => {
+	const sync = useDebounceFn(async () => {
 		const operations = storage.queue.boards.length + storage.queue.cards.length
 		const result = await ofetch(`${apiURL}/sync`, {
 			method: 'POST',
@@ -58,7 +58,7 @@ onMounted(async () => {
 			console.log('%cSYNC', logBadge('#79c0ff'), pluralize('operation', operations))
 
 		storage.queue = { cards: [], boards: [] }
-	})
+	}, 500)
 
 	unwatchSync = watchEffect(() => {
 		const operations = storage.queue.boards.length + storage.queue.cards.length
@@ -68,10 +68,10 @@ onMounted(async () => {
 	})
 
 	// Download boards from the server
-	unwatchFetchBoards = watchEffect(() => {
-		if (appState.loggedIn && appState.online)
+	unwatchFetchBoards = watch(() => appState.loggedIn && appState.online, online => {
+		if (online)
 			fetchBoards()
-	})
+	}, { immediate: true })
 })
 
 onUnmounted(() => {
