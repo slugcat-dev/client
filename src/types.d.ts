@@ -24,8 +24,8 @@ interface Card {
 	new?: boolean,
 	pos: Pos
 	content: any
-	modified: number
 	created: number
+	modified: number
 }
 
 interface Queue {

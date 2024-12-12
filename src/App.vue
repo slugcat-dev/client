@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useAppState } from './composables/appState'
-import { useToaster } from './composables/toaster'
 import { useRouter } from 'vue-router'
+import { useToaster } from './composables/toaster'
+import { useGateway } from './composables/gateway'
 import { useSettings } from './composables/settings'
 import { onMounted, onUnmounted, watch, watchEffect, type WatchHandle } from 'vue'
 import { useStorage } from './composables/storage'
@@ -17,6 +18,7 @@ const root = document.documentElement
 const appState = useAppState()
 const router = useRouter()
 const { toast, untoast } = useToaster()
+const { gateway } = useGateway()
 const settings = useSettings()
 let unwatchSync: WatchHandle
 let unwatchFetchBoards: WatchHandle
@@ -42,7 +44,6 @@ onMounted(async () => {
 
 	// Sync boards and cards with the server
 	const sync = useDebounceFn(async () => {
-		const operations = storage.queue.boards.length + storage.queue.cards.length
 		const result = await ofetch(`${apiURL}/sync`, {
 			method: 'POST',
 			body: storage.queue,
@@ -53,9 +54,7 @@ onMounted(async () => {
 		const failed = result.boards.length + result.cards.length
 
 		if (failed)
-			console.error('%cSYNC', logBadge('#79c0ff'), `${pluralize('operation', operations)}, ${failed} failed`, result.boards, result.cards)
-		else
-			console.log('%cSYNC', logBadge('#79c0ff'), pluralize('operation', operations))
+			console.error('%cSYNC', logBadge('#79c0ff'), `${pluralize('operation', failed)} failed`, result.boards, result.cards)
 
 		storage.queue = { cards: [], boards: [] }
 	}, 500)
@@ -100,14 +99,19 @@ useEventListener(window, 'online', () => {
 // Offline notification
 watchEffect(() => {
 	if (appState.online) {
+		gateway.open()
+
 		if (offlineToast) {
 			untoast(offlineToast)
 			toast('Back online')
 
 			offlineToast = undefined
 		}
-	} else
+	} else {
+		gateway.close()
+
 		offlineToast = toast('Offline, some features are not available', 'red', true)
+	}
 })
 
 watch(settings, () => {

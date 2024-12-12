@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useBoard } from '../composables/board'
-import { provide } from 'vue'
+import { useGateway } from '../composables/gateway'
+import { onBeforeUnmount, provide } from 'vue'
 import BoardHeader from '../components/BoardHeader.vue'
 import Canvas from '../components/Canvas.vue'
 
 const route = useRoute()
-const board = await useBoard(route)
-const { available } = board
+const boardContext = await useBoard(route)
+const { gateway } = useGateway()
+const { available } = boardContext
 
-provide('board', board)
+provide('board', boardContext)
+
+gateway.send({
+	type: 'userJoinBoard',
+	board: boardContext.board.id
+})
+
+onBeforeUnmount(() => {
+	gateway.send({ type: 'userLeaveBoard' })
+})
 </script>
 
 <template>

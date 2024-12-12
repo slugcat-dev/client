@@ -2,6 +2,7 @@
 import { computed, type Ref, inject, reactive, toRef, useTemplateRef, watch, type WatchHandle } from 'vue'
 import { usePointer } from '../composables/pointer'
 import { useSettings } from '../composables/settings'
+import { useGateway } from '../composables/gateway'
 import { onceChanged, rectContains, rectsOverlap, suppressClick } from '../utils'
 import type Card from './Card.vue'
 import CardContentBox from './CardContentBox.vue'
@@ -21,11 +22,11 @@ const cardRef = useTemplateRef('card-ref')
 const contentRef = useTemplateRef<CardContentRef>('content-ref')
 const selection = inject('selection') as CanvasSelection
 const canvas = inject('canvas') as CanvasContext
-const { updateCard, updateMany } = inject('board') as BoardContext
+const { board, updateCard, updateMany } = inject('board') as BoardContext
 const state = reactive({
 	selected: false,
 	dragging: false,
-	resizing: false as boolean | string,
+	resizing: false as false | string,
 	downState: {
 		offsetX: 0,
 		offsetY: 0,
@@ -36,6 +37,7 @@ const state = reactive({
 })
 const { pointer, pointers } = usePointer()
 const cardRefs = inject('card-refs') as Ref<CardRef[]>
+const { gateway } = useGateway()
 const settings = useSettings()
 const cursor = computed(() => {
 	if (contentRef.value?.active) return 'auto'
@@ -185,12 +187,18 @@ function onPointerMove() {
 			y: snap(newPos.y, 'y', 'drag')
 		}
 
-		if (relatedCards.size) {
+		if (!pointer.altKey) {
 			relatedCards.forEach(c => {
 				c.pos.x += card.pos.x - prevPos.x
 				c.pos.y += card.pos.y - prevPos.y
 			})
 		}
+
+		gateway.send({
+			type: 'updateCards',
+			board: board.id,
+			cards: [card, ...relatedCards].map(card => ({ id: card.id, pos: card.pos }))
+		})
 	}
 
 	if (state.resizing) {

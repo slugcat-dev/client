@@ -1,14 +1,16 @@
 import { useAppState } from './appState'
 import { useStorage } from './storage'
+import { useGateway } from './gateway'
 import { type RouteLocation } from 'vue-router'
 import { computed, reactive, watch } from 'vue'
-import { reactiveComputed } from '@vueuse/core'
+import { reactiveComputed, tryOnScopeDispose } from '@vueuse/core'
 import { clone, logBadge, nanoid } from '../utils'
 import { FetchError, ofetch } from 'ofetch'
 
 const apiURL = import.meta.env.APP_API_URL
 const appState = useAppState()
 const storage = await useStorage()
+const { gateway, onMessage, cleanupOnMessage } = useGateway()
 
 export async function useBoard(route: RouteLocation) {
 	const id = route.params.board as string
@@ -61,6 +63,12 @@ export async function useBoard(route: RouteLocation) {
 			appState.pendingWork.delete('new-cards')
 	}, { immediate: true })
 
+	onMessage(handleGatewayMessage)
+
+	tryOnScopeDispose(() => {
+		cleanupOnMessage(handleGatewayMessage)
+	})
+
 	// Create a card
 	function createCard(data: Partial<Card>) {
 		const card = {
@@ -78,14 +86,12 @@ export async function useBoard(route: RouteLocation) {
 			storage.queue.cards.push({
 				type: 'create',
 				board: board.id,
-				card: {
-					id: card.id,
-					type: card.type,
-					pos: card.pos,
-					content: card.content,
-					created: card.created,
-					modified: card.modified
-				}
+				card
+			})
+			gateway.send({
+				type: 'createCard',
+				board: board.id,
+				card
 			})
 		}
 
@@ -103,29 +109,34 @@ export async function useBoard(route: RouteLocation) {
 			storage.queue.cards.push({
 				type: 'create',
 				board: board.id,
-				card: {
-					id: card.id,
-					type: card.type,
-					pos: card.pos,
-					content: card.content,
-					created: card.created,
-					modified: card.modified
-				}
+				card
+			})
+			gateway.send({
+				type: 'createCard',
+				board: board.id,
+				card
 			})
 		} else {
 			card.modified = now
 
 			if (!card.new) {
+				const update = {
+					id: card.id,
+					pos: card.pos,
+					content: card.content,
+					modified: card.modified
+				}
+
 				board.cards[board.cards.findIndex(c => c.id === card.id)] = clone(card)
 				storage.queue.cards.push({
 					type: 'update',
 					board: board.id,
-					card: {
-						id: card.id,
-						pos: card.pos,
-						content: card.content,
-						modified: card.modified
-					}
+					card: update
+				})
+				gateway.send({
+					type: 'updateCards',
+					board: board.id,
+					cards: [update]
 				})
 			}
 		}
@@ -144,10 +155,18 @@ export async function useBoard(route: RouteLocation) {
 				card: {
 					id: card.id,
 					pos: card.pos,
-					content: card.content,
 					modified: card.modified
 				}
 			})
+		})
+		gateway.send({
+			type: 'updateCards',
+			board: board.id,
+			cards: cards.filter(card => !card.new).map(card => ({
+				id: card.id,
+				pos: card.pos,
+				modified: card.modified
+			}))
 		})
 	}
 
@@ -163,6 +182,11 @@ export async function useBoard(route: RouteLocation) {
 					modified: Date.now()
 				}
 			})
+			gateway.send({
+				type: 'deleteCard',
+				board: board.id,
+				card: { id: card.id }
+			})
 		}
 
 		cards.splice(cards.findIndex(c => c.id === card.id), 1)
@@ -171,6 +195,51 @@ export async function useBoard(route: RouteLocation) {
 	// Batch delete cards
 	function deleteMany(cardsToDelte: Card[]) {
 		cardsToDelte.forEach(deleteCard)
+	}
+
+	function handleGatewayMessage(data: any) {
+		switch (data.type) {
+			case 'createCard': {
+				cards.push(data.card)
+				board.cards.push(data.card)
+
+				break
+			}
+
+			case 'updateCards': {
+				data.cards.forEach((card: Partial<Card>) => {
+					const cardIndex = cards.findIndex(c => c.id === card.id)
+					const boardCardIndex = board.cards.findIndex(c => c.id === card.id)
+
+					if (cardIndex !== -1) {
+						cards[cardIndex].content = card.content ?? cards[cardIndex].content
+						cards[cardIndex].pos = card.pos ?? cards[cardIndex].pos
+						cards[cardIndex].modified = card.modified ?? cards[cardIndex].modified
+					}
+
+					if (boardCardIndex !== -1) {
+						board.cards[boardCardIndex].content = card.content ?? board.cards[cardIndex].content
+						board.cards[boardCardIndex].pos = card.pos ?? board.cards[boardCardIndex].pos
+						board.cards[boardCardIndex].modified = card.modified ?? board.cards[boardCardIndex].modified
+					}
+				})
+
+				break
+			}
+
+			case 'deleteCard': {
+				const cardIndex = cards.findIndex(c => c.id === data.card.id)
+				const boardCardIndex = board.cards.findIndex(c => c.id === data.card.id)
+
+				if (cardIndex !== -1)
+					cards.splice(cardIndex, 1)
+
+				if (boardCardIndex !== -1)
+					board.cards.splice(boardCardIndex, 1)
+
+				break
+			}
+		}
 	}
 
 	return {
