@@ -235,7 +235,7 @@ export async function highlightCodeAddon(editor: Editor) {
 
 				// Make the language label red if the language is not supported
 				if (codeLangElm && language !== openMatch[4])
-					(codeLangElm as HTMLElement).style.color = 'var(--color-red)'
+					(codeLangElm as HTMLElement).style.color = '#ff7b72'
 			}
 		}
 

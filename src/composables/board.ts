@@ -29,8 +29,8 @@ export async function useBoard(route: RouteLocation) {
 		}
 	}
 
-	watch(() => appState.loggedIn && appState.online, () => {
-		if (appState.loggedIn && appState.online)
+	watch([() => appState.loggedIn && appState.online, gateway.connected], () => {
+		if (appState.loggedIn && appState.online && gateway.connected.value)
 			fetchBoard(id)
 	}, { immediate: isCached })
 
@@ -63,9 +63,20 @@ export async function useBoard(route: RouteLocation) {
 			appState.pendingWork.delete('new-cards')
 	}, { immediate: true })
 
+	watch(gateway.connected, () => {
+		if (gateway.connected.value) {
+			console.log('%cGATEWAY', logBadge('#7ee787'), 'Joining', { id: board.id })
+			gateway.send({
+				type: 'userJoinBoard',
+				board: board.id
+			})
+		}
+	}, { immediate: true })
+
 	onMessage(handleGatewayMessage)
 
 	tryOnScopeDispose(() => {
+		gateway.send({ type: 'userLeaveBoard' })
 		cleanupOnMessage(handleGatewayMessage)
 	})
 

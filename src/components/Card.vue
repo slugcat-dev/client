@@ -197,7 +197,7 @@ function onPointerMove() {
 		gateway.send({
 			type: 'updateCards',
 			board: board.id,
-			cards: [card, ...relatedCards].map(card => ({ id: card.id, pos: card.pos }))
+			cards: [card, ...relatedCards].map(card => ({ id: card.id, pos: card.pos, modified: Date.now() }))
 		})
 	}
 
