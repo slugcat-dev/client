@@ -20,6 +20,10 @@ provide('board', boardContext)
 	<div v-else class="board not-found">
 		<h1>404</h1>
 		BOARD NOT FOUND
+		<div style="display: flex; margin-top: 1rem; gap: .5rem;">
+			<button @click="$router.push('/')">Go Home</button>
+			<button @click="$router.push('/login')">Log In</button>
+		</div>
 	</div>
 </template>
 
@@ -33,6 +37,7 @@ provide('board', boardContext)
 
 .not-found {
 	justify-content: center;
+	align-items: center;
 	text-align: center;
 	font-family: 'Fira Code', monospace;
 
