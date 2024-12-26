@@ -132,7 +132,8 @@ function onPointerDown(event: PointerEvent) {
 		if (card.type === 'box' || card.type === 'image') {
 			state.downState.width = card.content.width
 			state.downState.height = card.content.height
-		}
+		} else if (card.type === 'text')
+			state.downState.width = cardRect.width / canvas.smoothZoom
 
 		unwatchPointerMove = watch([pointer, canvas], onPointerMove)
 		unwatchPointerUp = watch([
@@ -226,6 +227,10 @@ function onPointerMove() {
 			card.content.width = Math.min(newWidth, imgWidth)
 			card.content.height = Math.min(newHeight, imgHeight)
 		}
+
+		// Text cards can be resized horizontally
+		if (card.type === 'text')
+			card.content.width = Math.max(snap(state.downState.width + newPos.x, 'x', 'resize') - card.pos.x, 0)
 	}
 
 	canvas.edgeScroll()

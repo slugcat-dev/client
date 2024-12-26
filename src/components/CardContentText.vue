@@ -24,6 +24,7 @@ onMounted(() => {
 	editor = new Editor(editorRef.value!, {
 		readonly: true,
 		hideMarks: true,
+		lineWrap: true,
 		keymap: {
 			'Alt ArrowUp': editor => moveLine(editor, true),
 			'Alt ArrowDown': editor => moveLine(editor, false)
@@ -135,6 +136,11 @@ defineExpose({ active: toRef(state, 'active') })
 	<div
 		ref="editor-ref"
 		class="card-content-text"
+		:style="{
+			minWidth: 'min-content',
+			width: card.content.width ? `${card.content.width}px` : 'max-content',
+			maxWidth: `${card.content.width ?? 720}px`
+		}"
 		@click.left.exact="onClick"
 		@keydown.delete="onKeyDelete"
 		@paste.capture.stop.prevent="onPaste"
@@ -143,6 +149,7 @@ defineExpose({ active: toRef(state, 'active') })
 	<div class="selection-layer">
 		<div ref="caret-ref" class="caret"></div>
 	</div>
+	<div class="resize-h"></div>
 </template>
 
 <style scoped>

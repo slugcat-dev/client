@@ -118,6 +118,7 @@ defineExpose({
 			height: `${card.content.height ?? 0}px`,
 		}"
 		@load.once="onLoad"
+		@error="console.error"
 		@click.left.exact="activate"
 	>
 	<UploadProgress
@@ -170,6 +171,11 @@ defineExpose({
 	width: 2rem;
 	height: 2rem;
 	transform: translate(-50%, -50%);
+	transition: opacity 200ms 1s;
+
+	@starting-style {
+		opacity: 0;
+	}
 }
 
 .resize-d {

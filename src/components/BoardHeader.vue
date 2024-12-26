@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSettings } from '../composables/settings'
 import { inject } from 'vue'
+import { useGateway } from '../composables/gateway'
 import { updateBoard } from '../composables/board'
 import IconSnap from './Icons/IconSnap.vue'
 import IconGrid from './Icons/IconGrid.vue'
@@ -8,6 +9,7 @@ import IconSettings from './Icons/IconSettings.vue'
 
 const settings = useSettings()
 const { board } = inject('board') as BoardContext
+const { gateway } = useGateway()
 </script>
 
 <template>
@@ -33,6 +35,7 @@ const { board } = inject('board') as BoardContext
 			</div>
 		</div>
 		<input v-model="board.name" @blur="() => updateBoard(board)">
+		<div v-if="!gateway.connected.value">Gateway not connected</div>
 		<RouterLink to="/">Board List</RouterLink>
 		<div class="flex-spacer"></div>
 		<RouterLink to="/settings" class="settings-button">

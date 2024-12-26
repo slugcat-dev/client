@@ -7,7 +7,7 @@ import { useArrowKeys, useKeymap } from '../composables/keys'
 import { useSettings } from '../composables/settings'
 import { useToaster } from '../composables/toaster'
 import { useEventListener } from '@vueuse/core'
-import { distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
+import { clone, distance, isTrackpad, midpoint, moveThreshold, onceChanged, usingInput } from '../utils'
 import { copyCards, pasteOnCanvas } from '../clipboard'
 import CanvasBackground from './CanvasBackground.vue'
 import Card from './Card.vue'
@@ -243,7 +243,7 @@ function onPointerDown(event: PointerEvent) {
 			], onPointerUp, { flush: 'sync' })
 		} else if (pointers.length === 2) {
 			state.pinching = true
-			state.gesture.pointers = pointers.map(p => ({ ...p }))
+			state.gesture.pointers = pointers.map(clone)
 			state.gesture.initialZoom = canvas.smoothZoom
 			state.gesture.prevTranslate = { x: 0, y: 0 }
 			clickAllowed = false
@@ -258,35 +258,37 @@ function onPointerMove() {
 
 	clearTimeout(longPressTimeout)
 
-	// Update the selection
-	if (state.selecing) {
-		canvas.edgeScroll()
-
-		if (!selection.draw) {
-			if (!selection.box) {
-				const downPos = canvas.toCanvasPos(pointer.down as Pos)
-
-				selection.box = new DOMRect(downPos.x, downPos.y, 0, 0)
-				selection.boxVisible = true
-			}
-
-			const pointerPos = canvas.toCanvasPos(pointer)
-
-			selection.box = new DOMRect(
-				selection.box.x,
-				selection.box.y,
-				pointerPos.x - selection.box.x,
-				pointerPos.y - selection.box.y
-			)
-		}
-	}
-
 	// Pan the canvas
 	if (state.panning) {
 		canvas.scroll.x += pointer.movementX
 		canvas.scroll.y += pointer.movementY
 		canvas.smoothScroll.x = canvas.scroll.x
 		canvas.smoothScroll.y = canvas.scroll.y
+	}
+
+	if (state.selecing) {
+		canvas.edgeScroll()
+
+		if (selection.draw)
+			return
+
+		// Init the selection box
+		if (!selection.box) {
+			const downPos = canvas.toCanvasPos(pointer.down as Pos)
+
+			selection.box = new DOMRect(downPos.x, downPos.y, 0, 0)
+			selection.boxVisible = true
+		}
+
+		// Update the selection box
+		const pointerPos = canvas.toCanvasPos(pointer)
+
+		selection.box = new DOMRect(
+			selection.box.x,
+			selection.box.y,
+			pointerPos.x - selection.box.x,
+			pointerPos.y - selection.box.y
+		)
 	}
 }
 

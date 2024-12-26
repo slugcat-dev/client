@@ -14,6 +14,7 @@ import { fetchBoards } from './composables/board'
 import Toaster from './components/Toaster.vue'
 
 const apiURL = import.meta.env.APP_API_URL
+const commit = (window as any).commit
 const root = document.documentElement
 const appState = useAppState()
 const router = useRouter()
@@ -129,4 +130,17 @@ watch(settings, () => {
 			<Toaster />
 		</main>
 	</Suspense>
+	<div class="version">{{ commit }}</div>
 </template>
+
+<style scoped>
+.version {
+	position: fixed;
+	bottom: 1rem;
+	left: 1rem;
+	font-size: .75rem;
+	font-family: 'Fira Code', monospace;
+	opacity: .25;
+	z-index: 10;
+}
+</style>

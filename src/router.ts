@@ -15,12 +15,10 @@ export const router = createRouter({
 		},
 		{
 			path: '/login',
-			name: 'login',
 			component: Login
 		},
 		{
 			path: '/settings',
-			name: 'settings',
 			component: Settings
 		},
 		{

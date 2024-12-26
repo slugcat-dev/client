@@ -28,7 +28,6 @@
 	color: light-dark(#005cc5, #79c0ff);
 }
 
-.hljs-regexp,
 .hljs-string,
 .hljs-meta .hljs-string {
 	color: light-dark(#032f62, #a5d6ff);
@@ -51,6 +50,7 @@
 
 .hljs-name,
 .hljs-quote,
+.hljs-regexp,
 .hljs-selector-tag,
 .hljs-selector-pseudo {
 	color: light-dark(#22863a, #7ee787);
